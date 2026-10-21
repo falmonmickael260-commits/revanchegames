@@ -1,26 +1,115 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --rg-void: #05070d;
+  --rg-abyss: #090d16;
+  --rg-surface: #0e1322;
+  --rg-surface-raised: #141a2c;
+  --rg-border: #232b42;
+  --rg-border-soft: #1a2136;
+
+  /* Text */
+  --rg-text: #f3f5fb;
+  --rg-text-dim: #9aa3bd;
+  --rg-text-faint: #5c6485;
+
+  /* Electric accents */
+  --rg-cyan: #2fe6ff;
+  --rg-cyan-soft: #7df3ff;
+  --rg-violet: #b24bff;
+  --rg-violet-soft: #d49bff;
+  --rg-amber: #f0a93e;
+
+  --rg-gradient-electric: linear-gradient(120deg, var(--rg-cyan) 0%, var(--rg-violet) 100%);
+
+  --font-display: var(--font-chakra);
+  --font-body: var(--font-manrope);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-void: var(--rg-void);
+  --color-abyss: var(--rg-abyss);
+  --color-surface: var(--rg-surface);
+  --color-surface-raised: var(--rg-surface-raised);
+  --color-border: var(--rg-border);
+  --color-border-soft: var(--rg-border-soft);
+  --color-text: var(--rg-text);
+  --color-text-dim: var(--rg-text-dim);
+  --color-text-faint: var(--rg-text-faint);
+  --color-cyan: var(--rg-cyan);
+  --color-cyan-soft: var(--rg-cyan-soft);
+  --color-violet: var(--rg-violet);
+  --color-violet-soft: var(--rg-violet-soft);
+  --color-amber: var(--rg-amber);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--rg-void);
+  color: var(--rg-text);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--rg-violet);
+  color: var(--rg-void);
+}
+
+/* Thin, electric scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rg-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--rg-border);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--rg-text-faint);
+}
+
+/* Grain overlay, applied via a fixed pseudo-layer in the shell */
+.rg-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.rg-glow-text {
+  background: var(--rg-gradient-electric);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
