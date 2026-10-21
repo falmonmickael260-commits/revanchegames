@@ -1,17 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Lock, Play, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import type { Game } from "@/types/game";
 import { GameArt } from "./GameArt";
 import { StatusBadge } from "./StatusBadge";
 import { CategoryPill } from "./CategoryPill";
 import { FavoriteButton } from "./FavoriteButton";
+import { PlayButton } from "./PlayButton";
 import { useFavorites } from "@/lib/use-favorites";
 
 export function GameCard({ game, index = 0 }: { game: Game; index?: number }) {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const launchable = game.enabled && !!game.url;
 
   return (
     <motion.article
@@ -58,29 +58,7 @@ export function GameCard({ game, index = 0 }: { game: Game; index?: number }) {
             </span>
           </div>
 
-          {launchable ? (
-            <a
-              href={game.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan to-violet px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-void transition-transform hover:scale-[1.04]"
-            >
-              <Play className="h-3 w-3" strokeWidth={2.5} fill="currentColor" />
-              Jouer
-            </a>
-          ) : (
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              tabIndex={-1}
-              title="Ce jeu n'est pas encore disponible"
-              className="flex cursor-not-allowed items-center gap-1.5 rounded-full bg-surface-raised px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-text-faint opacity-60"
-            >
-              <Lock className="h-3 w-3" strokeWidth={2.5} />
-              Jouer
-            </button>
-          )}
+          <PlayButton game={game} />
         </div>
       </div>
     </motion.article>

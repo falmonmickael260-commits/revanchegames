@@ -18,7 +18,7 @@ export function CategoryFilter() {
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="rg-rail gap-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
       {CATEGORIES.map((cat) => {
         const isActive = active === cat.id;
         return (
@@ -27,11 +27,12 @@ export function CategoryFilter() {
             type="button"
             onClick={() => select(cat.id)}
             aria-pressed={isActive}
-            className={`rounded-full border px-3.5 py-1.5 font-body text-sm transition-colors ${
+            className="shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 font-body text-sm font-semibold transition-all"
+            style={
               isActive
-                ? "border-cyan/40 bg-cyan/10 text-text"
-                : "border-border-soft bg-surface text-text-dim hover:border-border hover:text-text"
-            }`}
+                ? { background: cat.color, borderColor: cat.color, color: "var(--rg-void)" }
+                : { borderColor: "var(--rg-border-soft)", background: "var(--rg-surface)", color: "var(--rg-text-dim)" }
+            }
           >
             {cat.label}
           </button>

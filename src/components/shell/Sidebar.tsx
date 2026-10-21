@@ -30,9 +30,11 @@ export function Sidebar() {
               {active && (
                 <motion.span
                   layoutId="rg-sidebar-active"
-                  className="absolute inset-0 rounded-xl border border-border bg-surface-raised"
+                  className="absolute inset-0 overflow-hidden rounded-xl border border-border bg-surface-raised"
                   transition={{ type: "spring", stiffness: 420, damping: 36 }}
-                />
+                >
+                  <span className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-cyan to-violet" />
+                </motion.span>
               )}
               <Icon
                 className={`relative z-10 h-[18px] w-[18px] transition-colors ${
