@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, LayoutGrid, Heart, History, Sparkles, User, Settings } from "lucide-react";
+import { Home, LayoutGrid, Heart, History, Sparkles, Coins, User, Settings } from "lucide-react";
 
 export type NavItem = {
   id: string;
@@ -14,6 +14,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "favorites", label: "Mes favoris", href: "/favorites", icon: Heart },
   { id: "recent", label: "Récemment joués", href: "/recent", icon: History },
   { id: "new", label: "Nouveautés", href: "/new", icon: Sparkles },
+  { id: "shop", label: "Boutique", href: "/shop", icon: Coins },
   { id: "profile", label: "Profil", href: "/profile", icon: User },
   { id: "settings", label: "Paramètres", href: "/settings", icon: Settings },
 ];

@@ -243,10 +243,10 @@ export const GAMES: Game[] = [
     name: "10000",
     tagline: "Relancez les dés. Tentez le tout pour le tout.",
     description:
-      "Jeu de dés dans lequel les joueurs cherchent à accumuler des points. Les règles exactes seront définies selon la version retenue.",
+      "Jeu de dés dans lequel les joueurs cherchent à accumuler des points avant les autres.",
     categories: ["des"],
-    status: "development",
-    enabled: false,
+    status: "available",
+    enabled: true,
     icon: "dices",
     image: "/games/10000.webp",
     theme: { accent: "#f2c94c", accentSoft: "#fbe49a" },

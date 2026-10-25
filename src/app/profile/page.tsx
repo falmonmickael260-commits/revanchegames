@@ -1,28 +1,101 @@
-"use client";
-
-import { useState } from "react";
-import { Gamepad2, Heart, Trophy, Users, Pencil, Check } from "lucide-react";
+import { Suspense } from "react";
+import Link from "next/link";
+import { Gamepad2, Trophy, Target, UserPlus } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatTile } from "@/components/ui/StatTile";
 import { EmptyState } from "@/components/library/EmptyState";
-import { useProfile } from "@/lib/use-profile";
-import { useFavorites } from "@/lib/use-favorites";
+import { FavoritesTile } from "@/components/profile/FavoritesTile";
+import { SignOutButton } from "@/components/profile/SignOutButton";
+import { createClient } from "@/lib/supabase/server";
 
+type GameStatsRow = {
+  game_slug: string;
+  games_played: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  win_rate: number | null;
+};
+
+// The session lives in cookies, so it's only known at request time — wrapping
+// it in Suspense keeps the route's static shell prerenderable (Next.js 16
+// Cache Components) while the real profile streams in below the fallback.
 export default function ProfilePage() {
-  const { name, updateName } = useProfile();
-  const { favorites } = useFavorites();
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
+  return (
+    <Suspense fallback={<ProfileSkeleton />}>
+      <ProfileContent />
+    </Suspense>
+  );
+}
 
-  function startEdit() {
-    setDraft(name);
-    setEditing(true);
+function ProfileSkeleton() {
+  return (
+    <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+      <PageHeader eyebrow="Compte" title="Profil" />
+      <div className="h-24 animate-pulse rounded-2xl border border-border-soft bg-surface" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-[66px] animate-pulse rounded-xl border border-border-soft bg-surface" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+async function ProfileContent() {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+
+  if (!user) {
+    return (
+      <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+        <PageHeader eyebrow="Compte" title="Profil" />
+        <EmptyState
+          icon={UserPlus}
+          title="Pas encore connecté"
+          message="Crée un compte Revanche Game pour retrouver tes statistiques sur Kilomax, Président, Quiz Master, La Meute et 10000 — depuis n'importe quel appareil."
+          action={
+            <div className="flex gap-2">
+              <Link
+                href="/sign-up"
+                className="rounded-lg bg-gradient-to-r from-cyan to-violet px-4 py-2 font-display text-sm font-semibold text-void"
+              >
+                Créer un compte
+              </Link>
+              <Link
+                href="/sign-in"
+                className="rounded-lg border border-border-soft px-4 py-2 font-display text-sm font-semibold text-text-dim"
+              >
+                Se connecter
+              </Link>
+            </div>
+          }
+        />
+      </div>
+    );
   }
 
-  function save() {
-    updateName(draft);
-    setEditing(false);
-  }
+  const [{ data: profile }, { data: catalog }, { data: stats }, { data: totals }] =
+    await Promise.all([
+      supabase.from("profiles").select("username, avatar_url, created_at").eq("id", user.id).single(),
+      supabase.from("game_catalog").select("slug, display_name, sort_order").order("sort_order"),
+      supabase
+        .from("game_stats")
+        .select("game_slug, games_played, wins, losses, draws, win_rate")
+        .eq("user_id", user.id),
+      supabase
+        .from("game_stats_totals")
+        .select("games_played, wins, losses, draws, win_rate")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+    ]);
+
+  const statsBySlug = new Map((stats as GameStatsRow[] | null)?.map((s) => [s.game_slug, s]));
+  const username = profile?.username ?? "Joueur";
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long" })
+    : null;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -30,58 +103,91 @@ export default function ProfilePage() {
 
       <div className="flex items-center gap-4 rounded-2xl border border-border-soft bg-surface p-5">
         <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan to-violet font-display text-2xl font-bold text-void">
-          {name.charAt(0).toUpperCase()}
+          {username.charAt(0).toUpperCase()}
         </span>
         <div className="flex-1">
-          {editing ? (
-            <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && save()}
-                maxLength={24}
-                className="w-full max-w-[220px] rounded-lg border border-border-soft bg-void px-3 py-1.5 font-display text-lg font-semibold text-text focus:border-cyan/50 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={save}
-                aria-label="Enregistrer le pseudo"
-                className="rounded-lg bg-surface-raised p-2 text-cyan hover:text-cyan-soft"
-              >
-                <Check className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={startEdit}
-              className="group flex items-center gap-2 font-display text-lg font-semibold text-text"
-            >
-              {name}
-              <Pencil className="h-3.5 w-3.5 text-text-faint opacity-0 transition-opacity group-hover:opacity-100" />
-            </button>
-          )}
-          <p className="font-body text-sm text-text-faint">Pseudonyme local — visible uniquement sur cet appareil.</p>
+          <p className="font-display text-lg font-semibold text-text">{username}</p>
+          <p className="font-body text-sm text-text-faint">
+            {memberSince ? `Membre depuis ${memberSince}` : "Membre Revanche Game"}
+          </p>
         </div>
+        <SignOutButton />
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile icon={Heart} label="Favoris" value={favorites.length} />
-        <StatTile icon={Gamepad2} label="Parties jouées" value={0} />
-        <StatTile icon={Trophy} label="Victoires" value={0} />
-        <StatTile icon={Users} label="Amis" value={0} />
+        <FavoritesTile />
+        <StatTile icon={Gamepad2} label="Parties jouées" value={totals?.games_played ?? 0} />
+        <StatTile icon={Trophy} label="Victoires" value={totals?.wins ?? 0} />
+        <StatTile
+          icon={Target}
+          label="Taux de victoire"
+          value={totals?.win_rate != null ? `${totals.win_rate}%` : "—"}
+        />
       </div>
 
       <div>
         <p className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.3em] text-violet">
-          Bientôt
+          Statistiques par jeu
         </p>
-        <EmptyState
-          icon={Users}
-          title="Amis & invitations"
-          message="L'ajout d'amis, les invitations et les salons multijoueurs arriveront avec les premiers jeux activés."
-        />
+        <div className="overflow-x-auto rounded-2xl border border-border-soft">
+          <table className="w-full min-w-[480px] border-collapse font-body text-sm">
+            <thead>
+              <tr className="border-b border-border-soft bg-surface-raised text-left">
+                <th className="px-4 py-3 font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
+                  Jeu
+                </th>
+                <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
+                  Parties
+                </th>
+                <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
+                  Victoires
+                </th>
+                <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
+                  Défaites
+                </th>
+                <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
+                  Taux
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {(catalog ?? []).map((game) => {
+                const row = statsBySlug.get(game.slug);
+                return (
+                  <tr key={game.slug} className="border-b border-border-soft bg-surface last:border-0">
+                    <td className="px-4 py-3 font-display font-semibold text-text">{game.display_name}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-text-dim">
+                      {row?.games_played ?? 0}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-cyan">{row?.wins ?? 0}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-text-dim">{row?.losses ?? 0}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-text-dim">
+                      {row?.win_rate != null ? `${row.win_rate}%` : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
+              <tr className="bg-surface-raised">
+                <td className="px-4 py-3 font-display font-bold text-text">Total</td>
+                <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">
+                  {totals?.games_played ?? 0}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums font-semibold text-cyan">
+                  {totals?.wins ?? 0}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">
+                  {totals?.losses ?? 0}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">
+                  {totals?.win_rate != null ? `${totals.win_rate}%` : "—"}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 font-body text-xs text-text-faint">
+          Alimentées par les résultats réels, envoyés par chaque jeu à la fin de la partie.
+        </p>
       </div>
     </div>
   );
