@@ -111,8 +111,13 @@ async function ProfileContent() {
     <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
       <PageHeader eyebrow="Compte" title="Profil" />
 
-      <div className="flex items-start justify-between gap-4 rounded-2xl border border-border-soft bg-surface p-5">
-        <div className="flex-1">
+      {/* En colonne sur mobile, côte à côte à partir de sm : forcer le
+          côte-à-côte plus tôt laissait à peine ~90px à l'avatar + pseudo +
+          identifiant sur un écran étroit (« Déconnexion » ne masque jamais
+          son texte, contrairement à « Paramètres ») — au point que le champ
+          de saisie de l'identifiant devenait fonctionnellement invisible. */}
+      <div className="flex flex-col items-start gap-4 rounded-2xl border border-border-soft bg-surface p-5 sm:flex-row sm:justify-between">
+        <div className="min-w-0 w-full sm:flex-1">
           <ProfileEditor
             userId={user.id}
             initialUsername={username}

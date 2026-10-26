@@ -264,16 +264,26 @@ export function ProfileEditor({
               {copied && <span className="font-display text-[10px] font-semibold text-cyan">Copié</span>}
             </button>
           ) : choosingTag ? (
-            <form onSubmit={handleChooseTag} className="mt-1.5 flex flex-col gap-1.5">
-              <div className="flex items-center gap-2">
-                <span className="font-body text-xs text-text-faint">RG-</span>
+            <form onSubmit={handleChooseTag} className="mt-1.5 flex min-w-0 flex-col gap-1.5">
+              {/* min-w-0 sur la ligne ET sur le champ : sans ça, un <input>
+                  dans un flex-row garde sa largeur intrinsèque par défaut
+                  (`min-width: auto`) et refuse de rétrécir — il poussait toute
+                  la ligne (et le bouton Déconnexion, plus loin dans l'en-tête)
+                  hors de l'écran sur mobile au lieu de tenir dans la carte. */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="shrink-0 font-body text-xs text-text-faint">RG-</span>
                 <input
                   autoFocus
                   value={tagDraft}
                   onChange={(e) => setTagDraft(e.target.value)}
                   maxLength={20}
                   placeholder="Ex. MikeFR"
-                  className="w-full max-w-[160px] rounded-lg border border-border-soft bg-void px-2.5 py-1 font-body text-xs text-text focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20"
+                  // min-w-[5rem], pas min-w-0 : un <input> dans un flex-row
+                  // rétrécit par défaut jusqu'à devenir fonctionnellement
+                  // invisible si l'espace manque — ici, le reste de la ligne
+                  // passe plutôt à l'écran suivant (flex-wrap) avant d'en
+                  // arriver là.
+                  className="min-w-[5rem] flex-1 rounded-lg border border-border-soft bg-void px-2.5 py-1 font-body text-xs text-text focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20"
                 />
                 <button
                   type="submit"
