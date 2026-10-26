@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import Link from "next/link";
 import { Gamepad2, Trophy, Target, UserPlus } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -6,6 +7,7 @@ import { StatTile } from "@/components/ui/StatTile";
 import { EmptyState } from "@/components/library/EmptyState";
 import { FavoritesTile } from "@/components/profile/FavoritesTile";
 import { SignOutButton } from "@/components/profile/SignOutButton";
+import { ProfileEditor } from "@/components/profile/ProfileEditor";
 import { createClient } from "@/lib/supabase/server";
 
 type GameStatsRow = {
@@ -43,6 +45,10 @@ function ProfileSkeleton() {
 }
 
 async function ProfileContent() {
+  // `toLocaleDateString` below resolves the current timezone, which Next.js's
+  // Cache Components treat as an unstable `Date.now()` read during
+  // prerendering — `connection()` marks this subtree as request-time only.
+  await connection();
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
@@ -101,13 +107,14 @@ async function ProfileContent() {
     <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
       <PageHeader eyebrow="Compte" title="Profil" />
 
-      <div className="flex items-center gap-4 rounded-2xl border border-border-soft bg-surface p-5">
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan to-violet font-display text-2xl font-bold text-void">
-          {username.charAt(0).toUpperCase()}
-        </span>
+      <div className="flex items-start justify-between gap-4 rounded-2xl border border-border-soft bg-surface p-5">
         <div className="flex-1">
-          <p className="font-display text-lg font-semibold text-text">{username}</p>
-          <p className="font-body text-sm text-text-faint">
+          <ProfileEditor
+            userId={user.id}
+            initialUsername={username}
+            initialAvatarUrl={profile?.avatar_url ?? null}
+          />
+          <p className="mt-2 font-body text-sm text-text-faint">
             {memberSince ? `Membre depuis ${memberSince}` : "Membre Revanche Game"}
           </p>
         </div>
