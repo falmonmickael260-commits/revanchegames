@@ -331,6 +331,130 @@ la valeur déclarée ici (`2`) ne reflète pas forcément celle du projet. Le
 fournisseur d'e-mail intégré de Supabase est par ailleurs fortement limité en
 débit — à vérifier dans le tableau de bord si des joueurs ne reçoivent rien.
 
+## Socle social : amis, présence, invitations, notifications
+
+Migration : `supabase/migrations/20261026030000_social_core.sql`. Un seul jeu
+de tables pour les cinq jeux — pas de liste d'amis par jeu.
+
+### Règle de sécurité, et pourquoi elle tient
+
+`friendships`, `game_invitations` et `notifications` n'ont **que** des
+politiques `SELECT`. Aucune écriture directe n'est possible depuis le
+navigateur : tout passe par des fonctions `security definer` qui relisent
+`auth.uid()` en première ligne et ignorent systématiquement tout identifiant
+d'expéditeur envoyé par le client.
+
+Conséquences vérifiées par test réel (deux comptes, vrais jetons) :
+
+- l'expéditeur d'une demande ne peut pas l'accepter lui-même ;
+- une demande déjà traitée ne peut pas être re-acceptée (`for update` + test
+  de statut) ;
+- une invitation déjà utilisée ou expirée est refusée ;
+- on ne peut inviter que ses amis, et jamais un joueur bloqué ;
+- un joueur ne lit ni les notifications, ni les abonnements push d'un autre.
+
+`are_friends` et `is_blocked_between` sont des fonctions internes : leur droit
+d'exécution est **révoqué** pour `anon` et `authenticated`.
+
+### Une seule relation par paire
+
+```sql
+create unique index friendships_unique_pair on public.friendships (
+  least(requester_id, addressee_id), greatest(requester_id, addressee_id)
+);
+```
+
+C'est cet index qui rend impossibles les demandes en double et les amitiés
+dupliquées, y compris quand A et B s'envoient une demande en même temps. Un
+`send_friend_request` qui retombe sur une relation existante **renvoie
+celle-ci** au lieu d'échouer.
+
+Un refus **supprime** la ligne au lieu de la marquer : sans cela, l'unicité de
+paire empêcherait le demandeur de retenter plus tard. Le refus n'est pas
+notifié.
+
+### Présence — pourquoi Realtime Presence et pas `last_seen`
+
+`src/lib/use-presence.ts`. La présence est attachée à la connexion WebSocket,
+ce qui règle trois choses qu'un horodatage en base fait mal :
+
+| Cas | Comportement |
+| --- | --- |
+| Onglet fermé | la présence disparaît avec la connexion — pas de faux « en ligne » |
+| Coupure réseau brève | Realtime se reconnecte et se re-déclare ; seule une coupure durable retire la présence |
+| Plusieurs appareils | la clé est l'identifiant du joueur ; les états sont fusionnés en gardant le plus actif (`in_game` > `online` > `away`) |
+
+Le délai avant disparition appartient à Realtime : **nous ne le réglons pas**,
+donc nous ne garantissons pas sa durée exacte.
+
+« Absent » est détecté côté client (aucune interaction depuis 5 min, ou onglet
+caché). Être en partie l'emporte sur l'inactivité — on ne veut pas afficher
+« absent » pour quelqu'un qui réfléchit devant ses cartes.
+
+Confidentialité : `profiles.share_activity` à `false` fait disparaître le jeu
+en cours de la diffusion ; le joueur apparaît seulement « en ligne ».
+
+Le canal de présence n'est rejoint que par les comptes connectés. Un visiteur
+anonyme ne le rejoint pas, donc ne voit pas le compteur « en ligne » — mieux
+que d'afficher « 0 en ligne », qui serait faux.
+
+### Invitations et code de salon — `rg_room`
+
+Accepter une invitation ouvre `/play/<slug>?room=<code>`, et la page de jeu
+ajoute `rg_room=<code>` à l'URL de l'iframe, à côté de `rg_token`.
+
+**À faire côté jeux** : aucun des cinq jeux ne lit encore `rg_room`. Tant
+qu'ils ne le font pas, l'invitation ouvre bien le bon jeu mais le joueur devra
+saisir le code de salon à la main. La convention est volontairement la même que
+`rg_token` : un paramètre d'URL lu à l'ouverture.
+
+Le code de salon fait partie de l'identité de la session de jeu
+(`GameSessionProvider`) : accepter une invitation vers un autre salon du même
+jeu recharge bien la partie, alors qu'un simple retour sur `/play/<slug>` ne
+touche à rien.
+
+### Compteur d'inscrits
+
+`platform_stats()` fait un `count(*)` sur `profiles` à chaque requête. Vérifié
+en conditions réelles : 13 → 15 à la création de deux comptes, 15 → 13 à leur
+suppression. Aucun visiteur anonyme n'y entre (un visiteur n'a pas de profil) et
+aucune donnée privée n'intervient — `profiles` ne contient pas d'e-mail.
+
+### Notifications push
+
+| Pièce | Fichier |
+| --- | --- |
+| Abonnement navigateur | `src/lib/push-client.ts` |
+| Envoi serveur | `src/app/api/push/notify/route.ts` |
+| Affichage | `public/sw.js` (`push`, `notificationclick`) |
+| Réglage | `src/components/social/SocialSettings.tsx` |
+
+Le client **n'indique jamais le destinataire** : il envoie l'identifiant de
+l'objet qu'il vient de créer, la route relit la ligne avec les droits de
+l'appelant (RLS), vérifie qu'il est du bon côté, puis déduit le destinataire de
+la base. Les abonnements d'autrui ne sont lisibles qu'avec la clé
+`service_role`, côté serveur. La clé VAPID privée ne quitte jamais le serveur.
+
+Variables requises (voir `.env.example`) :
+
+```
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=   # exposée au navigateur, c'est son rôle
+VAPID_PRIVATE_KEY=              # serveur uniquement, jamais commitée
+VAPID_SUBJECT=mailto:…
+```
+
+Limites à connaître, et qui ne sont pas des bugs :
+
+- **iOS** : Web Push depuis iOS 16.4 **et seulement** si le site est ajouté à
+  l'écran d'accueil. Dans un onglet Safari ordinaire, `PushManager` est absent ;
+  l'interface le dit explicitement au lieu d'échouer.
+- **Développement** : `ServiceWorkerRegister` sort immédiatement hors
+  production. Sans service worker, pas de push — donc **pas testable avec
+  `npm run dev`**.
+- Un refus d'autorisation n'est jamais réessayé en boucle, et n'empêche rien :
+  les mêmes notifications restent dans la cloche, et une invitation reçue hors
+  ligne est toujours là à la reconnexion.
+
 ## Kilomax (Unity/WebGL) — cas à part
 
 Contrairement aux quatre jeux web, Kilomax n'a **aucun serveur à nous** : le

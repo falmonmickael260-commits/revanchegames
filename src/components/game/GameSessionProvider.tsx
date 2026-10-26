@@ -7,13 +7,19 @@ export type ActiveGame = {
   name: string;
   /** URL de l'iframe, jeton d'identité inclus. Figée pour la durée de la partie. */
   src: string;
+  /**
+   * Salon visé, quand la partie a été ouverte via une invitation.
+   * Fait partie de l'identité de la session : changer de salon est une
+   * nouvelle partie, même sur le même jeu.
+   */
+  roomCode: string | null;
   startedAt: number;
 };
 
 type GameSessionValue = {
   active: ActiveGame | null;
   /** Déclare la partie en cours. Sans effet si ce jeu est déjà celui qui tourne. */
-  start: (game: Pick<ActiveGame, "slug" | "name" | "src">) => void;
+  start: (game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode">) => void;
   /** Termine la partie : démonte l'iframe et ferme ses connexions. */
   stop: () => void;
 };
@@ -42,7 +48,7 @@ const GameSessionContext = createContext<GameSessionValue | null>(null);
 export function GameSessionProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState<ActiveGame | null>(null);
 
-  const start = useCallback((game: Pick<ActiveGame, "slug" | "name" | "src">) => {
+  const start = useCallback((game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode">) => {
     setActive((previous) => {
       // Le point crucial de tout ce fichier. Revenir sur /play/<slug> fait
       // re-rendre la page côté serveur, qui re-signe un jeton et produit donc
@@ -50,7 +56,12 @@ export function GameSessionProvider({ children }: { children: React.ReactNode })
       // src de l'iframe changerait et le navigateur rechargerait le jeu — ce
       // qui est précisément ce qu'on veut éviter. Renvoyer `previous` à
       // l'identique : React ne re-rend pas, l'iframe n'est pas touchée.
-      if (previous && previous.slug === game.slug) return previous;
+      // Le salon compte autant que le jeu : accepter une invitation vers un
+      // autre salon du même jeu doit bien recharger la partie, alors qu'un
+      // simple retour sur /play/<slug> ne doit rien toucher.
+      if (previous && previous.slug === game.slug && previous.roomCode === game.roomCode) {
+        return previous;
+      }
       return { ...game, startedAt: Date.now() };
     });
   }, []);

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RotateCcw, Trash2, Volume2, Accessibility, Download } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SocialSettings } from "@/components/social/SocialSettings";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { writeStorage } from "@/lib/storage";
 
@@ -55,6 +56,8 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
       <PageHeader eyebrow="Préférences" title="Paramètres" />
+
+      <SocialSettings />
 
       <div className="flex flex-col gap-3">
         <SettingRow

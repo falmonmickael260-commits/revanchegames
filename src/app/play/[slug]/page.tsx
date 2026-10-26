@@ -21,10 +21,18 @@ export function generateStaticParams() {
 // `slug` (route param) and the session (cookies) are both only known at
 // request time, so the whole thing lives behind one Suspense boundary —
 // see Next.js 16 Cache Components ("Maximizing the static shell").
-export default function PlayGamePage({ params }: { params: Promise<{ slug: string }> }) {
+export default function PlayGamePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  // `?room=<code>` : posé quand on arrive par une invitation acceptée
+  // (voir InvitationToast). Absent en navigation normale.
+  searchParams: Promise<{ room?: string }>;
+}) {
   return (
     <Suspense fallback={<GameBoot />}>
-      <GameLauncher paramsPromise={params} />
+      <GameLauncher paramsPromise={params} searchParamsPromise={searchParams} />
     </Suspense>
   );
 }
@@ -52,12 +60,23 @@ function GameBoot() {
  * GameSessionProvider). Cette page reste responsable de ce qu'elle seule peut
  * faire — résoudre le slug et signer le jeton d'identité côté serveur.
  */
-async function GameLauncher({ paramsPromise }: { paramsPromise: Promise<{ slug: string }> }) {
+async function GameLauncher({
+  paramsPromise,
+  searchParamsPromise,
+}: {
+  paramsPromise: Promise<{ slug: string }>;
+  searchParamsPromise: Promise<{ room?: string }>;
+}) {
   // createPlatformToken() below reads Date.now() (token iat/exp), which Next.js's
   // Cache Components treat as unstable during prerendering — connection() marks
   // this subtree as request-time only (see the same fix in app/profile/page.tsx).
   await connection();
   const { slug } = await paramsPromise;
+  const { room } = await searchParamsPromise;
+  // Le code de salon vient d'une URL : on n'y laisse passer que ce qui a la
+  // forme d'un code, pour ne rien injecter dans l'URL du jeu.
+  const roomCode = typeof room === "string" && /^[A-Za-z0-9_-]{1,32}$/.test(room) ? room : null;
+
   const game = GAMES.find((g) => g.id === slug);
   if (!game || !game.enabled) notFound();
 
@@ -68,7 +87,11 @@ async function GameLauncher({ paramsPromise }: { paramsPromise: Promise<{ slug: 
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
 
-  let iframeSrc = targetUrl;
+  // Paramètres ajoutés à l'URL du jeu. `rg_token` prouve l'identité du joueur
+  // (signé côté serveur, vérifié par le jeu) ; `rg_room` indique le salon à
+  // rejoindre quand on arrive par une invitation.
+  const extra = new URLSearchParams();
+
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -76,11 +99,13 @@ async function GameLauncher({ paramsPromise }: { paramsPromise: Promise<{ slug: 
       .eq("id", user.id)
       .single();
     if (profile?.username) {
-      const token = createPlatformToken({ id: user.id, username: profile.username });
-      const separator = targetUrl.includes("?") ? "&" : "?";
-      iframeSrc = `${targetUrl}${separator}rg_token=${encodeURIComponent(token)}`;
+      extra.set("rg_token", createPlatformToken({ id: user.id, username: profile.username }));
     }
   }
+  if (roomCode) extra.set("rg_room", roomCode);
 
-  return <GameMount slug={slug} name={game.name} src={iframeSrc} />;
+  const separator = targetUrl.includes("?") ? "&" : "?";
+  const iframeSrc = extra.size > 0 ? `${targetUrl}${separator}${extra.toString()}` : targetUrl;
+
+  return <GameMount slug={slug} name={game.name} src={iframeSrc} roomCode={roomCode} />;
 }

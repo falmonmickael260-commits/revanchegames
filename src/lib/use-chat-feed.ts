@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "./supabase/client";
+import { usePlatformIdentity } from "./use-identity";
 import {
   CHAT_HISTORY_LIMIT,
   CHAT_MAX_LENGTH,
@@ -205,54 +206,13 @@ export function useChatFeed({
 }
 
 /**
- * Le joueur connecté, tel que le chat en a besoin (pseudo + avatar).
+ * Le joueur connecté, tel que le chat en a besoin.
  *
- * La page /chat obtient la même chose côté serveur ; le chat flottant est
- * monté dans la coquille, qui n'a pas accès à la session côté serveur, et doit
- * donc la lire côté navigateur. Les deux visent la même table `profiles`.
+ * Simple alias de `usePlatformIdentity` : le chat, les amis, la présence et
+ * les invitations doivent voir exactement la même identité — deux lectures
+ * séparées finiraient par diverger (pseudonyme changé dans le profil, avatar
+ * mis à jour, déconnexion dans un autre onglet).
  */
 export function useChatIdentity(): { me: ChatIdentity | null; ready: boolean } {
-  const [me, setMe] = useState<ChatIdentity | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const supabase = createClient();
-
-    async function load(userId: string | null) {
-      if (!userId) {
-        if (!cancelled) {
-          setMe(null);
-          setReady(true);
-        }
-        return;
-      }
-      const { data } = await supabase
-        .from("profiles")
-        .select("username, avatar_url")
-        .eq("id", userId)
-        .single();
-      if (cancelled) return;
-      setMe({
-        id: userId,
-        username: data?.username ?? "Joueur",
-        avatarUrl: data?.avatar_url ?? null,
-      });
-      setReady(true);
-    }
-
-    supabase.auth.getUser().then(({ data }) => load(data.user?.id ?? null));
-
-    // Connexion ou déconnexion dans un autre onglet pendant la partie.
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      load(session?.user?.id ?? null);
-    });
-
-    return () => {
-      cancelled = true;
-      subscription.subscription.unsubscribe();
-    };
-  }, []);
-
-  return { me, ready };
+  return usePlatformIdentity();
 }

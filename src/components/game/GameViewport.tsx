@@ -22,8 +22,9 @@ export function GameViewport() {
   // Quel jeu a fini de charger. Dérivé plutôt que remis à zéro par un effet :
   // changer de partie suffit à faire repasser `loaded` à faux, sans rendu
   // intermédiaire ni effet en cascade.
-  const [loadedSlug, setLoadedSlug] = useState<string | null>(null);
-  const loaded = active !== null && loadedSlug === active.slug;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const activeKey = active ? `${active.slug}:${active.roomCode ?? ""}` : null;
+  const loaded = activeKey !== null && loadedKey === activeKey;
 
   // État du plein écran, lu directement de l'API du navigateur.
   // `useSyncExternalStore` est l'outil prévu pour ça — c'est aussi ce
@@ -144,15 +145,16 @@ export function GameViewport() {
           </div>
         )}
 
-        {/* `key` sur le slug : changer de jeu crée bien une iframe neuve,
-            alors que revenir sur le même jeu la conserve telle quelle —
-            `src` est figée par le fournisseur de session (voir son commentaire). */}
+        {/* `key` sur le jeu ET le salon : changer de l'un ou de l'autre crée
+            bien une iframe neuve, alors que revenir sur la même partie la
+            conserve telle quelle — `src` est figée par le fournisseur de
+            session (voir son commentaire). */}
         <iframe
-          key={active.slug}
+          key={`${active.slug}:${active.roomCode ?? ""}`}
           src={active.src}
           title={active.name}
           className="rg-game-frame"
-          onLoad={() => setLoadedSlug(active.slug)}
+          onLoad={() => setLoadedKey(`${active.slug}:${active.roomCode ?? ""}`)}
           allow="fullscreen; autoplay; clipboard-write; gamepad; microphone"
         />
       </div>

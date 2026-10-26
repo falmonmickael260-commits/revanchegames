@@ -10,6 +10,7 @@ import { GameViewport } from "@/components/game/GameViewport";
 import { ResumeGamePill } from "@/components/game/ResumeGamePill";
 import { useGameSession } from "@/components/game/GameSessionProvider";
 import { ChatDock } from "@/components/chat/ChatDock";
+import { InvitationToast } from "@/components/social/InvitationToast";
 
 /**
  * La coquille de la plateforme, et l'arbitre de ce qui s'affiche autour du
@@ -82,6 +83,10 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
 
       {/* Chat accessible pendant toute la partie, y compris en naviguant. */}
       {active && <ChatDock suspended={onChatPage} onGameScreen={immersive} />}
+
+      {/* Invitation reçue : par-dessus tout, y compris l'écran de jeu, où
+          l'en-tête et sa cloche sont masqués. Une invitation est périssable. */}
+      <InvitationToast />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Search, User, Settings, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { NotificationCenter } from "@/components/social/NotificationCenter";
 
 export function Header() {
   const router = useRouter();
@@ -65,7 +66,15 @@ export function Header() {
         )}
       </div>
 
-      <div className="ml-auto hidden items-center gap-1 lg:flex">
+      {/* La cloche est visible a toutes les tailles, contrairement aux liens
+          Parametres/Profil que la barre d'onglets du bas reprend sur mobile :
+          une demande d'ami ou une invitation ne doit pas etre atteignable
+          seulement sur ordinateur. */}
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        <NotificationCenter />
+      </div>
+
+      <div className="hidden items-center gap-1 lg:flex">
         <Link
           href="/settings"
           aria-label="Paramètres"
