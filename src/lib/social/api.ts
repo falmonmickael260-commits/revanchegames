@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { SearchResult } from "./types";
+import { toFriendProfile, type FriendProfile, type FriendProfileRow } from "./friend-profile";
 
 /**
  * Les mutations du socle social, côté navigateur.
@@ -152,10 +153,20 @@ export async function unreadDirectMessageCounts(): Promise<ActionResult<Record<s
   return { ok: true, data: map };
 }
 
-/** Préférences de confidentialité — écriture directe, protégée par RLS (update own). */
+/** Profil d'un ami : réservé aux amis (voir get_friend_profile), avec son propre réglage de confidentialité. */
+export async function getFriendProfile(userId: string): Promise<ActionResult<FriendProfile>> {
+  const result = await rpc<FriendProfileRow[]>("get_friend_profile", { p_user_id: userId });
+  if (!result.ok) return result;
+  const row = result.data?.[0];
+  if (!row) return { ok: false, error: "Profil introuvable." };
+  return { ok: true, data: toFriendProfile(row) };
+}
+
 export async function updatePrivacy(patch: {
   share_activity?: boolean;
   allow_friend_requests?: boolean;
+  ghost_mode?: boolean;
+  profile_visible?: boolean;
 }): Promise<ActionResult> {
   const supabase = createClient();
   const { data: auth } = await supabase.auth.getUser();

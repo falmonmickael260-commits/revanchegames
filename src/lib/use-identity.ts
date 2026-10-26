@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "./supabase/client";
 
 /**
@@ -21,43 +21,54 @@ export type PlatformIdentity = {
   avatarUrl: string | null;
   shareActivity: boolean;
   allowFriendRequests: boolean;
+  /** Apparaît hors ligne pour ses amis, même connecté — voir use-presence.ts. */
+  ghostMode: boolean;
+  /** Statistiques et liste d'amis visibles par les amis sur /profile/<id>. */
+  profileVisible: boolean;
 };
 
 export function usePlatformIdentity(): { me: PlatformIdentity | null; ready: boolean } {
   const [me, setMe] = useState<PlatformIdentity | null>(null);
   const [ready, setReady] = useState(false);
+  // Lu par l'abonnement temps réel ci-dessous, qui ne doit pas se rouvrir à
+  // chaque changement d'identité — seulement quand le compte change.
+  const userIdRef = useRef<string | null>(null);
+
+  const load = useCallback(async (userId: string | null) => {
+    userIdRef.current = userId;
+    if (!userId) {
+      setMe(null);
+      setReady(true);
+      return;
+    }
+
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("profiles")
+      .select("username, avatar_url, share_activity, allow_friend_requests, ghost_mode, profile_visible")
+      .eq("id", userId)
+      .single();
+
+    // Le compte a pu changer pendant l'attente (déconnexion) : ne pas écraser
+    // un état plus récent avec une réponse tardive.
+    if (userIdRef.current !== userId) return;
+
+    setMe({
+      id: userId,
+      username: data?.username ?? "Joueur",
+      avatarUrl: data?.avatar_url ?? null,
+      // Par défaut on partage, comme la valeur par défaut en base ; mais si
+      // la ligne n'a pas pu être lue on reste prudent sur l'activité.
+      shareActivity: data?.share_activity ?? false,
+      allowFriendRequests: data?.allow_friend_requests ?? true,
+      ghostMode: data?.ghost_mode ?? false,
+      profileVisible: data?.profile_visible ?? true,
+    });
+    setReady(true);
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
     const supabase = createClient();
-
-    async function load(userId: string | null) {
-      if (!userId) {
-        if (!cancelled) {
-          setMe(null);
-          setReady(true);
-        }
-        return;
-      }
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("username, avatar_url, share_activity, allow_friend_requests")
-        .eq("id", userId)
-        .single();
-
-      if (cancelled) return;
-      setMe({
-        id: userId,
-        username: data?.username ?? "Joueur",
-        avatarUrl: data?.avatar_url ?? null,
-        // Par défaut on partage, comme la valeur par défaut en base ; mais si
-        // la ligne n'a pas pu être lue on reste prudent sur l'activité.
-        shareActivity: data?.share_activity ?? false,
-        allowFriendRequests: data?.allow_friend_requests ?? true,
-      });
-      setReady(true);
-    }
 
     supabase.auth.getUser().then(({ data }) => load(data.user?.id ?? null));
 
@@ -67,10 +78,37 @@ export function usePlatformIdentity(): { me: PlatformIdentity | null; ready: boo
     });
 
     return () => {
-      cancelled = true;
       subscription.subscription.unsubscribe();
     };
-  }, []);
+  }, [load]);
+
+  // Reflète en direct un changement fait ailleurs sur *sa propre* ligne —
+  // page Paramètres (mode fantôme, activité partagée…), ou un autre onglet.
+  // Sans ça, les réglages de confidentialité ne prenaient effet qu'après un
+  // rechargement complet : `me` restait figé sur sa valeur de départ, et
+  // `usePresence` (qui en dépend) continuait de publier l'ancien choix.
+  useEffect(() => {
+    if (!me) return;
+    const supabase = createClient();
+    const userId = me.id;
+    const channel = supabase
+      .channel(`rg-own-profile-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+        () => {
+          void load(userId);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // Volontairement indexé sur le seul id : l'abonnement ne doit pas se
+    // rouvrir à chaque rechargement d'identité qu'il provoque lui-même.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me?.id, load]);
 
   return { me, ready };
 }

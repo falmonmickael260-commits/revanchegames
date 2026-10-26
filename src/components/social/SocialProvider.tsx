@@ -79,6 +79,7 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
     meId: me?.id ?? null,
     shareActivity: me?.shareActivity ?? false,
     currentGameSlug: active?.slug ?? null,
+    ghostMode: me?.ghostMode ?? false,
   });
 
   const loadFriendships = useCallback(async () => {

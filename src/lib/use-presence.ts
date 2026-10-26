@@ -49,10 +49,15 @@ export function usePresence({
   meId,
   shareActivity,
   currentGameSlug,
+  ghostMode = false,
 }: {
   meId: string | null;
   shareActivity: boolean;
   currentGameSlug: string | null;
+  /** En mode fantôme, on rejoint quand même le canal (pour voir les autres),
+   * mais on n'y publie jamais sa propre présence — les amis le voient donc
+   * "hors ligne", sans rien à démasquer côté serveur. */
+  ghostMode?: boolean;
 }): PresenceMap {
   const [raw, setRaw] = useState<Record<string, PresencePayload[]>>({});
   const [idle, setIdle] = useState(false);
@@ -119,7 +124,9 @@ export function usePresence({
       .on("presence", { event: "join" }, sync)
       .on("presence", { event: "leave" }, sync)
       .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
+        // Fantôme : on reste abonné (pour continuer de voir les autres),
+        // mais on ne publie jamais notre propre entrée.
+        if (status === "SUBSCRIBED" && !ghostMode) {
           channel.track({ status: myStatus, game_slug: myGameSlug } satisfies PresencePayload);
         }
       });
@@ -138,8 +145,16 @@ export function usePresence({
     const supabase = createClient();
     const channel = supabase.getChannels().find((c) => c.topic === `realtime:${PRESENCE_CHANNEL}`);
     if (!channel) return;
+
+    // Passage en mode fantôme pendant la session (pas seulement au montage) :
+    // retirer l'entrée déjà publiée, plutôt que de la laisser traîner jusqu'à
+    // la fermeture de l'onglet.
+    if (ghostMode) {
+      channel.untrack();
+      return;
+    }
     channel.track({ status: myStatus, game_slug: myGameSlug } satisfies PresencePayload);
-  }, [meId, myStatus, myGameSlug]);
+  }, [meId, myStatus, myGameSlug, ghostMode]);
 
   return useMemo(() => {
     const map: PresenceMap = new Map();

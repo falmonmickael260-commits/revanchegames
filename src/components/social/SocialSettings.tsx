@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, BellOff, Eye, EyeOff, UserPlus } from "lucide-react";
+import { Bell, BellOff, Eye, EyeOff, Ghost, Lock, UserPlus, Users } from "lucide-react";
 import { useSocial } from "./SocialProvider";
 import { updatePrivacy } from "@/lib/social/api";
 import {
@@ -32,7 +32,12 @@ export function SocialSettings() {
   // Les préférences font autorité côté profil ; `override` ne porte que le
   // basculement optimiste local, le temps que l'écriture aboutisse. Dérivées
   // plutôt que recopiées par un effet.
-  const [override, setOverride] = useState<{ share?: boolean; requests?: boolean }>({});
+  const [override, setOverride] = useState<{
+    share?: boolean;
+    requests?: boolean;
+    ghost?: boolean;
+    profileVisible?: boolean;
+  }>({});
   const [privacyBusy, setPrivacyBusy] = useState(false);
 
   // Lecture de l'état réel du navigateur (jamais supposé).
@@ -50,6 +55,8 @@ export function SocialSettings() {
 
   const shareActivity = override.share ?? me.shareActivity;
   const allowRequests = override.requests ?? me.allowFriendRequests;
+  const ghostMode = override.ghost ?? me.ghostMode;
+  const profileVisible = override.profileVisible ?? me.profileVisible;
 
   async function togglePush() {
     setPushBusy(true);
@@ -68,13 +75,20 @@ export function SocialSettings() {
     setPushBusy(false);
   }
 
-  async function togglePrivacy(patch: { share_activity?: boolean; allow_friend_requests?: boolean }) {
+  async function togglePrivacy(patch: {
+    share_activity?: boolean;
+    allow_friend_requests?: boolean;
+    ghost_mode?: boolean;
+    profile_visible?: boolean;
+  }) {
     setPrivacyBusy(true);
     // Optimiste : le réglage bascule tout de suite…
     setOverride((previous) => ({
       ...previous,
       ...(patch.share_activity !== undefined ? { share: patch.share_activity } : {}),
       ...(patch.allow_friend_requests !== undefined ? { requests: patch.allow_friend_requests } : {}),
+      ...(patch.ghost_mode !== undefined ? { ghost: patch.ghost_mode } : {}),
+      ...(patch.profile_visible !== undefined ? { profileVisible: patch.profile_visible } : {}),
     }));
 
     const result = await updatePrivacy(patch);
@@ -87,6 +101,8 @@ export function SocialSettings() {
         const next = { ...previous };
         if (patch.share_activity !== undefined) delete next.share;
         if (patch.allow_friend_requests !== undefined) delete next.requests;
+        if (patch.ghost_mode !== undefined) delete next.ghost;
+        if (patch.profile_visible !== undefined) delete next.profileVisible;
         return next;
       });
     }
@@ -128,13 +144,35 @@ export function SocialSettings() {
 
       {/* ---- Confidentialité ---- */}
       <Row
+        icon={Ghost}
+        title="Mode fantôme"
+        description={
+          ghostMode
+            ? "Activé : tu apparais hors ligne pour tes amis, même connecté. Les demandes d'ami et messages continuent d'arriver normalement."
+            : "Apparaître hors ligne pour tes amis, même connecté — plus fort que le réglage ci-dessous, qui ne masque que le jeu en cours."
+        }
+        action={
+          <Toggle
+            checked={ghostMode}
+            disabled={privacyBusy}
+            label="Mode fantôme"
+            onChange={(value) => togglePrivacy({ ghost_mode: value })}
+          />
+        }
+      />
+
+      <Row
         icon={shareActivity ? Eye : EyeOff}
         title="Montrer à quoi je joue"
-        description="Tes amis voient le jeu de ta partie en cours. Désactivé, tu apparais seulement « en ligne »."
+        description={
+          ghostMode
+            ? "Sans effet pendant que le mode fantôme est actif : tu n'apparais pas du tout en ligne."
+            : "Tes amis voient le jeu de ta partie en cours. Désactivé, tu apparais seulement « en ligne »."
+        }
         action={
           <Toggle
             checked={shareActivity}
-            disabled={privacyBusy}
+            disabled={privacyBusy || ghostMode}
             label="Montrer à quoi je joue"
             onChange={(value) => togglePrivacy({ share_activity: value })}
           />
@@ -151,6 +189,20 @@ export function SocialSettings() {
             disabled={privacyBusy}
             label="Accepter les demandes d'ami"
             onChange={(value) => togglePrivacy({ allow_friend_requests: value })}
+          />
+        }
+      />
+
+      <Row
+        icon={profileVisible ? Users : Lock}
+        title="Profil visible par mes amis"
+        description="Désactivé, un ami qui clique sur ton profil ne voit que ton pseudo — ni tes statistiques, ni ta liste d'amis."
+        action={
+          <Toggle
+            checked={profileVisible}
+            disabled={privacyBusy}
+            label="Profil visible par mes amis"
+            onChange={(value) => togglePrivacy({ profile_visible: value })}
           />
         }
       />

@@ -349,17 +349,19 @@ export function FriendsView() {
                   key={friend.friendshipId}
                   className="flex items-center gap-3 rounded-xl border border-border-soft bg-surface px-3 py-2.5"
                 >
-                  <Avatar username={friend.username} avatarUrl={friend.avatarUrl} size="sm" />
+                  <Link href={`/profile/${friend.id}`} className="shrink-0">
+                    <Avatar username={friend.username} avatarUrl={friend.avatarUrl} size="sm" />
+                  </Link>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-sm font-semibold text-text">
+                  <Link href={`/profile/${friend.id}`} className="min-w-0 flex-1 group">
+                    <p className="truncate font-display text-sm font-semibold text-text group-hover:text-cyan">
                       {friend.username}
                     </p>
                     <p className="flex items-center gap-1.5 font-body text-[11px] text-text-faint">
                       <PresenceDot status={friend.presence} />
                       {playing ? `En partie — ${playing}` : presenceLabel(friend.presence)}
                     </p>
-                  </div>
+                  </Link>
 
                   <button
                     type="button"
