@@ -640,6 +640,67 @@ dans le jeu (`guest_label`), marqué « (invité) ». Le masquer donnerait une
 liste de participants fausse. En revanche il n'entre pas au classement — il
 n'a pas de profil auquel rattacher des statistiques.
 
+## Expérience et niveaux
+
+Migration `20261026210000`. Comme le classement : **aucune table**. L'XP est
+recalculée à chaque lecture depuis `game_stats_totals`, c'est-à-dire depuis
+les parties réellement déclarées par les jeux.
+
+Trois conséquences voulues :
+
+- impossible de désynchroniser un compteur d'XP de l'historique réel ;
+- impossible de s'attribuer de l'XP — il faudrait falsifier une partie, et
+  seule la clé de service écrit dans `game_results` ;
+- une partie effacée retire l'XP correspondante, sans traitement à écrire.
+
+Le prix, assumé : changer le barème change rétroactivement le niveau de tout
+le monde. Mieux vaut un chiffre toujours vrai qu'un compteur figé qui ne
+correspond plus à rien.
+
+### Barème et courbe
+
+```
+ 10 XP par partie jouée    (être là compte)
++15 XP par victoire
+ +5 XP par match nul
+```
+
+Une défaite rapporte donc 10 XP : jouer et perdre fait progresser, plus
+lentement. Rien ne descend jamais.
+
+Chaque niveau coûte 100 XP de plus que le précédent — niveau 2 à 100 XP,
+niveau 3 à 300, niveau 4 à 600. Soit `50 × L × (L−1)` pour atteindre le
+niveau L, et `L = ⌊(1 + √(1 + XP/12.5)) / 2⌋` pour l'inverse.
+
+Vérifié sur un vrai compte : 11 parties, 6 victoires, 1 nul →
+`11×10 + 6×15 + 1×5 = 205 XP` → niveau 2, 105/200 dans le niveau.
+
+Le niveau affiché reste **global**, même sur un classement filtré par jeu :
+c'est le niveau du joueur sur la plateforme, pas sur un titre en particulier.
+
+## La photo du joueur dans les jeux
+
+Le jeton `rg_token` transporte désormais un champ `avatar` en plus de `uid` et
+`username` :
+
+```json
+{ "uid": "…", "username": "nexoo26", "avatar": "https://…/avatars/…/1.webp", "iat": …, "exp": … }
+```
+
+- **Facultatif** : le champ est *absent* (pas `null`) quand le compte n'a pas
+  de photo, ce qui garde le jeton court.
+- **Deux formes possibles** : une URL du bucket `avatars`, ou un emoji choisi
+  dans la liste proposée par le profil. Un jeu doit gérer les deux — afficher
+  l'URL en image, l'emoji en texte.
+- **Rétrocompatible** : un jeu qui ne lit que `uid` et `username` continue de
+  fonctionner sans rien changer. La signature couvre tout le contenu, donc
+  l'avatar n'est pas plus falsifiable que le pseudonyme.
+- Taille du jeton avec une URL de photo : ~260 caractères.
+
+**À faire côté jeux** : lire `avatar` et l'afficher à la place du joueur
+autour de la table. Aucun des cinq jeux ne le fait encore — la plateforme
+l'envoie, c'est tout.
+
 ## Kilomax (Unity/WebGL) — cas à part
 
 Contrairement aux quatre jeux web, Kilomax n'a **aucun serveur à nous** : le

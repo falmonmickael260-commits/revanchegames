@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/library/EmptyState";
 import { createClient } from "@/lib/supabase/server";
 import { toFriendProfile, type FriendProfileRow } from "@/lib/social/friend-profile";
 import { ReportPlayerButton } from "@/components/social/ReportPlayerButton";
+import { LevelBadge } from "@/components/stats/LevelBadge";
 
 // `id` est un identifiant de compte quelconque, impossible à énumérer à
 // l'avance via `generateStaticParams` (contrairement à /play/<slug>, dont la
@@ -126,7 +127,15 @@ async function FriendProfileContent({
       <div className="flex items-start gap-4 rounded-2xl border border-border-soft bg-surface p-5">
         <Avatar username={profile.username} avatarUrl={profile.avatarUrl} />
         <div className="min-w-0 flex-1">
-          <p className="font-display text-lg font-semibold text-text">{profile.username}</p>
+          <p className="flex items-center gap-2 font-display text-lg font-semibold text-text">
+            {profile.username}
+            {profile.level !== null && (
+              <LevelBadge
+                compact
+                progress={{ level: profile.level, xp: 0, xpIntoLevel: 0, xpForLevel: 0 }}
+              />
+            )}
+          </p>
           {profile.playerTag && (
             <p className="font-body text-xs tracking-wide text-text-faint">RG-{profile.playerTag}</p>
           )}

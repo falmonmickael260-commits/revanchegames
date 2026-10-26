@@ -10,6 +10,7 @@ import { SignOutButton } from "@/components/profile/SignOutButton";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
 import { GhostModeCard } from "@/components/social/GhostModeCard";
 import { MatchList } from "@/components/stats/MatchList";
+import { LevelBadge, toProgress } from "@/components/stats/LevelBadge";
 import { toMatches } from "@/lib/social/stats";
 import { createClient } from "@/lib/supabase/server";
 
@@ -91,6 +92,7 @@ async function ProfileContent() {
     { data: stats },
     { data: totals },
     { data: matchRows },
+    { data: progressRows },
   ] = await Promise.all([
       supabase
         .from("profiles")
@@ -109,9 +111,12 @@ async function ProfileContent() {
         .maybeSingle(),
       // Les dernières parties de ce joueur, invités compris.
       supabase.rpc("recent_matches", { p_user_id: user.id, p_limit: 10 }),
+      // XP et niveau, recalculés depuis les parties réelles.
+      supabase.rpc("player_progress", { p_user_id: user.id }),
     ]);
 
   const matches = toMatches(matchRows);
+  const progress = toProgress(progressRows);
 
   const statsBySlug = new Map((stats as GameStatsRow[] | null)?.map((s) => [s.game_slug, s]));
   const username = profile?.username ?? "Joueur";
@@ -160,6 +165,8 @@ async function ProfileContent() {
       {/* Le mode fantôme est ici, et pas seulement dans les paramètres : on
           décide de se rendre invisible au moment d'aller jouer, pas en
           explorant des réglages. C'est le même réglage des deux côtés. */}
+      {progress && <LevelBadge progress={progress} />}
+
       <GhostModeCard />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

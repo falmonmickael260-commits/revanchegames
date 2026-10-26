@@ -20,6 +20,8 @@ export type LeaderboardEntry = {
   losses: number;
   draws: number;
   winRate: number | null;
+  /** Niveau global du joueur sur la plateforme, pas sur ce jeu. */
+  level: number | null;
 };
 
 export type MatchPlayer = {
@@ -50,6 +52,7 @@ type LeaderboardRow = {
   losses: number;
   draws: number;
   win_rate: number | null;
+  level: number | null;
 };
 
 type MatchRow = {
@@ -72,6 +75,7 @@ export function toLeaderboard(rows: unknown): LeaderboardEntry[] {
     losses: Number(row.losses),
     draws: Number(row.draws),
     winRate: row.win_rate === null ? null : Number(row.win_rate),
+    level: row.level === null || row.level === undefined ? null : Number(row.level),
   }));
 }
 

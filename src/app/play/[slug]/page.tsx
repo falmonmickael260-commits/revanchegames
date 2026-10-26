@@ -95,11 +95,18 @@ async function GameLauncher({
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("username")
+      .select("username, avatar_url")
       .eq("id", user.id)
       .single();
     if (profile?.username) {
-      extra.set("rg_token", createPlatformToken({ id: user.id, username: profile.username }));
+      extra.set(
+        "rg_token",
+        createPlatformToken({
+          id: user.id,
+          username: profile.username,
+          avatarUrl: profile.avatar_url,
+        }),
+      );
     }
   }
   if (roomCode) extra.set("rg_room", roomCode);

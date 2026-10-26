@@ -8,6 +8,7 @@ import { MatchList } from "@/components/stats/MatchList";
 import { createClient } from "@/lib/supabase/server";
 import { GAMES } from "@/data/games";
 import { toLeaderboard, toMatches, type LeaderboardEntry } from "@/lib/social/stats";
+import { LevelBadge } from "@/components/stats/LevelBadge";
 
 const PLAYABLE = GAMES.filter((game) => game.enabled);
 
@@ -159,8 +160,16 @@ function Row({ entry }: { entry: LeaderboardEntry }) {
       >
         <Avatar username={entry.username} avatarUrl={entry.avatarUrl} size="sm" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-display text-sm font-semibold text-text">
-            {entry.username}
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate font-display text-sm font-semibold text-text">
+              {entry.username}
+            </span>
+            {entry.level !== null && (
+              <LevelBadge
+                compact
+                progress={{ level: entry.level, xp: 0, xpIntoLevel: 0, xpForLevel: 0 }}
+              />
+            )}
           </span>
           <span className="block font-body text-[11px] text-text-faint">
             {entry.gamesPlayed} partie{entry.gamesPlayed > 1 ? "s" : ""}

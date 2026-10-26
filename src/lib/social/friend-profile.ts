@@ -19,6 +19,8 @@ export type FriendProfile = {
   losses: number | null;
   draws: number | null;
   winRate: number | null;
+  /** Niveau global, affiché même si le profil est masqué. */
+  level: number | null;
   perGame:
     | { gameSlug: string; gamesPlayed: number; wins: number; losses: number; winRate: number | null }[]
     | null;
@@ -37,6 +39,7 @@ export type FriendProfileRow = {
   losses: number | null;
   draws: number | null;
   win_rate: number | null;
+  level: number | null;
   per_game: FriendProfile["perGame"];
   friends: FriendProfile["friends"];
 };
@@ -54,6 +57,7 @@ export function toFriendProfile(row: FriendProfileRow): FriendProfile {
     losses: row.losses,
     draws: row.draws,
     winRate: row.win_rate,
+    level: row.level,
     perGame: row.per_game,
     friends: row.friends,
   };
