@@ -9,6 +9,8 @@ import { FavoritesTile } from "@/components/profile/FavoritesTile";
 import { SignOutButton } from "@/components/profile/SignOutButton";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
 import { GhostModeCard } from "@/components/social/GhostModeCard";
+import { MatchList } from "@/components/stats/MatchList";
+import { toMatches } from "@/lib/social/stats";
 import { createClient } from "@/lib/supabase/server";
 
 type GameStatsRow = {
@@ -83,8 +85,13 @@ async function ProfileContent() {
     );
   }
 
-  const [{ data: profile }, { data: catalog }, { data: stats }, { data: totals }] =
-    await Promise.all([
+  const [
+    { data: profile },
+    { data: catalog },
+    { data: stats },
+    { data: totals },
+    { data: matchRows },
+  ] = await Promise.all([
       supabase
         .from("profiles")
         .select("username, avatar_url, created_at, player_tag, signature")
@@ -100,7 +107,11 @@ async function ProfileContent() {
         .select("games_played, wins, losses, draws, win_rate")
         .eq("user_id", user.id)
         .maybeSingle(),
+      // Les dernières parties de ce joueur, invités compris.
+      supabase.rpc("recent_matches", { p_user_id: user.id, p_limit: 10 }),
     ]);
+
+  const matches = toMatches(matchRows);
 
   const statsBySlug = new Map((stats as GameStatsRow[] | null)?.map((s) => [s.game_slug, s]));
   const username = profile?.username ?? "Joueur";
@@ -226,6 +237,18 @@ async function ProfileContent() {
           Alimentées par les résultats réels, envoyés par chaque jeu à la fin de la partie.
         </p>
       </div>
+
+      {/* ---- Historique ---- */}
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-text-faint">
+          Mes dernières parties
+        </h2>
+        <MatchList
+          matches={matches}
+          highlightUserId={user.id}
+          emptyMessage="Aucune partie enregistrée pour l'instant. Lance une partie : le résultat apparaîtra ici dès qu'elle sera terminée."
+        />
+      </section>
     </div>
   );
 }

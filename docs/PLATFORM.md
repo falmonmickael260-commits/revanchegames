@@ -607,6 +607,39 @@ d'invitations qu'il ne reste de places.
 membre arrive sur le bon jeu mais doit encore saisir le code. C'est le dernier
 maillon manquant de la chaîne, côté dépôts des jeux.
 
+## Classement et historique des parties
+
+Migration `20261026200000`. **Aucune nouvelle table** : tout se lit depuis
+`game_results`, `game_result_players` et les vues `game_stats` /
+`game_stats_totals`, qui contiennent déjà les parties réellement déclarées par
+les jeux. Rien n'est stocké en double, donc rien ne peut se désynchroniser — et
+aucun chiffre n'est inventé. Un classement vide signifie qu'aucune partie n'a
+encore été enregistrée, pas qu'il faut le remplir artificiellement.
+
+Les deux fonctions (`leaderboard`, `recent_matches`) existent surtout pour
+éviter le N+1 : sans elles, le navigateur ferait une requête de profil par
+joueur classé, et une requête de participants par partie affichée.
+
+### Ordre de tri, et pourquoi
+
+Victoires d'abord, puis taux de victoire, puis parties jouées. Classer d'abord
+par taux ferait remonter en tête quelqu'un ayant gagné son unique partie —
+exact, mais trompeur. Le nombre de victoires récompense ceux qui jouent
+vraiment ; le taux départage à égalité.
+
+### Lisible sans compte
+
+`leaderboard` et `recent_matches` sont accordées à `anon`. Ces données sont
+déjà publiques (`game_results_select_all`, `profiles_select_all`), et un
+classement qu'on ne peut pas regarder avant de s'inscrire n'a pas d'intérêt.
+
+### Les invités comptent
+
+Un joueur sans compte apparaît dans l'historique sous le pseudo qu'il a saisi
+dans le jeu (`guest_label`), marqué « (invité) ». Le masquer donnerait une
+liste de participants fausse. En revanche il n'entre pas au classement — il
+n'a pas de profil auquel rattacher des statistiques.
+
 ## Kilomax (Unity/WebGL) — cas à part
 
 Contrairement aux quatre jeux web, Kilomax n'a **aucun serveur à nous** : le
