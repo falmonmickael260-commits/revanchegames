@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowDown } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { PlayerCardDialog } from "@/components/social/PlayerCardDialog";
 import { formatChatTime, type ChatMessage, type ChatIdentity } from "@/lib/chat-shared";
 
 /** Marge, en pixels, en dessous de laquelle on considère être « en bas ». */
@@ -41,6 +42,9 @@ export function ChatMessageList({
   // incrémenté depuis un effet : pas d'état à resynchroniser, donc pas de
   // rendu en cascade.
   const [seenCount, setSeenCount] = useState(0);
+  // Joueur dont on consulte la fiche, ouverte depuis son avatar ou son
+  // pseudonyme dans la conversation.
+  const [viewing, setViewing] = useState<string | null>(null);
   const missed = Math.max(0, messages.length - seenCount);
 
   // useLayoutEffect : on repositionne avant que le navigateur ne peigne, pour
@@ -130,16 +134,40 @@ export function ChatMessageList({
                     own ? "flex-row-reverse text-right" : ""
                   }`}
                 >
-                  <Avatar username={message.username} avatarUrl={message.avatarUrl} size="sm" />
+                  {/* Avatar et pseudonyme ouvrent la fiche du joueur : c'est
+                      de là qu'on ajoute quelqu'un croisé dans le chat. Sur ses
+                      propres messages, le bouton ne sert à rien. */}
+                  {own ? (
+                    <Avatar username={message.username} avatarUrl={message.avatarUrl} size="sm" />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setViewing(message.userId)}
+                      aria-label={`Voir la fiche de ${message.username}`}
+                      className="shrink-0 rounded-full transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                    >
+                      <Avatar username={message.username} avatarUrl={message.avatarUrl} size="sm" />
+                    </button>
+                  )}
                   <div
                     className={`flex min-w-0 max-w-[82%] flex-col gap-0.5 sm:max-w-[75%] ${
                       own ? "items-end" : "items-start"
                     }`}
                   >
                     <div className="flex min-w-0 items-baseline gap-2">
-                      <span className="truncate font-display text-xs font-semibold text-text-dim">
-                        {message.username}
-                      </span>
+                      {own ? (
+                        <span className="truncate font-display text-xs font-semibold text-text-dim">
+                          {message.username}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setViewing(message.userId)}
+                          className="truncate font-display text-xs font-semibold text-text-dim transition-colors hover:text-cyan"
+                        >
+                          {message.username}
+                        </button>
+                      )}
                       <span className="shrink-0 font-body text-[0.7rem] text-text-faint">
                         {formatChatTime(message.createdAt)}
                       </span>
@@ -170,6 +198,10 @@ export function ChatMessageList({
           <ArrowDown className="h-3.5 w-3.5" />
           {missed === 1 ? "1 nouveau message" : `${missed} nouveaux messages`}
         </button>
+      )}
+
+      {viewing && (
+        <PlayerCardDialog userId={viewing} onClose={() => setViewing(null)} />
       )}
     </div>
   );

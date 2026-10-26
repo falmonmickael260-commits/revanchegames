@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/library/EmptyState";
 import { FavoritesTile } from "@/components/profile/FavoritesTile";
 import { SignOutButton } from "@/components/profile/SignOutButton";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
+import { GhostModeCard } from "@/components/social/GhostModeCard";
 import { createClient } from "@/lib/supabase/server";
 
 type GameStatsRow = {
@@ -144,6 +145,11 @@ async function ProfileContent() {
           <SignOutButton />
         </div>
       </div>
+
+      {/* Le mode fantôme est ici, et pas seulement dans les paramètres : on
+          décide de se rendre invisible au moment d'aller jouer, pas en
+          explorant des réglages. C'est le même réglage des deux côtés. */}
+      <GhostModeCard />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <FavoritesTile />

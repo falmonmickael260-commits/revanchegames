@@ -204,7 +204,8 @@ export async function requestPushDelivery(
     | { type: "friend_request"; friendshipId: string }
     | { type: "friend_accepted"; friendshipId: string }
     | { type: "game_invitation"; invitationId: string }
-    | { type: "platform_invite"; toUserId: string },
+    | { type: "platform_invite"; toUserId: string }
+    | { type: "direct_message"; messageId: string },
 ): Promise<void> {
   try {
     await fetch("/api/push/notify", {

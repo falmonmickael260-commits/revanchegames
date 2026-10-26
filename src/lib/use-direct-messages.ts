@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "./supabase/client";
 import { sendDirectMessage, markDirectMessagesRead, type DirectMessageRow } from "./social/api";
+import { requestPushDelivery } from "./push-client";
 import type { ChatMessage, ChatIdentity } from "./chat-shared";
 
 const HISTORY_LIMIT = 100;
@@ -134,6 +135,11 @@ export function useDirectMessages({
         return false;
       }
       ingest(result.data);
+      // Fait sonner le téléphone du destinataire. Volontairement sans
+      // `await` ni gestion d'erreur : le message est déjà en base et
+      // s'affichera de toute façon ; le push n'est qu'un supplément, et la
+      // route elle-même ignore les rafales.
+      void requestPushDelivery({ type: "direct_message", messageId: result.data.id });
       return true;
     },
     [other, ingest],

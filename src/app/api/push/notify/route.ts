@@ -37,7 +37,14 @@ type Body =
   | { type: "friend_request"; friendshipId: string }
   | { type: "friend_accepted"; friendshipId: string }
   | { type: "game_invitation"; invitationId: string }
-  | { type: "platform_invite"; toUserId: string };
+  | { type: "platform_invite"; toUserId: string }
+  | { type: "direct_message"; messageId: string };
+
+/**
+ * Deux messages envoyés coup sur coup ne font sonner le téléphone qu'une
+ * fois : au-delà du premier, la conversation parle d'elle-même.
+ */
+const DIRECT_MESSAGE_THROTTLE_SECONDS = 60;
 
 type PushRow = {
   id: string;
@@ -82,7 +89,7 @@ export async function POST(request: NextRequest) {
 
   let recipientId: string | null = null;
   let title = "Revanche Games";
-  let message = "";
+  let message_ = "";
   let url = "/friends";
   let tag = "rg-social";
 
@@ -110,7 +117,7 @@ export async function POST(request: NextRequest) {
       }
       recipientId = friendship.addressee_id;
       title = "Nouvelle demande d'ami";
-      message = `${actorName} veut devenir ton ami.`;
+      message_ = `${actorName} veut devenir ton ami.`;
       tag = "rg-friend-request";
     } else {
       // Seul celui qui accepte peut prévenir le demandeur.
@@ -119,7 +126,7 @@ export async function POST(request: NextRequest) {
       }
       recipientId = friendship.requester_id;
       title = "Demande d'ami acceptée";
-      message = `${actorName} a accepté ta demande d'ami.`;
+      message_ = `${actorName} a accepté ta demande d'ami.`;
       tag = "rg-friend-accepted";
     }
   } else if (body.type === "game_invitation") {
@@ -141,7 +148,7 @@ export async function POST(request: NextRequest) {
     recipientId = invitation.to_user_id;
     const label = gameName(invitation.game_slug);
     title = "Invitation à jouer";
-    message = `${actorName} t'invite à jouer${label ? ` à ${label}` : ""}.`;
+    message_ = `${actorName} t'invite à jouer${label ? ` à ${label}` : ""}.`;
     // Ouvre directement le jeu concerné ; la validité de l'invitation est
     // revérifiée à l'arrivée par la bannière d'invitation.
     url = `/play/${invitation.game_slug}`;
@@ -168,9 +175,54 @@ export async function POST(request: NextRequest) {
 
     recipientId = body.toUserId;
     title = "Un ami te fait signe";
-    message = `${actorName} t'invite à le/la retrouver sur Revanche Games.`;
+    message_ = `${actorName} t'invite à le/la retrouver sur Revanche Games.`;
     url = "/friends";
     tag = "rg-platform-invite";
+  } else if (body.type === "direct_message") {
+    if (typeof body.messageId !== "string") {
+      return NextResponse.json({ error: "identifiant manquant" }, { status: 400 });
+    }
+
+    // Lu avec les droits de l'appelant : RLS garantit qu'il est partie à
+    // cette conversation, sinon `data` est nul.
+    const { data: message } = await supabase
+      .from("direct_messages")
+      .select("from_user_id, to_user_id, created_at")
+      .eq("id", body.messageId)
+      .maybeSingle();
+
+    if (!message) return NextResponse.json({ error: "introuvable" }, { status: 404 });
+    // Seul l'expéditeur peut provoquer cette notification — sans quoi le
+    // destinataire pourrait se faire re-sonner lui-même indéfiniment.
+    if (message.from_user_id !== me.id) {
+      return NextResponse.json({ error: "interdit" }, { status: 403 });
+    }
+
+    // Anti-rafale : si un message a déjà été envoyé à cette personne dans la
+    // dernière minute, le téléphone a déjà sonné.
+    const since = new Date(
+      new Date(message.created_at).getTime() - DIRECT_MESSAGE_THROTTLE_SECONDS * 1000,
+    ).toISOString();
+
+    const { count } = await supabase
+      .from("direct_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("from_user_id", me.id)
+      .eq("to_user_id", message.to_user_id)
+      .gte("created_at", since)
+      .lt("created_at", message.created_at);
+
+    if ((count ?? 0) > 0) {
+      return NextResponse.json({ sent: 0, reason: "throttled" });
+    }
+
+    recipientId = message.to_user_id;
+    title = `Message de ${actorName}`;
+    // Volontairement sans le contenu du message : il s'afficherait sur un
+    // écran verrouillé, à la vue de n'importe qui.
+    message_ = "Tu as reçu un message privé.";
+    url = "/friends";
+    tag = `rg-dm-${me.id}`;
   } else {
     return NextResponse.json({ error: "type inconnu" }, { status: 400 });
   }
@@ -208,7 +260,7 @@ export async function POST(request: NextRequest) {
     process.env.VAPID_PRIVATE_KEY!,
   );
 
-  const payload = JSON.stringify({ title, body: message, url, tag });
+  const payload = JSON.stringify({ title, body: message_, url, tag });
   const dead: string[] = [];
   let sent = 0;
 
