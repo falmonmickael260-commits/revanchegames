@@ -545,6 +545,68 @@ Volontairement **hors** du test `profile_visible` : c'est une présentation que
 le joueur a écrite pour être lue, au même titre que son pseudonyme, alors que
 `profile_visible` protège ses statistiques et sa liste d'amis.
 
+## Groupes d'amis
+
+Migrations `20261026170000` à `20261026190000`. Trois tables —
+`friend_groups`, `friend_group_members`, `friend_group_messages` — et aucune
+duplication du socle existant : « être ami » reste `are_friends`, inviter un
+groupe crée de vraies lignes `game_invitations`, et les notifications passent
+par la table `notifications`.
+
+### Deux pièges rencontrés, à ne pas réintroduire
+
+**1. Récursion RLS.** Une politique sur `friend_group_members` qui interroge
+`friend_group_members` pour savoir si l'on est membre se rappelle elle-même —
+PostgreSQL répond « infinite recursion detected in policy ». D'où une fonction
+`security definer`, qui contourne RLS.
+
+**2. La fonction du prédicat doit être exécutable par `authenticated`.**
+C'est le bug le plus sournois de cette fonctionnalité. `is_group_member()`
+avait ses droits révoqués pour `authenticated`, or **une politique RLS
+s'évalue avec les droits de celui qui interroge** : la politique échouait donc
+pour tout le monde, membres compris.
+
+Et ça ne se voyait pas tout de suite : la *liste* des groupes s'affichait
+correctement, parce qu'elle passe par `my_friend_groups()`, qui est
+`security definer` et contourne RLS. Seul le chat restait vide. Un test qui
+vérifiait « un non-membre ne lit rien » passait — pour la mauvaise raison.
+
+La correction : `am_i_group_member(group_id)`, exécutable par
+`authenticated`, qui ne prend **que** l'identifiant du groupe et lit
+`auth.uid()` elle-même. On ne peut donc pas s'en servir pour sonder
+l'appartenance d'autrui, contrairement à `is_group_member(group, user)`, qui
+reste réservée aux fonctions internes.
+
+**Leçon générale** : quand une politique RLS appelle une fonction, toujours
+vérifier que le rôle qui interroge peut l'exécuter — et tester avec un
+*membre*, pas seulement avec un intrus.
+
+### Règles appliquées en base
+
+| Règle | Mécanisme |
+| --- | --- |
+| Pas de membre en double | clé primaire `(group_id, user_id)` |
+| On n'ajoute que ses amis | `are_friends` dans `create_friend_group` et `add_group_members` |
+| Gérer exige un rôle | `group_role()` vérifié dans chaque fonction |
+| Un membre ne peut pas se promouvoir | aucune politique d'écriture ; `muted` et `last_read_at` passent par leurs propres fonctions |
+| Départ du créateur | propriété au plus ancien administrateur, sinon au plus ancien membre, sinon le groupe est supprimé |
+
+Limites : 30 groupes par créateur, 50 membres par groupe.
+
+### Inviter un groupe à jouer
+
+`invite_group_to_play` crée une `game_invitation` par membre, avec le **même
+`room_code`**. Le parcours d'acceptation, l'expiration et la vérification du
+salon sont donc exactement ceux des invitations entre deux joueurs — et les
+membres qui acceptent tombent dans la même partie sans rien taper.
+
+La capacité annoncée du salon est respectée : on n'envoie pas plus
+d'invitations qu'il ne reste de places.
+
+**Dépend toujours de `rg_room`** : tant qu'aucun jeu ne lit ce paramètre, le
+membre arrive sur le bon jeu mais doit encore saisir le code. C'est le dernier
+maillon manquant de la chaîne, côté dépôts des jeux.
+
 ## Kilomax (Unity/WebGL) — cas à part
 
 Contrairement aux quatre jeux web, Kilomax n'a **aucun serveur à nous** : le

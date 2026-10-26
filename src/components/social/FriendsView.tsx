@@ -21,6 +21,7 @@ import { GAMES } from "@/data/games";
 import { useSocial } from "./SocialProvider";
 import { PresenceDot, presenceLabel } from "./PresenceDot";
 import { InviteFriendDialog } from "./InviteFriendDialog";
+import { GroupsSection } from "./GroupsSection";
 import { DirectMessageDialog } from "./DirectMessageDialog";
 import {
   blockPlayer,
@@ -327,6 +328,9 @@ export function FriendsView() {
           </ul>
         </section>
       )}
+
+      {/* ---- Groupes ---- */}
+      <GroupsSection />
 
       {/* ---- Liste d'amis ---- */}
       <section className="flex flex-col gap-3">

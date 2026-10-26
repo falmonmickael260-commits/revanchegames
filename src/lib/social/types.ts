@@ -43,7 +43,9 @@ export type NotificationKind =
   | "game_invitation"
   | "invitation_accepted"
   | "invitation_declined"
-  | "platform_invite";
+  | "platform_invite"
+  | "group_added"
+  | "group_removed";
 
 export type PlatformNotification = {
   id: string;

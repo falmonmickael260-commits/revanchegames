@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, Check, Gamepad2, Radio, UserPlus, UserCheck, X } from "lucide-react";
+import { Bell, Check, Gamepad2, Radio, UserPlus, UserCheck, X, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useSocial } from "./SocialProvider";
 import { respondToFriendRequest } from "@/lib/social/api";
@@ -40,6 +40,10 @@ function describe(notification: PlatformNotification): { icon: typeof Bell; text
       return { icon: Gamepad2, text: `${who} t'invite à jouer${game ? ` à ${game}` : ""}.` };
     case "invitation_accepted":
       return { icon: Check, text: `${who} a accepté ton invitation${game ? ` à ${game}` : ""}.` };
+    case "group_added":
+      return { icon: Users, text: `${who} t'a ajouté à un groupe.` };
+    case "group_removed":
+      return { icon: Users, text: `${who} t'a retiré d'un groupe.` };
     case "invitation_declined":
       return { icon: X, text: `${who} a refusé ton invitation${game ? ` à ${game}` : ""}.` };
     case "platform_invite":
