@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
-import { Gamepad2, Trophy, Target, UserPlus } from "lucide-react";
+import { Gamepad2, Trophy, Target, UserPlus, Settings } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatTile } from "@/components/ui/StatTile";
 import { EmptyState } from "@/components/library/EmptyState";
@@ -84,7 +84,11 @@ async function ProfileContent() {
 
   const [{ data: profile }, { data: catalog }, { data: stats }, { data: totals }] =
     await Promise.all([
-      supabase.from("profiles").select("username, avatar_url, created_at").eq("id", user.id).single(),
+      supabase
+        .from("profiles")
+        .select("username, avatar_url, created_at, player_tag")
+        .eq("id", user.id)
+        .single(),
       supabase.from("game_catalog").select("slug, display_name, sort_order").order("sort_order"),
       supabase
         .from("game_stats")
@@ -113,12 +117,26 @@ async function ProfileContent() {
             userId={user.id}
             initialUsername={username}
             initialAvatarUrl={profile?.avatar_url ?? null}
+            initialPlayerTag={profile?.player_tag ?? null}
           />
           <p className="mt-2 font-body text-sm text-text-faint">
             {memberSince ? `Membre depuis ${memberSince}` : "Membre Revanche Game"}
           </p>
         </div>
-        <SignOutButton />
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Seul accès aux paramètres sur mobile : la barre latérale qui les
+              proposait n'existe qu'à partir de lg, et c'est là qu'on active
+              les notifications — le réglage le plus utile sur téléphone. */}
+          <Link
+            href="/settings"
+            aria-label="Paramètres"
+            className="flex items-center gap-1.5 rounded-lg border border-border-soft px-3 py-2 font-display text-xs font-semibold text-text-dim transition-colors hover:border-border hover:text-text"
+          >
+            <Settings className="h-4 w-4" strokeWidth={2} />
+            <span className="hidden sm:inline">Paramètres</span>
+          </Link>
+          <SignOutButton />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

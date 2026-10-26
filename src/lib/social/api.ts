@@ -45,6 +45,11 @@ async function rpc<T>(name: string, args: Record<string, unknown>): Promise<Acti
   return { ok: true, data: data as T };
 }
 
+/** Choisit l'identifiant fixe du joueur — une seule fois, voir set_player_tag. */
+export function setPlayerTag(tag: string) {
+  return rpc<boolean>("set_player_tag", { p_tag: tag });
+}
+
 export async function searchPlayers(query: string): Promise<ActionResult<SearchResult[]>> {
   const result = await rpc<
     { id: string; username: string; avatar_url: string | null; relationship: string; accepts_requests: boolean }[]
@@ -85,6 +90,11 @@ export function unblockPlayer(otherId: string) {
   return rpc<boolean>("unblock_player", { p_other_id: otherId });
 }
 
+/** « Inviter à me rejoindre » — distinct de « Inviter à jouer » : aucune destination, juste un signal. */
+export function inviteToPlatform(toUserId: string) {
+  return rpc<boolean>("invite_to_platform", { p_to_user_id: toUserId });
+}
+
 export function sendGameInvitation(toUserId: string, gameSlug: string, roomCode?: string | null) {
   return rpc<string>("send_game_invitation", {
     p_to_user_id: toUserId,
@@ -110,6 +120,36 @@ export async function respondToGameInvitation(
 
 export function markNotificationsRead(ids?: string[]) {
   return rpc<number>("mark_notifications_read", { p_ids: ids ?? null });
+}
+
+export type DirectMessageRow = {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  body: string;
+  created_at: string;
+};
+
+export async function sendDirectMessage(
+  toUserId: string,
+  body: string,
+): Promise<ActionResult<DirectMessageRow>> {
+  return rpc<DirectMessageRow>("send_direct_message", { p_to_user_id: toUserId, p_body: body });
+}
+
+export function markDirectMessagesRead(otherId: string) {
+  return rpc<number>("mark_direct_messages_read", { p_other_id: otherId });
+}
+
+export async function unreadDirectMessageCounts(): Promise<ActionResult<Record<string, number>>> {
+  const result = await rpc<{ from_user_id: string; unread: number }[]>(
+    "unread_direct_message_counts",
+    {},
+  );
+  if (!result.ok) return result;
+  const map: Record<string, number> = {};
+  for (const row of result.data ?? []) map[row.from_user_id] = row.unread;
+  return { ok: true, data: map };
 }
 
 /** Préférences de confidentialité — écriture directe, protégée par RLS (update own). */

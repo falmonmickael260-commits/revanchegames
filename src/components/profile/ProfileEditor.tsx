@@ -2,9 +2,11 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Check, Pencil } from "lucide-react";
+import { Camera, Check, Copy, Lock, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/Avatar";
+import { setPlayerTag } from "@/lib/social/api";
+import { formatPlayerTag } from "@/lib/player-tag";
 
 const AVATAR_CHOICES = [
   "🦊", "🐼", "🦁", "🐸", "🐙", "🦉", "🐝", "🦋",
@@ -16,10 +18,13 @@ export function ProfileEditor({
   userId,
   initialUsername,
   initialAvatarUrl,
+  initialPlayerTag,
 }: {
   userId: string;
   initialUsername: string;
   initialAvatarUrl: string | null;
+  /** `null` : pas encore choisi. Une fois défini, ne peut plus changer. */
+  initialPlayerTag: string | null;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,6 +40,52 @@ export function ProfileEditor({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [avatarError, setAvatarError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const [playerTag, setPlayerTagValue] = useState(initialPlayerTag);
+  const [choosingTag, setChoosingTag] = useState(false);
+  const [tagDraft, setTagDraft] = useState("");
+  const [tagError, setTagError] = useState("");
+  const [savingTag, setSavingTag] = useState(false);
+
+  async function handleCopyTag() {
+    if (!playerTag) return;
+    try {
+      await navigator.clipboard.writeText(formatPlayerTag(playerTag));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* presse-papiers indisponible — rien à faire, le texte reste sélectionnable à la main */
+    }
+  }
+
+  async function handleChooseTag(event: FormEvent) {
+    event.preventDefault();
+    setTagError("");
+
+    const trimmed = tagDraft.trim();
+    if (trimmed.length < 3 || trimmed.length > 20) {
+      setTagError("L'identifiant doit contenir entre 3 et 20 caractères.");
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+      setTagError("L'identifiant ne peut contenir que des lettres, des chiffres et des _.");
+      return;
+    }
+
+    setSavingTag(true);
+    const result = await setPlayerTag(trimmed);
+    setSavingTag(false);
+
+    if (!result.ok) {
+      setTagError(result.error);
+      return;
+    }
+
+    setPlayerTagValue(trimmed);
+    setChoosingTag(false);
+    router.refresh();
+  }
 
   async function handleSaveName(event: FormEvent) {
     event.preventDefault();
@@ -196,6 +247,68 @@ export function ProfileEditor({
             </button>
           )}
           {nameError && <p className="mt-1 font-body text-xs text-violet-soft">{nameError}</p>}
+
+          {/* Contrairement au pseudonyme ci-dessus, modifiable à volonté :
+              cet identifiant se choisit une seule fois (voir set_player_tag,
+              qui refuse toute écriture si la colonne n'est déjà plus vide). */}
+          {playerTag ? (
+            <button
+              type="button"
+              onClick={handleCopyTag}
+              aria-label={`Copier l'identifiant fixe ${formatPlayerTag(playerTag)}`}
+              title="Fixe — choisi une seule fois, ne change jamais même si tu changes de pseudo. Donne-le à un ami pour qu'il te retrouve."
+              className="group mt-1 flex items-center gap-1.5 font-body text-xs text-text-faint transition-colors hover:text-text-dim"
+            >
+              <span className="tabular-nums tracking-wide">{formatPlayerTag(playerTag)}</span>
+              <Copy className="h-3 w-3 text-text-faint transition-colors group-hover:text-cyan" />
+              {copied && <span className="font-display text-[10px] font-semibold text-cyan">Copié</span>}
+            </button>
+          ) : choosingTag ? (
+            <form onSubmit={handleChooseTag} className="mt-1.5 flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <span className="font-body text-xs text-text-faint">RG-</span>
+                <input
+                  autoFocus
+                  value={tagDraft}
+                  onChange={(e) => setTagDraft(e.target.value)}
+                  maxLength={20}
+                  placeholder="Ex. MikeFR"
+                  className="w-full max-w-[160px] rounded-lg border border-border-soft bg-void px-2.5 py-1 font-body text-xs text-text focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20"
+                />
+                <button
+                  type="submit"
+                  disabled={savingTag || !tagDraft.trim()}
+                  className="shrink-0 rounded-lg bg-gradient-to-r from-cyan to-violet px-2.5 py-1 font-display text-[11px] font-semibold text-void disabled:opacity-50"
+                >
+                  {savingTag ? "…" : "Valider"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChoosingTag(false)}
+                  className="shrink-0 font-body text-[11px] text-text-faint hover:text-text-dim"
+                >
+                  Annuler
+                </button>
+              </div>
+              <p className="font-body text-[11px] text-text-faint">
+                Définitif : impossible à changer une fois validé.
+              </p>
+              {tagError && <p className="font-body text-xs text-violet-soft">{tagError}</p>}
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setTagDraft("");
+                setTagError("");
+                setChoosingTag(true);
+              }}
+              className="group mt-1 flex items-center gap-1.5 font-body text-xs text-text-faint transition-colors hover:text-cyan"
+            >
+              <Lock className="h-3 w-3" />
+              Choisir mon identifiant fixe
+            </button>
+          )}
         </div>
       </div>
 

@@ -5,6 +5,8 @@ import Link from "next/link";
 import {
   Check,
   Gamepad2,
+  MessageCircle,
+  Radio,
   Search,
   ShieldOff,
   UserMinus,
@@ -19,8 +21,10 @@ import { GAMES } from "@/data/games";
 import { useSocial } from "./SocialProvider";
 import { PresenceDot, presenceLabel } from "./PresenceDot";
 import { InviteFriendDialog } from "./InviteFriendDialog";
+import { DirectMessageDialog } from "./DirectMessageDialog";
 import {
   blockPlayer,
+  inviteToPlatform,
   removeFriend,
   respondToFriendRequest,
   searchPlayers,
@@ -52,6 +56,7 @@ export function FriendsView() {
     incomingRequests,
     outgoingRequests,
     blocked,
+    dmUnread,
     refresh,
   } = useSocial();
 
@@ -64,6 +69,11 @@ export function FriendsView() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [inviting, setInviting] = useState<FriendEntry | null>(null);
+  const [chatting, setChatting] = useState<FriendEntry | null>(null);
+  // Amis à qui on vient de faire signe : désactive le bouton localement, pour
+  // ne pas attendre une erreur serveur avant de refléter la limite de
+  // fréquence (deux heures, voir invite_to_platform).
+  const [pinged, setPinged] = useState<Set<string>>(new Set());
 
   const needle = query.trim();
   const longEnough = needle.length >= 2;
@@ -160,8 +170,8 @@ export function FriendsView() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Chercher un pseudonyme…"
-            aria-label="Chercher un joueur par pseudonyme"
+            placeholder="Pseudonyme ou identifiant RG-…"
+            aria-label="Chercher un joueur par pseudonyme ou par son identifiant fixe"
             className="w-full rounded-full border border-border-soft bg-surface py-2.5 pl-10 pr-4 font-body text-base text-text placeholder:text-text-faint focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20 sm:text-sm"
           />
         </div>
@@ -353,6 +363,54 @@ export function FriendsView() {
 
                   <button
                     type="button"
+                    onClick={() => setChatting(friend)}
+                    aria-label={
+                      dmUnread.get(friend.id)
+                        ? `Discuter avec ${friend.username} — ${dmUnread.get(friend.id)} message${(dmUnread.get(friend.id) ?? 0) > 1 ? "s" : ""} non lu${(dmUnread.get(friend.id) ?? 0) > 1 ? "s" : ""}`
+                        : `Discuter avec ${friend.username}`
+                    }
+                    className="relative flex shrink-0 items-center gap-1.5 rounded-lg border border-border-soft px-2.5 py-1.5 font-display text-xs font-semibold text-text-dim transition-colors hover:border-border hover:text-text"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Chat</span>
+                    {Boolean(dmUnread.get(friend.id)) && (
+                      <span className="absolute -right-1 -top-1 flex min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-cyan to-violet px-1 py-0.5 font-display text-[9px] font-bold leading-none text-void">
+                        {dmUnread.get(friend.id)}
+                      </span>
+                    )}
+                  </button>
+
+                  {friend.presence === "offline" && (
+                    <button
+                      type="button"
+                      disabled={pinged.has(friend.id)}
+                      onClick={async () => {
+                        setPinged((set) => new Set(set).add(friend.id));
+                        const result = await inviteToPlatform(friend.id);
+                        if (result.ok) {
+                          void requestPushDelivery({ type: "platform_invite", toUserId: friend.id });
+                        } else {
+                          // Limite de fréquence ou relation entre-temps rompue :
+                          // on ne bloque pas définitivement le bouton pour une
+                          // tentative qui n'a pas abouti.
+                          setPinged((set) => {
+                            const next = new Set(set);
+                            next.delete(friend.id);
+                            return next;
+                          });
+                          setError(result.error);
+                        }
+                      }}
+                      aria-label={`Faire signe à ${friend.username} de nous rejoindre`}
+                      title="Inviter à nous rejoindre sur Revanche Games"
+                      className="flex shrink-0 items-center gap-1.5 rounded-lg p-1.5 text-text-faint transition-colors hover:bg-surface-raised hover:text-cyan disabled:opacity-40"
+                    >
+                      <Radio className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
                     onClick={() => setInviting(friend)}
                     aria-label={`Inviter ${friend.username} à jouer`}
                     className="flex shrink-0 items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan to-violet px-2.5 py-1.5 font-display text-xs font-semibold text-void"
@@ -419,6 +477,10 @@ export function FriendsView() {
 
       {inviting && (
         <InviteFriendDialog friend={inviting} onClose={() => setInviting(null)} />
+      )}
+
+      {chatting && me && (
+        <DirectMessageDialog me={me} friend={chatting} onClose={() => setChatting(null)} />
       )}
     </Shell>
   );

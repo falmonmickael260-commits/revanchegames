@@ -21,5 +21,13 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "settings", label: "Paramètres", href: "/settings", icon: Settings },
 ];
 
-/** Subset surfaced in the mobile bottom bar — kept short for thumb reach. */
-export const MOBILE_NAV_IDS = ["home", "library", "chat", "profile"];
+/**
+ * Ce que la barre d'onglets du bas montre sur mobile.
+ *
+ * Cinq entrées maximum : au-delà, les libellés se chevauchent sur un écran
+ * de 375 px. « Amis » y figure parce que c'est de là que partent les
+ * invitations, et que la barre latérale qui le proposait n'existe pas sur
+ * mobile. Les paramètres, eux, sont atteignables depuis la page Profil —
+ * c'est là qu'on active les notifications, qui ne servent que sur téléphone.
+ */
+export const MOBILE_NAV_IDS = ["home", "library", "friends", "chat", "profile"];

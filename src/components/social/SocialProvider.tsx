@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { usePlatformIdentity, type PlatformIdentity } from "@/lib/use-identity";
 import { usePresence, type PresenceMap } from "@/lib/use-presence";
 import { useGameSession } from "@/components/game/GameSessionProvider";
-import { markNotificationsRead } from "@/lib/social/api";
+import { markNotificationsRead, unreadDirectMessageCounts } from "@/lib/social/api";
 import {
   readFriendship,
   toInvitation,
@@ -44,6 +44,9 @@ type SocialValue = {
 
   presence: PresenceMap;
 
+  /** Messages privés non lus, par ami — pour la pastille dans la liste d'amis. */
+  dmUnread: Map<string, number>;
+
   /** Recharge amis, demandes et invitations après une action. */
   refresh: () => Promise<void>;
   markAllRead: () => Promise<void>;
@@ -70,6 +73,7 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
   const [friendships, setFriendships] = useState<FriendshipRow[]>([]);
   const [notifications, setNotifications] = useState<PlatformNotification[]>([]);
   const [invitations, setInvitations] = useState<GameInvitation[]>([]);
+  const [dmUnread, setDmUnread] = useState<Map<string, number>>(new Map());
 
   const presence = usePresence({
     meId: me?.id ?? null,
@@ -120,10 +124,15 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
     setInvitations(((data ?? []) as unknown as InvitationRow[]).map(toInvitation));
   }, []);
 
+  const loadDmUnread = useCallback(async () => {
+    const result = await unreadDirectMessageCounts();
+    if (result.ok) setDmUnread(new Map(Object.entries(result.data)));
+  }, []);
+
   const refresh = useCallback(async () => {
     if (!me) return;
-    await Promise.all([loadFriendships(), loadNotifications(), loadInvitations(me.id)]);
-  }, [me, loadFriendships, loadNotifications, loadInvitations]);
+    await Promise.all([loadFriendships(), loadNotifications(), loadInvitations(me.id), loadDmUnread()]);
+  }, [me, loadFriendships, loadNotifications, loadInvitations, loadDmUnread]);
 
   // Chargement initial. Rien à vider à la déconnexion : les valeurs
   // exposées plus bas sont filtrées sur `me`, ce qui évite un `setState`
@@ -132,13 +141,13 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
     if (!me) return;
     let cancelled = false;
     (async () => {
-      await Promise.all([loadFriendships(), loadNotifications(), loadInvitations(me.id)]);
+      await Promise.all([loadFriendships(), loadNotifications(), loadInvitations(me.id), loadDmUnread()]);
       if (cancelled) return;
     })();
     return () => {
       cancelled = true;
     };
-  }, [me, loadFriendships, loadNotifications, loadInvitations]);
+  }, [me, loadFriendships, loadNotifications, loadInvitations, loadDmUnread]);
 
   // Temps réel. Les charges utiles de Realtime n'embarquent pas les jointures
   // de profil, donc on recharge la liste concernée plutôt que de reconstituer
@@ -166,12 +175,20 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, () => {
         void loadFriendships();
       })
+      // Un message privé (envoi *ou* marquage comme lu, donc "*" et non
+      // "INSERT") change le compteur de non-lus d'un ami précis — pas de
+      // conversation ouverte à mettre à jour ici, <DirectMessageDialog />
+      // tient son propre canal filtré sur la paire concernée pendant qu'elle
+      // est ouverte.
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, () => {
+        void loadDmUnread();
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [me, loadFriendships, loadNotifications, loadInvitations]);
+  }, [me, loadFriendships, loadNotifications, loadInvitations, loadDmUnread]);
 
   // Les invitations expirent sans événement en base : on réévalue
   // périodiquement pour retirer de l'écran celles qui ne sont plus valides.
@@ -266,6 +283,7 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
       unreadCount: me ? unreadCount : 0,
       invitations: me ? invitations : [],
       presence,
+      dmUnread: me ? dmUnread : new Map(),
       refresh,
       markAllRead,
     }),
@@ -280,6 +298,7 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
       unreadCount,
       invitations,
       presence,
+      dmUnread,
       refresh,
       markAllRead,
     ],

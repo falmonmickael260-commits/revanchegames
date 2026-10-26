@@ -192,6 +192,26 @@ body {
   z-index: -1;
 }
 
+/* ---------------------------------------------------------------------------
+ * Même principe que .rg-game-stage, pour /chat : un flex item borné seulement
+ * par `min-height` (jamais `height`) ne peut pas donner de hauteur réelle à un
+ * `h-full` descendant — s'il déborde, c'est le conteneur qui grandit, pas lui
+ * qui défile. La page entière défilait donc depuis le haut au lieu du seul
+ * historique. Des insets fixes, calés sur les mêmes variables que le reste de
+ * la coquille, donnent à /chat une hauteur réellement bornée.
+ * ------------------------------------------------------------------------- */
+.rg-chat-page-stage {
+  position: fixed;
+  top: var(--rg-header-h);
+  bottom: var(--rg-bottom-nav-h);
+  left: calc(var(--rg-sidebar-w) + var(--rg-safe-left));
+  right: var(--rg-safe-right);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* L'iframe remplit toute la scène. `display: block` supprime l'espace
  * d'interligne que les éléments en ligne laissent sous eux. */
 .rg-game-frame {

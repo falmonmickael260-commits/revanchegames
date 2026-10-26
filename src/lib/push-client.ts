@@ -69,6 +69,22 @@ export function isIosWithoutStandalone(): boolean {
   return !standalone;
 }
 
+/**
+ * Vrai quand la page tourne en PWA installée (écran d'accueil / fenêtre
+ * autonome), tous appareils confondus — pas seulement iOS (voir
+ * `isIosWithoutStandalone` pour le cas particulier d'iOS hors écran
+ * d'accueil). C'est le signal qui déclenche la proposition d'activer les
+ * notifications : en onglet de navigateur ordinaire, l'appareil n'a de toute
+ * façon pas vocation à rester ouvert en arrière-plan.
+ */
+export function isStandaloneDisplay(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    ("standalone" in navigator && (navigator as { standalone?: boolean }).standalone === true)
+  );
+}
+
 export async function readPushState(): Promise<PushState> {
   if (!isPushSupported()) return "unsupported";
   if (Notification.permission === "denied") return "denied";
@@ -187,7 +203,8 @@ export async function requestPushDelivery(
   payload:
     | { type: "friend_request"; friendshipId: string }
     | { type: "friend_accepted"; friendshipId: string }
-    | { type: "game_invitation"; invitationId: string },
+    | { type: "game_invitation"; invitationId: string }
+    | { type: "platform_invite"; toUserId: string },
 ): Promise<void> {
   try {
     await fetch("/api/push/notify", {

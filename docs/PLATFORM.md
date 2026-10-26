@@ -403,10 +403,15 @@ que d'afficher « 0 en ligne », qui serait faux.
 Accepter une invitation ouvre `/play/<slug>?room=<code>`, et la page de jeu
 ajoute `rg_room=<code>` à l'URL de l'iframe, à côté de `rg_token`.
 
-**À faire côté jeux** : aucun des cinq jeux ne lit encore `rg_room`. Tant
-qu'ils ne le font pas, l'invitation ouvre bien le bon jeu mais le joueur devra
-saisir le code de salon à la main. La convention est volontairement la même que
-`rg_token` : un paramètre d'URL lu à l'ouverture.
+**Les cinq jeux lisent maintenant `rg_room`** (Président, La Meute et 10000 le
+faisaient déjà ; Quiz Master et Kilomax l'ont reçu le 2026-10-26) : accepter
+une invitation rejoint directement le salon, sans ressaisie de code. Avec un
+pseudonyme déjà connu sur l'appareil (profil local ou — pour Kilomax —
+pseudonyme de plateforme), l'entrée est automatique ; sinon le code reste
+pré-rempli, à un clic de confirmer. La convention est volontairement la même
+que `rg_token` : un paramètre d'URL lu à l'ouverture (voir `platformRoom.ts`/
+`.js` dans chaque jeu). Commité localement sur la branche de chaque jeu ;
+pas encore déployé (voir « Ce qui reste à faire » en bas de page).
 
 Le code de salon fait partie de l'identité de la session de jeu
 (`GameSessionProvider`) : accepter une invitation vers un autre salon du même
@@ -507,3 +512,12 @@ installé sur cette machine, l'éditeur est en cours de téléchargement.
 - Aucune bannière "Connecté en tant que…" ajoutée côté interface pour La
   Meute et 10000 (contrairement à Président/Quiz Master) — purement
   cosmétique, l'attribution du compte fonctionne déjà sans elle
+- Le support `rg_room` de Quiz Master et Kilomax (2026-10-26) est commité sur
+  la branche de chaque jeu, pas encore poussé ni déployé — à faire avant que
+  l'auto-rejoint fonctionne réellement en production
+- Messagerie privée (`direct_messages`) et « inviter à nous rejoindre »
+  (`invite_to_platform`) ajoutées le 2026-10-26 : un bouton Chat par ami dans
+  `/friends` (voir `DirectMessageDialog.tsx`, `use-direct-messages.ts`) et un
+  bouton discret sur les amis hors ligne. Testées avec deux comptes réels
+  (historique, temps réel, pastille de non-lus, limite de fréquence de
+  `invite_to_platform`)

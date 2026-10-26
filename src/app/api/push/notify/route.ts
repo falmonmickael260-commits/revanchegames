@@ -36,7 +36,8 @@ import { GAMES } from "@/data/games";
 type Body =
   | { type: "friend_request"; friendshipId: string }
   | { type: "friend_accepted"; friendshipId: string }
-  | { type: "game_invitation"; invitationId: string };
+  | { type: "game_invitation"; invitationId: string }
+  | { type: "platform_invite"; toUserId: string };
 
 type PushRow = {
   id: string;
@@ -145,6 +146,31 @@ export async function POST(request: NextRequest) {
     // revérifiée à l'arrivée par la bannière d'invitation.
     url = `/play/${invitation.game_slug}`;
     tag = `rg-invitation-${invitation.game_slug}`;
+  } else if (body.type === "platform_invite") {
+    if (typeof body.toUserId !== "string") {
+      return NextResponse.json({ error: "identifiant manquant" }, { status: 400 });
+    }
+
+    // Pas de ligne à relire par id ici (une notification n'a pas d'« auteur
+    // vérifiable » après coup) : on revérifie directement l'amitié, avec les
+    // droits de l'appelant — RLS ne renvoie une ligne que si l'un des deux
+    // est bien lui, donc ce select ne peut pas confirmer une amitié à
+    // laquelle il n'est pas partie.
+    const { data: friendship } = await supabase
+      .from("friendships")
+      .select("id")
+      .or(`requester_id.eq.${me.id},addressee_id.eq.${me.id}`)
+      .or(`requester_id.eq.${body.toUserId},addressee_id.eq.${body.toUserId}`)
+      .eq("status", "accepted")
+      .maybeSingle();
+
+    if (!friendship) return NextResponse.json({ error: "interdit" }, { status: 403 });
+
+    recipientId = body.toUserId;
+    title = "Un ami te fait signe";
+    message = `${actorName} t'invite à le/la retrouver sur Revanche Games.`;
+    url = "/friends";
+    tag = "rg-platform-invite";
   } else {
     return NextResponse.json({ error: "type inconnu" }, { status: 400 });
   }
