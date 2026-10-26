@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { MessageCircle } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { ChatRoom, type ChatMessage } from "@/components/chat/ChatRoom";
+import { ChatRoom } from "@/components/chat/ChatRoom";
+import { rowsToMessages, type ChatHistoryRow } from "@/lib/chat-shared";
 import { createClient } from "@/lib/supabase/server";
 
 export default function ChatPage() {
@@ -36,16 +37,10 @@ async function ChatContent() {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  const initialMessages: ChatMessage[] = ((rows as unknown as RawMessageRow[]) ?? [])
-    .map((row) => ({
-      id: row.id,
-      body: row.body,
-      createdAt: row.created_at,
-      userId: row.user_id,
-      username: row.profiles?.username ?? "Joueur",
-      avatarUrl: row.profiles?.avatar_url ?? null,
-    }))
-    .reverse();
+  // Même conversion que celle utilisée par le chargement côté navigateur
+  // (`useChatFeed`), pour que l'historique rendu côté serveur et celui chargé
+  // par le chat flottant ne puissent pas differer.
+  const initialMessages = rowsToMessages(rows as unknown as ChatHistoryRow[]);
 
   let me: { id: string; username: string; avatarUrl: string | null } | null = null;
   if (user) {
@@ -75,10 +70,3 @@ async function ChatContent() {
   );
 }
 
-type RawMessageRow = {
-  id: string;
-  body: string;
-  created_at: string;
-  user_id: string;
-  profiles: { username: string; avatar_url: string | null } | null;
-};

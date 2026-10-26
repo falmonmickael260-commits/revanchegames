@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
-import { PartyPopper, AlertCircle, MailQuestion } from "lucide-react";
+import { PartyPopper, AlertCircle, MailQuestion, Smartphone, WifiOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { SuccessBadge } from "@/components/auth/SuccessBadge";
 import { ResendConfirmation } from "@/components/auth/ResendConfirmation";
@@ -12,9 +12,25 @@ export default function ConfirmedPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   return (
-    <Suspense fallback={<div className="flex min-h-[calc(100vh-64px)] items-center justify-center" />}>
+    <Suspense fallback={<ConfirmedSkeleton />}>
       <ConfirmedContent searchParamsPromise={searchParams} />
     </Suspense>
+  );
+}
+
+// Le temps que la session soit vérifiée côté serveur, on affiche un état de
+// chargement explicite — jamais un message de réussite ni d'échec, puisqu'à
+// cet instant on ne sait pas encore lequel des deux est vrai.
+function ConfirmedSkeleton() {
+  return (
+    <Shell>
+      <span className="flex h-16 w-16 items-center justify-center rounded-full border border-border-soft bg-surface">
+        <span className="h-7 w-7 animate-spin rounded-full border-2 border-border border-t-cyan" />
+      </span>
+      <p className="mt-5 font-display text-sm font-semibold text-text-dim">
+        Vérification de ton adresse e-mail…
+      </p>
+    </Shell>
   );
 }
 
@@ -26,9 +42,10 @@ async function ConfirmedContent({
   await connection();
   const { status } = await searchParamsPromise;
 
-  // The success message is never shown on the strength of a query param alone
-  // — only a real, server-verified session (set by /auth/callback after a
-  // successful exchangeCodeForSession) counts as "really confirmed".
+  // Le message de réussite n'est jamais affiché sur la foi d'un paramètre
+  // d'URL : seule une session réelle, vérifiée côté serveur (posée par
+  // /auth/callback après une validation réussie du jeton), compte comme
+  // « vraiment confirmé ».
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
 
@@ -40,7 +57,8 @@ async function ConfirmedContent({
           Bienvenue sur Revanche Game !
         </h1>
         <p className="mt-2 max-w-sm font-body text-sm text-text-dim">
-          Ton compte est confirmé. Tu peux maintenant retrouver tes amis et commencer à jouer.
+          Ton adresse e-mail est confirmée. Tu peux maintenant retrouver tes amis et commencer à
+          jouer.
         </p>
         <Link
           href="/"
@@ -52,19 +70,52 @@ async function ConfirmedContent({
     );
   }
 
-  if (status === "expired") {
+  // Lien ouvert dans un navigateur différent de celui de l'inscription : le
+  // vérificateur PKCE n'y est pas. Rien n'est cassé côté compte — il suffit
+  // d'un lien qui ne dépende pas du navigateur, ou de se connecter.
+  if (status === "other_browser") {
     return (
       <Shell>
-        <IconBadge icon={MailQuestion} />
+        <IconBadge icon={Smartphone} />
         <h1 className="mt-5 font-display text-xl font-semibold text-text sm:text-2xl">
-          Ce lien n&apos;est plus valide
+          Ouvre le lien sur l&apos;appareil de ton inscription
         </h1>
         <p className="mt-2 max-w-sm font-body text-sm text-text-dim">
-          Il a peut-être expiré, ou déjà été utilisé — ton compte est alors sans doute déjà confirmé.
-          Essaie de te connecter, ou demande un nouveau lien ci-dessous.
+          Ce lien a été ouvert dans un autre navigateur que celui utilisé pour créer le compte.
+          Réessaie depuis cet appareil-là, ou demande un nouveau lien ci-dessous : le nouveau
+          fonctionnera partout.
         </p>
-        <Link href="/sign-in" className="mt-5 font-display text-sm font-semibold text-cyan hover:text-cyan-soft">
-          J&apos;ai déjà un compte confirmé — me connecter
+        <div className="mt-6 w-full max-w-xs">
+          <ResendConfirmation />
+        </div>
+        <Link
+          href="/sign-in"
+          className="mt-4 font-display text-sm font-semibold text-text-dim hover:text-text"
+        >
+          Se connecter
+        </Link>
+      </Shell>
+    );
+  }
+
+  // Jeton déjà consommé — second clic, ou pré-chargement du lien par le client
+  // de messagerie. Le compte est très probablement déjà confirmé.
+  if (status === "used") {
+    return (
+      <Shell>
+        <IconBadge icon={PartyPopper} />
+        <h1 className="mt-5 font-display text-xl font-semibold text-text sm:text-2xl">
+          Cette adresse est déjà confirmée
+        </h1>
+        <p className="mt-2 max-w-sm font-body text-sm text-text-dim">
+          Ce lien avait déjà été utilisé — il n&apos;est valable qu&apos;une fois. Tu peux te
+          connecter directement.
+        </p>
+        <Link
+          href="/sign-in"
+          className="mt-7 rounded-lg bg-gradient-to-r from-cyan to-violet px-6 py-3 font-display text-sm font-semibold text-void"
+        >
+          Se connecter
         </Link>
         <div className="mt-6 w-full max-w-xs">
           <ResendConfirmation />
@@ -73,21 +124,72 @@ async function ConfirmedContent({
     );
   }
 
-  if (status === "error") {
+  if (status === "expired") {
     return (
       <Shell>
-        <IconBadge icon={AlertCircle} tone="error" />
+        <IconBadge icon={MailQuestion} />
         <h1 className="mt-5 font-display text-xl font-semibold text-text sm:text-2xl">
-          Un problème est survenu
+          Ce lien a expiré
         </h1>
         <p className="mt-2 max-w-sm font-body text-sm text-text-dim">
-          La confirmation n&apos;a pas pu aboutir. Réessaie en cliquant à nouveau sur le lien reçu par
-          e-mail, ou demande un nouveau lien ci-dessous.
+          Demande un nouvel e-mail de confirmation ci-dessous. Si ton compte était déjà confirmé,
+          tu peux simplement te connecter.
         </p>
         <div className="mt-6 w-full max-w-xs">
           <ResendConfirmation />
         </div>
-        <Link href="/sign-in" className="mt-4 font-display text-sm font-semibold text-text-dim hover:text-text">
+        <Link
+          href="/sign-in"
+          className="mt-4 font-display text-sm font-semibold text-text-dim hover:text-text"
+        >
+          J&apos;ai déjà un compte confirmé — me connecter
+        </Link>
+      </Shell>
+    );
+  }
+
+  if (status === "invalid") {
+    return (
+      <Shell>
+        <IconBadge icon={AlertCircle} tone="error" />
+        <h1 className="mt-5 font-display text-xl font-semibold text-text sm:text-2xl">
+          Ce lien est incomplet
+        </h1>
+        <p className="mt-2 max-w-sm font-body text-sm text-text-dim">
+          Certains clients de messagerie coupent les liens trop longs. Essaie de copier le lien
+          entier depuis l&apos;e-mail, ou demande-en un nouveau ci-dessous.
+        </p>
+        <div className="mt-6 w-full max-w-xs">
+          <ResendConfirmation />
+        </div>
+        <Link
+          href="/sign-in"
+          className="mt-4 font-display text-sm font-semibold text-text-dim hover:text-text"
+        >
+          Se connecter
+        </Link>
+      </Shell>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <Shell>
+        <IconBadge icon={WifiOff} tone="error" />
+        <h1 className="mt-5 font-display text-xl font-semibold text-text sm:text-2xl">
+          Impossible de vérifier ton adresse pour le moment
+        </h1>
+        <p className="mt-2 max-w-sm font-body text-sm text-text-dim">
+          Vérifie ta connexion et réessaie en cliquant à nouveau sur le lien reçu par e-mail. Si
+          cela persiste, demande un nouveau lien ci-dessous.
+        </p>
+        <div className="mt-6 w-full max-w-xs">
+          <ResendConfirmation />
+        </div>
+        <Link
+          href="/sign-in"
+          className="mt-4 font-display text-sm font-semibold text-text-dim hover:text-text"
+        >
           Se connecter
         </Link>
       </Shell>
@@ -97,7 +199,9 @@ async function ConfirmedContent({
   return (
     <Shell>
       <IconBadge icon={PartyPopper} />
-      <h1 className="mt-5 font-display text-xl font-semibold text-text sm:text-2xl">Pas encore connecté</h1>
+      <h1 className="mt-5 font-display text-xl font-semibold text-text sm:text-2xl">
+        Pas encore connecté
+      </h1>
       <p className="mt-2 max-w-sm font-body text-sm text-text-dim">
         Connecte-toi pour accéder à ton espace joueur Revanche Game.
       </p>
@@ -112,8 +216,10 @@ async function ConfirmedContent({
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
+  // min-h-dvh (et non 100vh) : sur mobile, dvh suit la hauteur réellement
+  // visible, barre d'adresse comprise — le contenu reste centré sans déborder.
   return (
-    <div className="flex min-h-[calc(100vh-64px)] flex-col items-center justify-center px-4 py-12 text-center">
+    <div className="flex min-h-[calc(100dvh-var(--rg-header-h))] flex-col items-center justify-center px-4 py-12 text-center">
       {children}
     </div>
   );
@@ -132,7 +238,10 @@ function IconBadge({
         tone === "error" ? "border-violet/40 bg-violet/10" : "border-border-soft bg-surface"
       }`}
     >
-      <Icon className={`h-7 w-7 ${tone === "error" ? "text-violet-soft" : "text-text-faint"}`} strokeWidth={1.8} />
+      <Icon
+        className={`h-7 w-7 ${tone === "error" ? "text-violet-soft" : "text-text-faint"}`}
+        strokeWidth={1.8}
+      />
     </span>
   );
 }

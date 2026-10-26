@@ -11,9 +11,11 @@ export function BottomNav() {
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border-soft bg-abyss/90 backdrop-blur-lg lg:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      // Doit valoir exactement `--rg-bottom-nav-h`, la place que <ShellFrame />
+      // reserve en bas des pages : 56 px utiles + la zone de securite.
+      style={{ height: "var(--rg-bottom-nav-h)", paddingBottom: "var(--rg-safe-bottom)" }}
     >
-      <ul className="flex items-stretch justify-around">
+      <ul className="flex h-full items-stretch justify-around">
         {items.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           const Icon = item.icon;

@@ -12,7 +12,10 @@ export function Sidebar() {
   const availableCount = GAMES.filter((g) => g.enabled).length;
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border-soft bg-abyss/60 px-4 py-6 lg:flex">
+    <aside
+      className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border-soft bg-abyss/60 px-4 pb-6 lg:flex"
+      style={{ paddingTop: "calc(1.5rem + var(--rg-safe-top))" }}
+    >
       <div className="px-2 pb-8">
         <Logo />
       </div>

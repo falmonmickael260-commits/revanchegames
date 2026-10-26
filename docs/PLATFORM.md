@@ -163,6 +163,174 @@ profil de la coquille s'occupe du reste.
   déclaré à l'événement `victory` du `GameController` — même niveau de
   test que La Meute.
 
+## La coquille : écran de jeu, partie persistante, chat flottant
+
+Trois choix structurants, à connaître avant de toucher à `/play/<slug>` ou à
+la coquille.
+
+### 1. L'iframe du jeu ne vit pas dans la route
+
+`/play/[slug]/page.tsx` ne rend plus le jeu : il calcule la cible (slug +
+jeton d'identité signé, les deux seulement possibles côté serveur) et la
+déclare via `<GameMount />`. L'iframe est rendue par `<GameViewport />`, monté
+dans `<ShellFrame />` — c'est-à-dire dans le layout racine, qui n'est jamais
+démonté d'une route à l'autre.
+
+Pourquoi : tant que l'iframe vivait dans la route, ouvrir son profil ou le
+chat la démontait, donc tuait le moteur du jeu et sa connexion temps réel. En
+la sortant de l'arbre des routes, changer de section ne fait que la *masquer*
+(`.rg-game-stage[data-backgrounded]`), et la partie continue.
+
+Deux détails à ne pas « simplifier » par erreur :
+
+- `GameSessionProvider.start()` **renvoie l'état précédent à l'identique** si
+  le slug est déjà actif. Revenir sur `/play/<slug>` re-rend la page côté
+  serveur, qui re-signe un jeton et produit donc une `src` différente ; si on
+  l'appliquait, l'attribut `src` changerait et le navigateur **rechargerait le
+  jeu**. C'est tout l'intérêt du mécanisme.
+- La mise en arrière-plan utilise `visibility: hidden`, **pas**
+  `display: none`. Un iframe passé en `display: none` est redimensionné à 0×0,
+  ce qui envoie au jeu un `resize` vers une taille nulle (canvas replié, mise
+  en page cassée au retour). `visibility: hidden` conserve la boîte, donc les
+  dimensions.
+
+L'état de la partie vit **en mémoire seulement**, jamais dans localStorage :
+une partie ne survit pas à la fermeture de l'onglet, et il ne faut pas
+proposer de reprendre une partie que le serveur du jeu a déjà abandonnée.
+
+### 2. Les hauteurs de la coquille sont des variables, pas des estimations
+
+`globals.css` expose `--rg-header-h`, `--rg-bottom-nav-h`, `--rg-sidebar-w`,
+`--rg-game-bar-h` et les `--rg-safe-*` (zones de sécurité iPhone). Les
+composants concernés portent ces hauteurs, et les pages qui réservent de la
+place lisent les mêmes variables.
+
+Ce que ça corrige : chaque page refaisait le calcul en `calc(100vh - 64px)`.
+Le 64 px était une approximation de l'en-tête, et `100vh` vaut sur mobile la
+hauteur du viewport *large* (barre d'adresse masquée). Sur l'écran de jeu, on
+cumulait donc en-tête + `100vh - 64px` + `pb-20` (80 px réservés à la barre
+d'onglets) = **`100vh` + 80 px** : le joueur devait défiler pour voir sa
+partie. Au passage, `pb-20` était aussi trop court sur un iPhone à indicateur
+d'accueil (56 + 34 = 90 px > 80 px), et le bas des pages passait sous la barre.
+
+La scène de jeu, elle, n'utilise aucune hauteur : elle est calée par des
+*insets* `position: fixed` (`top`/`bottom`/`left`/`right`). Un élément fixe
+ainsi calé est dimensionné par le navigateur contre le viewport réellement
+affiché, et re-dimensionné tout seul quand la barre d'adresse se replie, quand
+l'appareil tourne ou quand le clavier s'ouvre. `overflow: hidden` est porté par
+cette scène seule — jamais par `<html>` ou `<body>`, pour ne pas bloquer le
+défilement du reste de la plateforme.
+
+### 3. Un seul moteur de chat, deux présentations
+
+`useChatFeed` (historique, temps réel, envoi, déduplication) et
+`<ChatMessageList>` / `<ChatComposer>` sont partagés par la page `/chat` et le
+chat flottant `<ChatDock />`. Un message envoyé d'un côté apparaît de l'autre.
+
+- Ce qui est *partageable entre serveur et navigateur* vit dans
+  `lib/chat-shared.ts`, **sans** directive `"use client"` : la page `/chat`
+  rend son historique initial côté serveur et doit pouvoir appeler
+  `rowsToMessages`, ce qu'un module client lui interdit (« Attempted to call
+  rowsToMessages() from the server »).
+- Le dock n'est monté que **pendant une partie**, et il se met en retrait
+  (`suspended`) sur `/chat`, qui tient déjà son propre abonnement : pas de
+  double canal Realtime sur la même table.
+- Les permissions ne sont pas réimplémentées : RLS sur `chat_messages`
+  (lecture pour tous, insertion de ses seuls messages) reste la seule
+  autorité.
+- L'état de lecture (`rg:chat-last-read`) passe par `createLocalStore`, comme
+  les favoris et le profil.
+
+## Confirmation d'e-mail — la panne « Safari ne peut pas ouvrir la page »
+
+**Cause.** En production (Railway), `request.nextUrl.origin` ne renvoie pas le
+domaine public mais l'adresse interne du conteneur, `https://localhost:8080`
+(schéma pris dans `x-forwarded-proto`, hôte dans l'adresse d'écoute).
+`/auth/callback` construisait toutes ses redirections dessus. Constaté avant
+correction :
+
+```
+GET https://revanchegames-production.up.railway.app/auth/callback
+  → 307 Location: https://localhost:8080/sign-in
+```
+
+Le lien de confirmation arrivait donc bien jusqu'à la plateforme, puis la
+renvoyait vers une adresse qui n'existe que dans le conteneur — d'où l'erreur
+de connexion sur iPhone et Android. **La réinitialisation de mot de passe
+passait par la même route et était cassée de la même façon**, sans que ça ait
+été remarqué.
+
+**Correction.** `lib/site-url.ts` n'essaie pas de deviner le domaine public :
+il ne l'écrit pas du tout. Un en-tête `Location` relatif est autorisé
+(RFC 7231 §7.1.2) et chaque navigateur le résout contre l'URL qu'il a
+réellement demandée. Aucune variable d'environnement n'est nécessaire, sur
+n'importe quel hébergeur et n'importe quel domaine.
+`NEXT_PUBLIC_SITE_URL` reste un réglage optionnel pour forcer un domaine
+canonique.
+
+**Deux formats de lien acceptés**, parce qu'ils ne se valident pas pareil et
+qu'il ne faut pas les mélanger :
+
+| Lien | Méthode | Multi-appareils |
+| --- | --- | --- |
+| `?token_hash=…&type=signup` | `verifyOtp` | oui |
+| `?code=…` (`{{ .ConfirmationURL }}` par défaut) | `exchangeCodeForSession` | non |
+
+Le code PKCE ne peut être échangé que par le navigateur qui a lancé
+l'inscription (le vérificateur y est en cookie) — s'inscrire sur l'ordinateur
+puis relever ses e-mails sur le téléphone échouait. `confirmation.html` utilise
+donc maintenant `{{ .TokenHash }}`, et `/auth/callback` gère les deux formats.
+
+### Le modèle d'e-mail est bloqué par le palier gratuit
+
+**En l'état, `confirmation.html` n'est pas déployable** — et ne l'a jamais été.
+Tentative réelle (CLI 2.122.0, projet lié) :
+
+```
+$ npx supabase config push
+auth.email.template.confirmation.subject [update]
+  local:  "Bienvenue sur Revanche Game — Confirme ton compte !"
+  remote: "Confirm your email address"
+→ 400 Email template modification is not available for free tier projects
+  using the default email provider. Please upgrade your plan or configure
+  a custom SMTP provider.
+```
+
+Le sujet distant est `"Confirm your email address"` : c'est le **défaut de
+Supabase**. La production envoie donc l'e-mail standard, pas celui de ce
+dépôt, et le lien reçu est un `{{ .ConfirmationURL }}` au format `?code=`.
+
+Conséquences à garder en tête :
+
+- **La correction du « Safari ne peut pas ouvrir la page » ne dépend pas de
+  ça.** Elle est dans le code applicatif (`lib/site-url.ts`), déployé par
+  l'hébergeur de la coquille, et `/auth/callback` gère le format `?code=`.
+- **Le passage à `token_hash` est en sommeil** : il prendra effet tout seul le
+  jour où le modèle sera déployable. D'ici là, la confirmation reste limitée
+  au navigateur d'origine, et `/auth/confirmed?status=other_browser` est
+  justement l'écran qui explique ce cas au joueur.
+
+Pour débloquer : configurer un SMTP personnalisé (Resend, Brevo, SendGrid ont
+des paliers gratuits) dans `[auth.email.smtp]` + le tableau de bord, puis
+relancer `npx supabase config push`.
+
+### Avant tout `config push` — vérifier le diff
+
+`config push` envoie **tout** `config.toml`, pas seulement ce qu'on vient de
+changer. Toujours lancer `npx supabase config diff` d'abord.
+
+Cas réellement rencontré : `[auth.sms.twilio]` portait `enabled = true` avec un
+commentaire affirmant que ce champ « n'est pas comparé/poussé par la CLI ». Le
+diff disait le contraire — `update`, local `true` → distant `false`, plus deux
+`unmanaged-placeholder` en `local_only`. Un push aurait activé un fournisseur
+SMS avec des identifiants factices en production. Remis à `false`, qui est la
+valeur correcte (la plateforme n'envoie aucun SMS) et celle déjà en place.
+
+Noter aussi que `auth.rate_limit.email_sent` est listé comme **non comparé** :
+la valeur déclarée ici (`2`) ne reflète pas forcément celle du projet. Le
+fournisseur d'e-mail intégré de Supabase est par ailleurs fortement limité en
+débit — à vérifier dans le tableau de bord si des joueurs ne reçoivent rien.
+
 ## Kilomax (Unity/WebGL) — cas à part
 
 Contrairement aux quatre jeux web, Kilomax n'a **aucun serveur à nous** : le

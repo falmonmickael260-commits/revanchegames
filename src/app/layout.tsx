@@ -40,6 +40,15 @@ export const viewport: Viewport = {
   themeColor: "#05070d",
   width: "device-width",
   initialScale: 1,
+  // La vue s'étend sous l'encoche et l'indicateur d'accueil ; les zones de
+  // sécurité sont ensuite rendues par `env(safe-area-inset-*)`, exposées en
+  // variables `--rg-safe-*` dans globals.css.
+  viewportFit: "cover",
+  // Le clavier virtuel redimensionne la mise en page au lieu de se superposer,
+  // pour que la zone de saisie du chat reste visible pendant la frappe. Pris
+  // en charge par Chrome Android ; sur iOS, `useKeyboardInset` fait le travail
+  // à partir de `visualViewport`.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

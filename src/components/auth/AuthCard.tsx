@@ -12,7 +12,7 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4 py-12">
+    <div className="flex min-h-[calc(100dvh-var(--rg-header-h))] items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm rounded-2xl border border-border-soft bg-surface p-7 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
         <p className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-cyan">
           {eyebrow}
@@ -41,7 +41,9 @@ export function Field({
       </span>
       <input
         {...inputProps}
-        className="w-full rounded-lg border border-border-soft bg-void px-3.5 py-2.5 font-body text-sm text-text placeholder:text-text-faint focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20"
+        // text-base (16 px) sous sm : en dessous de 16 px, iOS Safari zoome
+        // automatiquement au focus et le formulaire sort de l'ecran.
+        className="w-full rounded-lg border border-border-soft bg-void px-3.5 py-2.5 font-body text-base text-text placeholder:text-text-faint focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20 sm:text-sm"
       />
     </label>
   );
@@ -50,14 +52,16 @@ export function Field({
 export function SubmitButton({
   children,
   pending,
+  disabled,
 }: {
   children: ReactNode;
   pending?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className="w-full rounded-lg bg-gradient-to-r from-cyan to-violet px-4 py-2.5 font-display text-sm font-semibold text-void transition-opacity disabled:opacity-60"
     >
       {pending ? "…" : children}

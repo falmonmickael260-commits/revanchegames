@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { GAMES } from "@/data/games";
 import { createPlatformToken } from "@/lib/platform-token";
 import { createClient } from "@/lib/supabase/server";
+import { GameMount } from "@/components/game/GameMount";
 
 function resolveGameUrl(slug: string, fallback?: string): string | undefined {
   const envKey = `GAME_URL_${slug.toUpperCase().replace(/-/g, "_")}`;
@@ -22,13 +23,36 @@ export function generateStaticParams() {
 // see Next.js 16 Cache Components ("Maximizing the static shell").
 export default function PlayGamePage({ params }: { params: Promise<{ slug: string }> }) {
   return (
-    <Suspense fallback={<div className="h-[calc(100vh-64px)] w-full animate-pulse bg-surface" />}>
-      <GameFrame paramsPromise={params} />
+    <Suspense fallback={<GameBoot />}>
+      <GameLauncher paramsPromise={params} />
     </Suspense>
   );
 }
 
-async function GameFrame({ paramsPromise }: { paramsPromise: Promise<{ slug: string }> }) {
+/**
+ * Attente de la cible du jeu (session + jeton signés côté serveur).
+ *
+ * Volontairement calé sur la même géométrie que la scène de <GameViewport />
+ * via `.rg-game-stage` : l'écran ne bouge pas d'un pixel quand le jeu
+ * s'y substitue.
+ */
+function GameBoot() {
+  return (
+    <div className="rg-game-stage items-center justify-center">
+      <span className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-cyan" />
+    </div>
+  );
+}
+
+/**
+ * Ne rend pas le jeu : le déclare.
+ *
+ * L'iframe vit dans <GameViewport />, monté dans la coquille, pour que la
+ * partie ne soit pas détruite dès que le joueur ouvre une autre section (voir
+ * GameSessionProvider). Cette page reste responsable de ce qu'elle seule peut
+ * faire — résoudre le slug et signer le jeton d'identité côté serveur.
+ */
+async function GameLauncher({ paramsPromise }: { paramsPromise: Promise<{ slug: string }> }) {
   // createPlatformToken() below reads Date.now() (token iat/exp), which Next.js's
   // Cache Components treat as unstable during prerendering — connection() marks
   // this subtree as request-time only (see the same fix in app/profile/page.tsx).
@@ -58,14 +82,5 @@ async function GameFrame({ paramsPromise }: { paramsPromise: Promise<{ slug: str
     }
   }
 
-  return (
-    <div className="flex h-[calc(100vh-64px)] w-full flex-col">
-      <iframe
-        src={iframeSrc}
-        title={game.name}
-        className="h-full w-full flex-1 border-0"
-        allow="fullscreen; autoplay"
-      />
-    </div>
-  );
+  return <GameMount slug={slug} name={game.name} src={iframeSrc} />;
 }

@@ -31,7 +31,14 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border-soft bg-void/80 px-4 py-3 backdrop-blur-lg sm:px-6">
+    <header
+      className="sticky top-0 z-30 flex shrink-0 items-center gap-3 border-b border-border-soft bg-void/80 px-4 backdrop-blur-lg sm:px-6"
+      // Hauteur portee par la variable partagee plutot que deduite du padding :
+      // les pages qui reservent la place de l'en-tete lisent la meme valeur.
+      // `--rg-safe-top` ne vaut 0 qu'en navigateur ; en PWA installee sur iOS,
+      // la vue s'etend sous la barre d'etat et il faut la compenser.
+      style={{ height: "var(--rg-header-h)", paddingTop: "var(--rg-safe-top)" }}
+    >
       <div className="lg:hidden">
         <Logo compact />
       </div>
