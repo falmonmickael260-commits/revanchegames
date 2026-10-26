@@ -51,7 +51,7 @@ export default function SignUpPage() {
       password,
       options: {
         data: { username: trimmed },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/confirmed`,
       },
     });
 

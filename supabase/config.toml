@@ -252,6 +252,11 @@ otp_expiry = 3600
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
+# E-mail de confirmation d'inscription — voir docs/PLATFORM.md.
+[auth.email.template.confirmation]
+subject = "Bienvenue sur Revanche Game — Confirme ton compte !"
+content_path = "./supabase/templates/confirmation.html"
+
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
 # enabled = true
@@ -291,9 +296,12 @@ max_frequency = "5s"
 
 # Configure one of the supported SMS providers: `twilio`, `twilio_verify`, `messagebird`, `textlocal`, `vonage`.
 [auth.sms.twilio]
-enabled = false
-account_sid = ""
-message_service_sid = ""
+enabled = true
+# Pas de vraie config Twilio ici ; ce champ n'est pas comparé/poussé par la
+# CLI (voir `supabase config diff`), seule sa présence est exigée par le
+# schéma local une fois `enabled = true` (déjà activé côté tableau de bord).
+account_sid = "unmanaged-placeholder"
+message_service_sid = "unmanaged-placeholder"
 # DO NOT commit your Twilio auth token to git. Use environment variable substitution instead:
 auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
 

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>Bienvenue sur Revanche Game</title>
+<!--[if mso]>
+<style>table,td,div,h1,p,a { font-family: Arial, Helvetica, sans-serif !important; }</style>
+<![endif]-->
+</head>
+<body style="margin:0; padding:0; background-color:#05070d; -webkit-text-size-adjust:100%; text-size-adjust:100%;">
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0;">
+    Bienvenue sur Revanche Game — confirme ton adresse e-mail pour commencer à jouer.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#05070d;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+               style="width:600px; max-width:600px; background-color:#0e1322; border:1px solid #1a2136; border-radius:16px; overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding:36px 32px 20px 32px;">
+              <img src="https://revanchegames-production.up.railway.app/email/logo.png"
+                   width="260" height="95" alt="Revanche Games"
+                   style="display:block; width:260px; height:auto; margin:0 auto;" />
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 32px;"><div style="height:1px; background-color:#1a2136; line-height:1px; font-size:1px;">&nbsp;</div></td>
+          </tr>
+
+          <!-- Title -->
+          <tr>
+            <td align="center" style="padding:32px 32px 0 32px;">
+              <h1 style="margin:0; font-family:'Chakra Petch', Arial, sans-serif; font-size:26px; line-height:1.3; font-weight:700; color:#f3f5fb;">
+                Bienvenue dans l&rsquo;univers<br />Revanche&nbsp;Game&nbsp;!
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:20px 40px 0 40px; font-family:'Manrope', Arial, sans-serif; font-size:15px; line-height:1.7; color:#9aa3bd;">
+              <p style="margin:0 0 16px 0;">Bonjour,</p>
+              <p style="margin:0 0 16px 0;">
+                Merci de rejoindre <strong style="color:#f3f5fb;">Revanche Game</strong> ! Nous sommes ravis de
+                t&rsquo;accueillir sur notre plateforme de jeux en ligne. Encore une petite étape avant de pouvoir
+                rejoindre tes amis, découvrir nos jeux et commencer à jouer.
+              </p>
+              <p style="margin:0;">Pour activer ton compte, clique sur le bouton ci-dessous.</p>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td align="center" style="padding:28px 32px 8px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" bgcolor="#2fe6ff" style="border-radius:10px; background:linear-gradient(120deg, #2fe6ff 0%, #b24bff 100%);">
+                    <a href="{{ .ConfirmationURL }}" target="_blank"
+                       style="display:inline-block; padding:15px 38px; font-family:'Chakra Petch', Arial, sans-serif; font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#05070d; text-decoration:none; border-radius:10px;">
+                      Confirmer mon compte
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Secondary copy -->
+          <tr>
+            <td style="padding:20px 40px 0 40px; font-family:'Manrope', Arial, sans-serif; font-size:14px; line-height:1.7; color:#9aa3bd;">
+              <p style="margin:0 0 16px 0;">
+                Une fois ton adresse e-mail confirmée, tu pourras retourner sur Revanche Game et profiter de ton
+                espace joueur : statistiques, chat général et tous les jeux de la plateforme.
+              </p>
+              <p style="margin:0;">
+                Si tu n&rsquo;es pas à l&rsquo;origine de cette inscription, tu peux simplement ignorer cet e-mail.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:28px 32px 0 32px;"><div style="height:1px; background-color:#1a2136; line-height:1px; font-size:1px;">&nbsp;</div></td>
+          </tr>
+
+          <!-- Sign-off -->
+          <tr>
+            <td align="center" style="padding:24px 32px 32px 32px; font-family:'Manrope', Arial, sans-serif; font-size:14px; line-height:1.6; color:#9aa3bd;">
+              À très bientôt sur Revanche Game !<br />
+              <strong style="color:#f3f5fb;">L&rsquo;équipe Revanche Game</strong>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Footer -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px;">
+          <tr>
+            <td align="center" style="padding:20px 32px; font-family:'Manrope', Arial, sans-serif; font-size:12px; line-height:1.6; color:#5c6485;">
+              Revanche Game — cet e-mail a été envoyé automatiquement, merci de ne pas y répondre.<br />
+              Si le bouton ne fonctionne pas, copie ce lien dans ton navigateur&nbsp;: {{ .ConfirmationURL }}
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
