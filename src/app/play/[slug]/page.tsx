@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { GAMES } from "@/data/games";
 import { createPlatformToken } from "@/lib/platform-token";
@@ -28,6 +29,10 @@ export default function PlayGamePage({ params }: { params: Promise<{ slug: strin
 }
 
 async function GameFrame({ paramsPromise }: { paramsPromise: Promise<{ slug: string }> }) {
+  // createPlatformToken() below reads Date.now() (token iat/exp), which Next.js's
+  // Cache Components treat as unstable during prerendering — connection() marks
+  // this subtree as request-time only (see the same fix in app/profile/page.tsx).
+  await connection();
   const { slug } = await paramsPromise;
   const game = GAMES.find((g) => g.id === slug);
   if (!game || !game.enabled) notFound();

@@ -4,27 +4,13 @@ import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Check, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { Avatar } from "@/components/ui/Avatar";
 
 const AVATAR_CHOICES = [
   "🦊", "🐼", "🦁", "🐸", "🐙", "🦉", "🐝", "🦋",
   "🦄", "🐯", "🐨", "🦖", "🐬", "🦅", "🐺", "🐧",
   "🎮", "👑", "🃏", "🎲",
 ];
-
-function isPhotoUrl(value: string | null) {
-  return !!value && /^https?:\/\//.test(value);
-}
-
-function AvatarPreview({ username, avatarUrl }: { username: string; avatarUrl: string | null }) {
-  if (isPhotoUrl(avatarUrl)) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={avatarUrl!} alt={username} className="h-full w-full object-cover" />;
-  }
-  if (avatarUrl) {
-    return <span className="text-3xl">{avatarUrl}</span>;
-  }
-  return <span>{username.charAt(0).toUpperCase()}</span>;
-}
 
 export function ProfileEditor({
   userId,
@@ -165,9 +151,7 @@ export function ProfileEditor({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
-          <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan to-violet font-display text-2xl font-bold text-void">
-            <AvatarPreview username={username} avatarUrl={avatarUrl} />
-          </span>
+          <Avatar username={username} avatarUrl={avatarUrl} />
           <button
             type="button"
             onClick={() => setPickerOpen((v) => !v)}
