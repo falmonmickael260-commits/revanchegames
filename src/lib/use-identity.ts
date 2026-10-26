@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createClient } from "./supabase/client";
 
 /**
@@ -33,6 +33,16 @@ export function usePlatformIdentity(): { me: PlatformIdentity | null; ready: boo
   // Lu par l'abonnement temps réel ci-dessous, qui ne doit pas se rouvrir à
   // chaque changement d'identité — seulement quand le compte change.
   const userIdRef = useRef<string | null>(null);
+  // Ce hook est appelé par plusieurs composants à la fois (SocialProvider et
+  // useChatIdentity, au moins) : sans suffixe propre à chaque instance, deux
+  // d'entre elles ouvraient un canal du même nom, et Supabase Realtime refuse
+  // d'y ajouter un second écouteur une fois le premier abonné ("cannot add
+  // postgres_changes callbacks ... after subscribe()") — ce qui faisait
+  // planter toute la page dès qu'une seconde instance se montait (typiquement
+  // ChatDock, pendant une partie). `useId()` et non `Math.random()` : un tirage
+  // aléatoire pendant le rendu est une E/S synchrone que le prérendu statique
+  // (Next.js 16 Cache Components) refuse d'exécuter.
+  const instanceId = useId();
 
   const load = useCallback(async (userId: string | null) => {
     userIdRef.current = userId;
@@ -92,7 +102,9 @@ export function usePlatformIdentity(): { me: PlatformIdentity | null; ready: boo
     const supabase = createClient();
     const userId = me.id;
     const channel = supabase
-      .channel(`rg-own-profile-${userId}`)
+      // `useId()` contient des ":" (ex. ":r0:"), pas toujours bienvenus dans
+      // un nom de canal — on ne garde que les caractères alphanumériques.
+      .channel(`rg-own-profile-${userId}-${instanceId.replace(/[^a-zA-Z0-9]/g, "")}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
