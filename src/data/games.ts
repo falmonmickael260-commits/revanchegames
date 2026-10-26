@@ -240,6 +240,7 @@ export const GAMES: Game[] = [
     categories: ["des"],
     status: "available",
     enabled: true,
+    url: "https://lewisdee.onrender.com/",
     icon: "dices",
     image: "/games/10000.webp",
     theme: { accent: "#f2c94c", accentSoft: "#fbe49a" },
