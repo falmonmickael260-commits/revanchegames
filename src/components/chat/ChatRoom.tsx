@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Send } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/Avatar";
@@ -134,8 +135,8 @@ export function ChatRoom({
   }
 
   return (
-    <div className="flex h-[65vh] flex-col rounded-2xl border border-border-soft bg-surface">
-      <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface">
+      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4 sm:py-4">
         {messages.length === 0 ? (
           <p className="py-10 text-center font-body text-sm text-text-faint">
             Aucun message pour l&apos;instant — sois le premier à dire bonjour !
@@ -145,17 +146,18 @@ export function ChatRoom({
             {messages.map((message) => {
               const own = me?.id === message.userId;
               return (
-                <div key={message.id} className={`flex items-start gap-2.5 ${own ? "flex-row-reverse text-right" : ""}`}>
+                <div key={message.id} className={`flex items-start gap-2 sm:gap-2.5 ${own ? "flex-row-reverse text-right" : ""}`}>
                   <Avatar username={message.username} avatarUrl={message.avatarUrl} size="sm" />
-                  <div className={`flex min-w-0 max-w-[75%] flex-col gap-0.5 ${own ? "items-end" : "items-start"}`}>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-display text-xs font-semibold text-text-dim">{message.username}</span>
-                      <span className="font-body text-[0.7rem] text-text-faint">{formatTime(message.createdAt)}</span>
+                  <div className={`flex min-w-0 max-w-[82%] flex-col gap-0.5 sm:max-w-[75%] ${own ? "items-end" : "items-start"}`}>
+                    <div className="flex min-w-0 items-baseline gap-2">
+                      <span className="truncate font-display text-xs font-semibold text-text-dim">{message.username}</span>
+                      <span className="shrink-0 font-body text-[0.7rem] text-text-faint">{formatTime(message.createdAt)}</span>
                     </div>
                     <p
-                      className={`break-words rounded-xl px-3 py-1.5 font-body text-sm text-text ${
+                      className={`min-w-0 break-words rounded-xl px-3 py-1.5 font-body text-sm text-text ${
                         own ? "bg-gradient-to-r from-cyan/20 to-violet/20" : "bg-surface-raised"
                       }`}
+                      style={{ overflowWrap: "anywhere" }}
                     >
                       {message.body}
                     </p>
@@ -168,15 +170,17 @@ export function ChatRoom({
       </div>
 
       {me ? (
-        <form onSubmit={handleSend} className="flex items-end gap-2 border-t border-border-soft p-3">
-          <div className="flex-1">
+        <form onSubmit={handleSend} className="flex shrink-0 items-end gap-2 border-t border-border-soft p-2.5 sm:p-3">
+          <div className="min-w-0 flex-1">
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               maxLength={MAX_LENGTH}
               placeholder="Écris un message…"
               aria-label="Votre message"
-              className="w-full rounded-lg border border-border-soft bg-void px-3.5 py-2.5 font-body text-sm text-text placeholder:text-text-faint focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20"
+              // text-base (16px) on small screens, so focusing this field doesn't
+              // trigger iOS Safari's automatic zoom (anything under 16px does).
+              className="w-full rounded-lg border border-border-soft bg-void px-3.5 py-2.5 font-body text-base text-text placeholder:text-text-faint focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20 sm:text-sm"
             />
             {error && <p className="mt-1.5 font-body text-xs text-violet-soft">{error}</p>}
           </div>
@@ -184,12 +188,30 @@ export function ChatRoom({
             type="submit"
             disabled={sending || !draft.trim()}
             aria-label="Envoyer"
-            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-cyan to-violet text-void disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-cyan to-violet text-void disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
           </button>
         </form>
-      ) : null}
+      ) : (
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border-soft p-3">
+          <p className="font-body text-xs text-text-faint">Connecte-toi pour participer à la discussion.</p>
+          <div className="flex shrink-0 gap-2">
+            <Link
+              href="/sign-in"
+              className="rounded-lg border border-border-soft px-3 py-1.5 font-display text-xs font-semibold text-text-dim"
+            >
+              Se connecter
+            </Link>
+            <Link
+              href="/sign-up"
+              className="rounded-lg bg-gradient-to-r from-cyan to-violet px-3 py-1.5 font-display text-xs font-semibold text-void"
+            >
+              Créer un compte
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

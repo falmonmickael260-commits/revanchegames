@@ -1,9 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { MessageCircle, UserPlus } from "lucide-react";
-import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { EmptyState } from "@/components/library/EmptyState";
 import { ChatRoom, type ChatMessage } from "@/components/chat/ChatRoom";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,9 +15,9 @@ export default function ChatPage() {
 
 function ChatSkeleton() {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto flex h-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <PageHeader eyebrow="Communauté" title="Chat général" />
-      <div className="h-[65vh] animate-pulse rounded-2xl border border-border-soft bg-surface" />
+      <div className="min-h-0 flex-1 animate-pulse rounded-2xl border border-border-soft bg-surface" />
     </div>
   );
 }
@@ -60,42 +58,17 @@ async function ChatContent() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-      <PageHeader
-        eyebrow="Communauté"
-        title="Chat général"
-        subtitle="Un seul salon pour tout le monde, tous jeux confondus."
-      />
-      {me ? (
-        <ChatRoom initialMessages={initialMessages} me={me} />
-      ) : (
-        <>
-          <ChatRoom initialMessages={initialMessages} me={null} />
-          <EmptyState
-            icon={UserPlus}
-            title="Pas encore connecté"
-            message="Crée un compte Revanche Game pour participer à la discussion — tu peux lire les messages, mais il faut un compte pour en envoyer."
-            action={
-              <div className="flex gap-2">
-                <Link
-                  href="/sign-up"
-                  className="rounded-lg bg-gradient-to-r from-cyan to-violet px-4 py-2 font-display text-sm font-semibold text-void"
-                >
-                  Créer un compte
-                </Link>
-                <Link
-                  href="/sign-in"
-                  className="rounded-lg border border-border-soft px-4 py-2 font-display text-sm font-semibold text-text-dim"
-                >
-                  Se connecter
-                </Link>
-              </div>
-            }
-          />
-        </>
-      )}
-      <p className="flex items-center gap-1.5 font-body text-xs text-text-faint">
-        <MessageCircle className="h-3.5 w-3.5" />
+    <div className="mx-auto flex h-full max-w-3xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <div className="shrink-0">
+        <PageHeader
+          eyebrow="Communauté"
+          title="Chat général"
+          subtitle="Un seul salon pour tout le monde, tous jeux confondus."
+        />
+      </div>
+      <ChatRoom initialMessages={initialMessages} me={me} />
+      <p className="hidden shrink-0 items-center gap-1.5 font-body text-xs text-text-faint sm:flex">
+        <MessageCircle className="h-3.5 w-3.5 shrink-0" />
         Les 50 derniers messages, visibles par tous — pense à rester sympa.
       </p>
     </div>
