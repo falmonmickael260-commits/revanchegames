@@ -175,3 +175,64 @@ export async function updatePrivacy(patch: {
   if (error) return { ok: false, error: toMessage(error) };
   return { ok: true, data: undefined };
 }
+
+/** Longueur maximale d'une signature — la même contrainte qu'en base. */
+export const SIGNATURE_MAX_LENGTH = 120;
+
+/**
+ * Enregistre la signature du profil.
+ *
+ * Écriture directe, protégée par RLS (`profiles_update_own`) et par la
+ * contrainte `profiles_signature_length` : la longueur est revalidée en base,
+ * donc la vérification faite ici n'est qu'un confort d'interface.
+ */
+export async function updateSignature(signature: string): Promise<ActionResult> {
+  const trimmed = signature.trim();
+  if (trimmed.length > SIGNATURE_MAX_LENGTH) {
+    return { ok: false, error: `La signature est limitée à ${SIGNATURE_MAX_LENGTH} caractères.` };
+  }
+
+  const supabase = createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return { ok: false, error: "Session expirée — reconnecte-toi." };
+
+  const { error } = await supabase
+    .from("profiles")
+    // Vider le champ remet `null`, pas une chaîne vide : c'est l'absence de
+    // signature qui est représentée, pas une signature vide.
+    .update({ signature: trimmed || null })
+    .eq("id", auth.user.id);
+
+  if (error) return { ok: false, error: toMessage(error) };
+  return { ok: true, data: undefined };
+}
+
+export type ReportKind =
+  | "avatar"
+  | "signature"
+  | "username"
+  | "behaviour"
+  | "message"
+  | "bug"
+  | "other";
+
+/**
+ * Envoie un signalement.
+ *
+ * Les limites (10 par heure, un seul dossier ouvert par motif et par joueur
+ * visé, interdiction de se signaler soi-même) sont appliquées par la fonction
+ * SQL `submit_report` — pas ici.
+ */
+export function submitReport(input: {
+  kind: ReportKind;
+  targetUserId?: string | null;
+  context?: string | null;
+  details?: string | null;
+}) {
+  return rpc<string>("submit_report", {
+    p_kind: input.kind,
+    p_target_user_id: input.targetUserId ?? null,
+    p_context: input.context ?? null,
+    p_details: input.details ?? null,
+  });
+}

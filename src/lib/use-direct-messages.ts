@@ -66,9 +66,12 @@ export function useDirectMessages({
     if (!enabled || !me || !other) return;
     let cancelled = false;
     seenIds.current = new Set();
-    setLoading(true);
 
     (async () => {
+      // `setLoading` est posé ici, dans la fonction asynchrone, et non dans
+      // le corps de l'effet : un setState synchrone dans un effet provoque
+      // un rendu en cascade (react-hooks/set-state-in-effect).
+      setLoading(true);
       const supabase = createClient();
       const { data, error: loadError } = await supabase
         .from("direct_messages")

@@ -37,10 +37,10 @@ export function PushInstallPrompt() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    if (!me || dismissed) {
-      setEligible(false);
-      return;
-    }
+    // Pas de remise à zéro ici : `visible` plus bas tient déjà compte de
+    // `me` et `dismissed`. Appeler setState dans le corps d'un effet
+    // déclencherait un rendu en cascade pour rien.
+    if (!me || dismissed) return;
     let cancelled = false;
     (async () => {
       if (!isStandaloneDisplay() || !isPushSupported()) return;
@@ -52,7 +52,10 @@ export function PushInstallPrompt() {
     };
   }, [me, dismissed]);
 
-  if (!eligible || done) return null;
+  // Dérivé : déconnexion ou rejet font disparaître la bannière sans qu'on
+  // ait à réécrire `eligible`.
+  const visible = eligible && Boolean(me) && !dismissed && !done;
+  if (!visible) return null;
 
   async function activate() {
     setBusy(true);

@@ -460,6 +460,91 @@ Limites à connaître, et qui ne sont pas des bugs :
   les mêmes notifications restent dans la cloche, et une invitation reçue hors
   ligne est toujours là à la reconnexion.
 
+## Photo de profil : recadrage, réencodage, modération
+
+### L'envoi passe par le serveur — et c'était le point important
+
+Avant, le navigateur écrivait **directement** dans le bucket `avatars`. Toute
+vérification faite côté navigateur était donc décorative : il suffisait
+d'appeler l'API de stockage soi-même pour la contourner, et le serveur ne
+voyait jamais l'image.
+
+La migration `20261026140000_avatar_server_only.sql` retire les politiques
+d'écriture du navigateur. Il ne reste que `avatars_read_all` : les avatars
+s'affichent pour tout le monde, mais seul `POST /api/avatar` publie.
+
+Vérifié en conditions réelles, avec un compte authentifié et son vrai jeton :
+l'écriture directe au stockage est refusée.
+
+### Ce que fait la route
+
+1. **Décode** avec `sharp` — un fichier qui n'est pas une image échoue ici,
+   quelle que soit son extension ou son `Content-Type` annoncé.
+2. **Réencode** en WebP 512×512 reconstruit depuis les pixels. Les
+   métadonnées EXIF (dont la géolocalisation de la photo) disparaissent, et
+   tout contenu caché après les données d'image aussi. Mesuré : une image
+   portant un EXIF ressort sans.
+3. **Soumet à la modération** avant publication.
+4. **Supprime l'ancienne photo**, uniquement dans le dossier du joueur.
+
+`sharp` a dû passer de `devDependencies` à `dependencies` : les dépendances de
+développement ne survivent pas au build de production.
+
+### Modération — ce qui marche, et ce qui ne marche pas
+
+Reconnaître une image dénudée demande un modèle de vision. Il n'y a pas de
+raccourci : ni l'extension, ni le nom, ni les dimensions ne disent quoi que ce
+soit du contenu. `src/lib/moderation.ts` délègue donc à un prestataire.
+
+| Configuration | Comportement |
+| --- | --- |
+| `SIGHTENGINE_USER` + `SIGHTENGINE_SECRET` définis | chaque photo est analysée, les images sexuellement explicites sont refusées avant publication |
+| variables absentes | **aucune détection** — toutes les images passent |
+
+Le second cas est assumé et dit explicitement dans le code : mieux vaut un
+système qui annonce qu'il ne vérifie rien qu'un système qui laisse croire à
+une protection inexistante. Le filet de sécurité est alors humain — le bouton
+« Signaler ».
+
+Une panne du prestataire ou un délai dépassé **ne bloquent pas** l'envoi : on
+ne refuse pas une photo légitime parce qu'un service tiers est indisponible.
+
+### Recadrage
+
+`AvatarCropper` produit le carré côté navigateur (glisser, pincer, pivoter par
+quarts). C'est un **confort**, pas une sécurité : le serveur refait le même
+travail. Vérifié : une image 800×400 remplit bien le cadre carré, et la sortie
+publiée est un WebP 512×512 de 4 Ko sans EXIF.
+
+## Signalements
+
+Table `reports` + fonction `submit_report`. Aucune écriture directe : la
+fonction applique les limites, incontournables depuis le navigateur.
+
+- 10 signalements par heure et par compte ;
+- un seul dossier ouvert par (auteur, cible, motif) — un index unique partiel ;
+- impossible de se signaler soi-même ;
+- on ne lit que ses propres signalements, jamais ceux qui nous visent.
+
+Trois points d'entrée : le bouton « Signaler » d'une fiche de profil, le
+bouton d'aide des paramètres, et l'icône de la barre de jeu — cette dernière
+joint automatiquement le jeu et le salon au signalement.
+
+`set_avatar_status(user_id, 'rejected')` retire la photo **et** empêche d'en
+remettre une. Réservée à `service_role` : c'est une décision de modération,
+pas une action de joueur. Vérifié : un joueur qui l'appelle reçoit
+« permission denied ».
+
+## Signature de profil
+
+Colonne `profiles.signature`, 120 caractères maximum (contrainte en base, pas
+seulement dans l'interface). Affichée sous le pseudonyme, sur sa propre fiche
+comme sur celle d'un ami.
+
+Volontairement **hors** du test `profile_visible` : c'est une présentation que
+le joueur a écrite pour être lue, au même titre que son pseudonyme, alors que
+`profile_visible` protège ses statistiques et sa liste d'amis.
+
 ## Kilomax (Unity/WebGL) — cas à part
 
 Contrairement aux quatre jeux web, Kilomax n'a **aucun serveur à nous** : le

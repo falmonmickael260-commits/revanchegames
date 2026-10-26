@@ -2,10 +2,11 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Check, Copy, Lock, Pencil } from "lucide-react";
+import { Camera, Check, Copy, Lock, Pencil, Quote } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/Avatar";
-import { setPlayerTag } from "@/lib/social/api";
+import { AvatarCropper } from "./AvatarCropper";
+import { setPlayerTag, updateSignature, SIGNATURE_MAX_LENGTH } from "@/lib/social/api";
 import { formatPlayerTag } from "@/lib/player-tag";
 
 const AVATAR_CHOICES = [
@@ -19,10 +20,13 @@ export function ProfileEditor({
   initialUsername,
   initialAvatarUrl,
   initialPlayerTag,
+  initialSignature,
 }: {
   userId: string;
   initialUsername: string;
   initialAvatarUrl: string | null;
+  /** Phrase de présentation affichée sous le pseudonyme. */
+  initialSignature: string | null;
   /** `null` : pas encore choisi. Une fois défini, ne peut plus changer. */
   initialPlayerTag: string | null;
 }) {
@@ -40,6 +44,15 @@ export function ProfileEditor({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [avatarError, setAvatarError] = useState("");
   const [uploading, setUploading] = useState(false);
+  // Photo choisie, en attente de recadrage. Tant qu'elle est posée, le
+  // recadreur est à l'écran et rien n'a encore été envoyé.
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+
+  const [signature, setSignature] = useState(initialSignature ?? "");
+  const [signatureDraft, setSignatureDraft] = useState(initialSignature ?? "");
+  const [editingSignature, setEditingSignature] = useState(false);
+  const [signatureError, setSignatureError] = useState("");
+  const [savingSignature, setSavingSignature] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const [playerTag, setPlayerTagValue] = useState(initialPlayerTag);
@@ -147,53 +160,82 @@ export function ProfileEditor({
     router.refresh();
   }
 
-  async function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleSaveSignature() {
+    setSavingSignature(true);
+    setSignatureError("");
+    const result = await updateSignature(signatureDraft);
+    setSavingSignature(false);
+    if (!result.ok) {
+      setSignatureError(result.error);
+      return;
+    }
+    setSignature(signatureDraft.trim());
+    setEditingSignature(false);
+    router.refresh();
+  }
+
+  /**
+   * Première étape : on ne fait que retenir le fichier. L'envoi n'a lieu
+   * qu'après recadrage, pour que le joueur voie exactement ce qui part.
+   */
+  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
 
     setAvatarError("");
 
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      setAvatarError("Formats acceptés : PNG, JPEG ou WebP.");
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Choisis un fichier image.");
       return;
     }
-    if (file.size > 3 * 1024 * 1024) {
-      setAvatarError("La photo doit faire moins de 3 Mo.");
+    // Garde-fou de confort : le serveur refait la vérification, et accepte
+    // jusqu'à 5 Mo — ici on évite surtout de charger un fichier énorme en
+    // mémoire pour le recadrage.
+    if (file.size > 10 * 1024 * 1024) {
+      setAvatarError("Cette image est trop lourde (10 Mo maximum).");
       return;
     }
 
+    setPendingPhoto(file);
+  }
+
+  /**
+   * Deuxième étape : envoi du carré recadré à `/api/avatar`.
+   *
+   * L'envoi direct au stockage a été retiré (voir la route et la migration
+   * 20261026140000) : le serveur est désormais le seul à pouvoir écrire, ce
+   * qui lui permet de refuser une image non conforme avant publication.
+   */
+  async function handleCropped(blob: Blob) {
     setUploading(true);
-    const supabase = createClient();
-    const extension = file.name.split(".").pop() || "jpg";
-    const path = `${userId}/${Date.now()}.${extension}`;
+    setAvatarError("");
 
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
+    const form = new FormData();
+    form.append("file", blob, "avatar.webp");
 
-    if (uploadError) {
+    let response: Response;
+    try {
+      response = await fetch("/api/avatar", { method: "POST", body: form });
+    } catch {
       setUploading(false);
-      setAvatarError("L'envoi de la photo a échoué. Réessaie.");
+      setAvatarError("Envoi impossible — vérifie ta connexion.");
       return;
     }
 
-    const { data: publicUrl } = supabase.storage.from("avatars").getPublicUrl(path);
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ avatar_url: publicUrl.publicUrl })
-      .eq("id", userId);
+    const payload = (await response.json().catch(() => null)) as
+      | { url?: string; error?: string }
+      | null;
 
     setUploading(false);
 
-    if (updateError) {
-      setAvatarError("Impossible d'enregistrer cette photo. Réessaie.");
+    if (!response.ok || !payload?.url) {
+      setAvatarError(payload?.error ?? "L'envoi de la photo a échoué. Réessaie.");
       return;
     }
 
-    setAvatarUrl(publicUrl.publicUrl);
+    setAvatarUrl(payload.url);
+    setPendingPhoto(null);
     setPickerOpen(false);
     router.refresh();
   }
@@ -322,6 +364,83 @@ export function ProfileEditor({
         </div>
       </div>
 
+      {/* ---- Signature ---- */}
+      <div className="rounded-xl border border-border-soft bg-surface px-4 py-3.5">
+        {editingSignature ? (
+          <div className="flex flex-col gap-2">
+            <label className="flex flex-col gap-1.5">
+              <span className="font-display text-xs font-semibold uppercase tracking-[0.15em] text-text-faint">
+                Ta signature
+              </span>
+              <textarea
+                value={signatureDraft}
+                onChange={(event) =>
+                  setSignatureDraft(event.target.value.slice(0, SIGNATURE_MAX_LENGTH))
+                }
+                rows={2}
+                placeholder="Une phrase qui te résume — visible par les autres joueurs."
+                // text-base sous sm : en dessous de 16 px, iOS Safari zoome au
+                // focus et sort le champ de l'écran.
+                className="w-full resize-none rounded-lg border border-border-soft bg-void px-3 py-2.5 font-body text-base text-text placeholder:text-text-faint focus:border-cyan/50 focus:outline-none sm:text-sm"
+              />
+            </label>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-body text-[11px] text-text-faint">
+                {signatureDraft.length} / {SIGNATURE_MAX_LENGTH}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={savingSignature}
+                  onClick={handleSaveSignature}
+                  className="rounded-lg bg-gradient-to-r from-cyan to-violet px-3 py-1.5 font-display text-xs font-semibold text-void disabled:opacity-50"
+                >
+                  {savingSignature ? "…" : "Enregistrer"}
+                </button>
+                <button
+                  type="button"
+                  disabled={savingSignature}
+                  onClick={() => {
+                    setSignatureDraft(signature);
+                    setSignatureError("");
+                    setEditingSignature(false);
+                  }}
+                  className="rounded-lg border border-border-soft px-3 py-1.5 font-display text-xs font-semibold text-text-dim disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+            {signatureError && (
+              <p className="font-body text-xs text-violet-soft">{signatureError}</p>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-start gap-3">
+            <Quote className="mt-0.5 h-4 w-4 shrink-0 text-cyan" strokeWidth={2} />
+            <p
+              className={`min-w-0 flex-1 font-body text-sm ${
+                signature ? "text-text-dim" : "text-text-faint"
+              }`}
+              style={{ overflowWrap: "anywhere" }}
+            >
+              {signature || "Aucune signature — ajoute une phrase qui te résume."}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSignatureDraft(signature);
+                setEditingSignature(true);
+              }}
+              aria-label="Modifier ma signature"
+              className="shrink-0 rounded-lg p-1.5 text-text-faint transition-colors hover:bg-surface-raised hover:text-text-dim"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
       {pickerOpen && (
         <div className="rounded-xl border border-border-soft bg-surface-raised p-4">
           <p className="mb-2.5 font-display text-xs font-semibold uppercase tracking-[0.15em] text-text-faint">
@@ -352,13 +471,26 @@ export function ProfileEditor({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/webp"
+              accept="image/*"
               onChange={handlePhotoChange}
               className="hidden"
             />
           </div>
           {avatarError && <p className="mt-2 font-body text-xs text-violet-soft">{avatarError}</p>}
         </div>
+      )}
+
+      {pendingPhoto && (
+        <AvatarCropper
+          file={pendingPhoto}
+          busy={uploading}
+          error={avatarError}
+          onCancel={() => {
+            setPendingPhoto(null);
+            setAvatarError("");
+          }}
+          onCropped={handleCropped}
+        />
       )}
     </div>
   );

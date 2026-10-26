@@ -86,7 +86,7 @@ async function ProfileContent() {
     await Promise.all([
       supabase
         .from("profiles")
-        .select("username, avatar_url, created_at, player_tag")
+        .select("username, avatar_url, created_at, player_tag, signature")
         .eq("id", user.id)
         .single(),
       supabase.from("game_catalog").select("slug, display_name, sort_order").order("sort_order"),
@@ -123,6 +123,7 @@ async function ProfileContent() {
             initialUsername={username}
             initialAvatarUrl={profile?.avatar_url ?? null}
             initialPlayerTag={profile?.player_tag ?? null}
+            initialSignature={profile?.signature ?? null}
           />
           <p className="mt-2 font-body text-sm text-text-faint">
             {memberSince ? `Membre depuis ${memberSince}` : "Membre Revanche Game"}

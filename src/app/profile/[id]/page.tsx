@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/library/EmptyState";
 import { createClient } from "@/lib/supabase/server";
 import { toFriendProfile, type FriendProfileRow } from "@/lib/social/friend-profile";
+import { ReportPlayerButton } from "@/components/social/ReportPlayerButton";
 
 // `id` est un identifiant de compte quelconque, impossible à énumérer à
 // l'avance via `generateStaticParams` (contrairement à /play/<slug>, dont la
@@ -129,8 +130,20 @@ async function FriendProfileContent({
           {profile.playerTag && (
             <p className="font-body text-xs tracking-wide text-text-faint">RG-{profile.playerTag}</p>
           )}
+          {/* La signature reste affichée même si le profil est masqué : c'est
+              une présentation écrite pour être lue, pas une statistique. */}
+          {profile.signature && (
+            <p
+              className="mt-1.5 font-body text-sm italic text-text-dim"
+              style={{ overflowWrap: "anywhere" }}
+            >
+              « {profile.signature} »
+            </p>
+          )}
           <p className="mt-1 font-body text-sm text-text-faint">Membre depuis {memberSince}</p>
         </div>
+
+        <ReportPlayerButton targetId={id} username={profile.username} />
       </div>
 
       {!profile.profileVisible ? (

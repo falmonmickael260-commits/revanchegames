@@ -10,6 +10,8 @@ export type FriendProfile = {
   username: string;
   avatarUrl: string | null;
   playerTag: string | null;
+  /** Phrase de présentation. Visible même si le profil est masqué. */
+  signature: string | null;
   memberSince: string;
   profileVisible: boolean;
   gamesPlayed: number | null;
@@ -27,6 +29,7 @@ export type FriendProfileRow = {
   username: string;
   avatar_url: string | null;
   player_tag: string | null;
+  signature: string | null;
   member_since: string;
   profile_visible: boolean;
   games_played: number | null;
@@ -43,6 +46,7 @@ export function toFriendProfile(row: FriendProfileRow): FriendProfile {
     username: row.username,
     avatarUrl: row.avatar_url,
     playerTag: row.player_tag,
+    signature: row.signature,
     memberSince: row.member_since,
     profileVisible: row.profile_visible,
     gamesPlayed: row.games_played,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Bell, BellOff, Eye, EyeOff, Ghost, Lock, UserPlus, Users } from "lucide-react";
 import { useSocial } from "./SocialProvider";
+import { ReportIssueButton } from "./ReportIssueButton";
 import { updatePrivacy } from "@/lib/social/api";
 import {
   isIosWithoutStandalone,
@@ -206,6 +207,12 @@ export function SocialSettings() {
           />
         }
       />
+
+      {/* ---- Aide ---- */}
+      <h2 className="mt-4 font-display text-sm font-semibold uppercase tracking-[0.18em] text-text-faint">
+        Un souci ?
+      </h2>
+      <ReportIssueButton context="parametres" />
     </div>
   );
 }
