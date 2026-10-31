@@ -33,6 +33,19 @@ async function ChatContent() {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
 
+  if (!user) {
+    return (
+      <div className="rg-chat-page-stage">
+        <div className="mx-auto flex h-full w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <PageHeader eyebrow="Communauté" title="Chat général" />
+          <div className="rounded-2xl border border-border-soft bg-surface p-6 text-sm text-text-faint">
+            Connecte-toi à ton compte Revanche Games pour accéder au chat général.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const { data: rows } = await supabase
     .from("chat_messages")
     .select("id, body, created_at, user_id, profiles(username, avatar_url)")
@@ -67,7 +80,7 @@ async function ChatContent() {
         <ChatRoom initialMessages={initialMessages} me={me} />
         <p className="hidden shrink-0 items-center gap-1.5 font-body text-xs text-text-faint sm:flex">
           <MessageCircle className="h-3.5 w-3.5 shrink-0" />
-          Les 50 derniers messages, visibles par tous — pense à rester sympa.
+          Les 50 derniers messages — pense à rester sympa.
         </p>
       </div>
     </div>

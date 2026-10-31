@@ -84,7 +84,10 @@ export function useChatFeed({
 
   // Chargement de l'historique quand il n'a pas été rendu côté serveur.
   useEffect(() => {
-    if (!enabled || seed) return;
+    if (!enabled || !me || seed) {
+      if (!me) { setMessages([]); setLoading(false); }
+      return;
+    }
     let cancelled = false;
 
     (async () => {

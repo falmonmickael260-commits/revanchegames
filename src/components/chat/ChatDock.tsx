@@ -100,7 +100,7 @@ export function ChatDock({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  if (suspended) return null;
+  if (suspended || !me) return null;
 
   return (
     <>
