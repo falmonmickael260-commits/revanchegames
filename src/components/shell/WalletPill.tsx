@@ -23,7 +23,7 @@ export function WalletPill() {
       className="flex shrink-0 items-center gap-1.5 rounded-full border border-border-soft bg-surface px-2.5 py-1.5 font-display text-xs font-semibold text-amber transition-colors hover:border-amber/40"
     >
       <Coins className="h-3.5 w-3.5" strokeWidth={2.5} />
-      <span className="tabular-nums">{ready && balance !== null ? balance.toLocaleString("fr-FR") : "…"}</span>
+      <span className="tabular-nums">{ready && balance !== null ? balance.toLocaleString("fr-FR") : ready ? "Indisponible" : "…"}</span>
     </Link>
   );
 }

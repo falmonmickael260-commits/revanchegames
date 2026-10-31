@@ -9,7 +9,7 @@ import { PromoCodeForm } from "./PromoCodeForm";
 /** Solde actuel + code promo — regroupés car tous deux liés au compte connecté. */
 export function ShopWalletSection() {
   const { me, ready } = useSocial();
-  const { balance } = useWallet(me?.id ?? null);
+  const { balance, ready: walletReady } = useWallet(me?.id ?? null);
 
   if (ready && !me) {
     return (
@@ -44,7 +44,7 @@ export function ShopWalletSection() {
         <div>
           <p className="font-body text-xs uppercase tracking-[0.2em] text-text-faint">Ton solde</p>
           <p className="font-display text-2xl font-bold text-text">
-            {balance !== null ? balance.toLocaleString("fr-FR") : "…"}{" "}
+            {balance !== null ? balance.toLocaleString("fr-FR") : walletReady ? "Indisponible" : "…"}{" "}
             <span className="font-body text-sm font-normal text-text-faint">pièces</span>
           </p>
         </div>

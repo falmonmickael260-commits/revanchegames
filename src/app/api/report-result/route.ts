@@ -16,7 +16,8 @@ import { createServiceClient } from "@/lib/supabase/server";
  * d'audit, pas résolu ici, juste explicitement assumé pour ce cas précis.
  */
 
-const ALLOWED_GAME_SLUGS = new Set(["kilomax", "president", "quiz-master", "la-meute", "10000"]);
+// La Meute publie ses résultats uniquement depuis son serveur de confiance.
+const ALLOWED_GAME_SLUGS = new Set(["kilomax", "president", "quiz-master", "10000"]);
 const ALLOWED_OUTCOMES = new Set(["win", "loss", "draw"]);
 
 // Ouvert : la protection réelle est la signature du jeton, pas l'origine —

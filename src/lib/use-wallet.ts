@@ -19,31 +19,26 @@ import { createClient } from "./supabase/client";
  * rencontré une fois sur l'identité du joueur, voir use-identity.ts.
  */
 export function useWallet(userId: string | null): { balance: number | null; ready: boolean } {
-  const [balance, setBalance] = useState<number | null>(null);
-  const [ready, setReady] = useState(false);
+  const [snapshot, setSnapshot] = useState<{ userId: string; balance: number | null } | null>(null);
   const instanceId = useId().replace(/[^a-zA-Z0-9]/g, "");
 
   useEffect(() => {
-    if (!userId) {
-      setBalance(null);
-      setReady(true);
-      return;
-    }
+    if (!userId) return;
 
     let cancelled = false;
     const supabase = createClient();
 
     async function load() {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("wallet_accounts")
         .select("balance_coins")
         .eq("user_id", userId as string)
         .maybeSingle();
       if (cancelled) return;
+      if (error) { setSnapshot({ userId: userId as string, balance: null }); return; }
       // Pas encore de ligne : le portefeuille n'a jamais reçu de mouvement,
       // le solde est donc bien 0 — pas "inconnu".
-      setBalance(data?.balance_coins ?? 0);
-      setReady(true);
+      setSnapshot({ userId: userId as string, balance: data?.balance_coins ?? 0 });
     }
     void load();
 
@@ -62,5 +57,8 @@ export function useWallet(userId: string | null): { balance: number | null; read
     };
   }, [userId, instanceId]);
 
-  return { balance, ready };
+  return {
+    balance: userId && snapshot?.userId === userId ? snapshot.balance : null,
+    ready: !userId || snapshot?.userId === userId,
+  };
 }
