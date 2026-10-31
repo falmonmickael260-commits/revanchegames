@@ -79,7 +79,7 @@ export function PromoCodeForm() {
         <input
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="Ex. REVANCHE1500"
+          placeholder="Code Games"
           maxLength={32}
           aria-label="Code promotionnel"
           className="w-full rounded-lg border border-border-soft bg-void px-3.5 py-2.5 font-body text-base uppercase tracking-wide text-text placeholder:text-text-faint placeholder:normal-case focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20 sm:text-sm"
