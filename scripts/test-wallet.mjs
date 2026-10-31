@@ -35,8 +35,11 @@ try {
   await query("select * from reserve_role('la-meute','LEGACY',$1,'hunter',100)", [legacy]);
   await check('ancien débit effectué avant migration', async () => assert.equal(await balance(legacy), 1900));
   await sql('20261031010000_promo_code_rename.sql');
+  await check('préflight de production exécuté en lecture seule', async () => db.exec(await readFile(new URL('./sql/production-preflight.sql', import.meta.url), 'utf8')));
   await sql('20261031040000_role_selection_deferred_charge.sql');
   await sql('20261031050000_promo_alias_and_win_rewards.sql');
+  await sql('20261031060000_trusted_meute_results.sql');
+  await check('postflight de production : schéma, permissions et RLS', async () => db.exec(await readFile(new URL('./sql/production-postflight.sql', import.meta.url), 'utf8')));
 
   await check('migrations exécutées sans erreur, même avec des utilisations historiques', async () => {
     await assert.rejects(query("select * from redeem_promo_code('REVANCHE1500')"), /déjà utilisé/);
@@ -102,15 +105,20 @@ try {
     await query('select cancel_role_reservation($1)',[next]);
     assert.equal(await balance(user),1900);
   });
+  await check('ancienne API bloquée par PostgreSQL, même avec une identité valide', async () => {
+    const payload = JSON.stringify([{user_id:user,outcome:'win'}]);
+    await assert.rejects(query("select record_game_result('la-meute','forged-old-api','FORGED',null,$1::jsonb)",[payload]), /serveur de confiance/);
+    assert.equal((await query("select count(*)::int as n from game_results where idempotency_key='forged-old-api'")).rows[0].n,0);
+  });
   await check('50 pièces par gagnant connecté, zéro pour perdant/invité/nul, retry sans double crédit', async () => {
     const payload = JSON.stringify([{user_id:user,outcome:'win'},{user_id:loser,outcome:'loss'},{user_id:poor,outcome:'draw'},{guest_label:'Invité',outcome:'win'}]);
-    for (let i=0;i<2;i++) await query("select record_game_result('la-meute','test-win','WIN',null,$1::jsonb)",[payload]);
+    for (let i=0;i<2;i++) await query("select record_la_meute_result('test-win','WIN',null,$1::jsonb)",[payload]);
     assert.equal(await balance(user),1950); assert.equal(await balance(loser),500); assert.equal(await balance(poor),0);
     await query("select record_game_result('kilomax','test-other','OTHER',null,$1::jsonb)",[payload]);
     assert.equal(await balance(user),1950);
   });
   await check('fonctions financières réservées au serveur ; RLS active', async () => {
-    const signatures = ['reserve_role(text,text,uuid,text,bigint,uuid,timestamptz)','resolve_role_reservations(text,text,uuid[],uuid[])','cancel_role_reservation(uuid)','cancel_role_reservations(text,text)','record_game_result(text,text,text,jsonb,jsonb)'];
+    const signatures = ['reserve_role(text,text,uuid,text,bigint,uuid,timestamptz)','resolve_role_reservations(text,text,uuid[],uuid[])','cancel_role_reservation(uuid)','cancel_role_reservations(text,text)','record_game_result(text,text,text,jsonb,jsonb)','record_la_meute_result(text,text,jsonb,jsonb)'];
     for (const fn of signatures) {
       for (const role of ['anon','authenticated']) assert.equal((await query("select has_function_privilege($1,$2,'EXECUTE') as allowed",[role,fn])).rows[0].allowed,false);
       assert.equal((await query("select has_function_privilege('service_role',$1,'EXECUTE') as allowed",[fn])).rows[0].allowed,true);

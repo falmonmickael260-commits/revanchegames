@@ -30,17 +30,21 @@ des utilisations est conservé, y compris celui de l'ancien code.
 Chaque gagnant authentifié de La Meute reçoit 50 pièces, une seule fois par
 résultat enregistré. Défaites, égalités et invités ne sont pas crédités. Le
 navigateur ne peut plus déclarer de résultat pour La Meute via `/api/report-result`.
-Les autres jeux conservent leur chemin existant ; le bonus de 50 pièces ne
+Le serveur utilise `record_la_meute_result`, réservée à `service_role` ;
+l'ancienne RPC `record_game_result` refuse ce jeu. Les autres jeux conservent leur chemin existant ; le bonus de 50 pièces ne
 s'applique qu'à La Meute. Pas de récompense rétroactive des anciennes parties.
 
 Les quatre packs sont affichés sans encaissement. Stripe et PayPal sont
 explicitement différés ; aucun moyen de paiement n'est activé.
 
 Les quantités de fleurs et de tomates sont égales au nombre total de
-participants de la partie, par joueur, et se rechargent chaque journée.
+participants de la partie, par joueur, et se rechargent uniquement à chaque
+nouvelle partie. Aucun rechargement au changement de journée ou à la reconnexion.
 Les éliminations ne diminuent pas cette quantité.
 
 ## Déploiement, dans cet ordre
+
+Guide opérateur et commandes exactes : [MISE_EN_PRODUCTION.md](MISE_EN_PRODUCTION.md).
 
 1. Déployer d'abord la plateforme avec le refus de `la-meute` dans
    `/api/report-result`. Ne pas activer les récompenses avant cette protection.
@@ -52,6 +56,7 @@ Les éliminations ne diminuent pas cette quantité.
 3. Appliquer les nouvelles migrations, dans cet ordre :
    - `20261031040000_role_selection_deferred_charge.sql`
    - `20261031050000_promo_alias_and_win_rewards.sql`
+   - `20261031060000_trusted_meute_results.sql`
    L'ancien fichier local `20261031030000_role_selection_deferred_charge.sql`
    n'a jamais été appliqué par cette intervention ; il a été renuméroté pour
    supprimer le conflit avec `wallet_trigger_fix`.
@@ -82,6 +87,6 @@ Les suites HTTP nécessitent un environnement autorisant l'ouverture d'un port.
 
 Aucun accès de production n'a été validé : DNS réseau indisponible dans
 l'environnement de travail, authentification GitHub signalée invalide et
-absence d'outils Railway/Vercel/Supabase configurés pour déployer. Les clés
+CLI retrouvées en cache mais sessions et accès distants non validés. Les clés
 locales ont été comparées sans être affichées ; cela ne prouve pas les
 variables réellement configurées chez les hébergeurs.
