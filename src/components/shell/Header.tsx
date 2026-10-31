@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search, User, Settings, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { NotificationCenter } from "@/components/social/NotificationCenter";
+import { WalletPill } from "./WalletPill";
 
 export function Header() {
   const router = useRouter();
@@ -70,7 +71,8 @@ export function Header() {
           Parametres/Profil que la barre d'onglets du bas reprend sur mobile :
           une demande d'ami ou une invitation ne doit pas etre atteignable
           seulement sur ordinateur. */}
-      <div className="ml-auto flex shrink-0 items-center gap-1">
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        <WalletPill />
         <NotificationCenter />
       </div>
 
