@@ -5,6 +5,9 @@ import type { NextRequest } from "next/server";
 // Refreshes the Supabase session cookie on every request. Renamed from
 // `middleware.ts` in Next.js 16 — see node_modules/next/dist/docs/.../proxy.md.
 export async function proxy(request: NextRequest) {
+  // Stripe authenticates with its signature. No Supabase session refresh/network
+  // request must prevent delivery or read/transform its raw request body.
+  if (request.nextUrl.pathname === "/api/stripe/webhook") return NextResponse.next();
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

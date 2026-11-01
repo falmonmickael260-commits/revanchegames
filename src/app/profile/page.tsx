@@ -13,6 +13,7 @@ import { MatchList } from "@/components/stats/MatchList";
 import { LevelBadge, toProgress } from "@/components/stats/LevelBadge";
 import { toMatches } from "@/lib/social/stats";
 import { createClient } from "@/lib/supabase/server";
+import { PurchaseHistory } from "@/components/shop/PurchaseHistory";
 
 type GameStatsRow = {
   game_slug: string;
@@ -168,6 +169,8 @@ async function ProfileContent() {
       {progress && <LevelBadge progress={progress} />}
 
       <GhostModeCard />
+
+      <PurchaseHistory />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <FavoritesTile />

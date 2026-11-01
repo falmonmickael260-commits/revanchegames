@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SocialSettings } from "@/components/social/SocialSettings";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { writeStorage } from "@/lib/storage";
+import { SupportLink } from "@/components/support/SupportLink";
+import Link from "next/link";
 
 function SettingRow({
   icon: Icon,
@@ -56,6 +58,9 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
       <PageHeader eyebrow="Préférences" title="Paramètres" />
+
+      <SupportLink />
+      <Link href="/profile#mes-achats" className="rounded-xl border border-border-soft bg-surface p-4 font-display text-sm font-semibold text-cyan">Mes achats et reçus de paiement</Link>
 
       <SocialSettings />
 

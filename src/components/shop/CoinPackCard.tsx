@@ -1,17 +1,57 @@
+"use client";
+
+import { useRef, useState } from "react";
 import { Lock } from "lucide-react";
 import { CoinStack } from "./CoinStack";
+import type { PackId } from "@/lib/stripe/catalog";
 
 export function CoinPackCard({
   name,
   coins,
   price,
   highlight = false,
+  packId,
+  available = false,
+  testMode = false,
 }: {
   name: string;
   coins: number;
   price: string;
   highlight?: boolean;
+  packId?: PackId;
+  available?: boolean;
+  testMode?: boolean;
 }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const requestId = useRef<string | null>(null);
+  const inFlight = useRef(false);
+  async function buy() {
+    if (inFlight.current || !available || !packId) return;
+    inFlight.current = true;
+    setBusy(true);
+    setError("");
+    requestId.current ||= crypto.randomUUID();
+    try {
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packId, requestId: requestId.current }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 409) requestId.current = null;
+        throw new Error(result.error || "Paiement indisponible.");
+      }
+      const url = new URL(result.url);
+      if (url.origin !== "https://checkout.stripe.com") throw new Error("Lien de paiement invalide.");
+      window.location.assign(url.href);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Paiement indisponible.");
+    } finally {
+      inFlight.current = false;
+      setBusy(false);
+    }
+  }
   return (
     <div
       className={`group relative flex flex-col items-center gap-4 rounded-2xl border px-6 py-8 text-center transition-all hover:-translate-y-0.5 ${
@@ -28,7 +68,7 @@ export function CoinPackCard({
 
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border-soft bg-void/70 px-2.5 py-1 font-display text-[10px] font-semibold uppercase tracking-[0.15em] text-text-dim backdrop-blur-sm">
         <span className="h-1.5 w-1.5 rounded-full bg-amber shadow-[0_0_6px_var(--rg-amber)]" />
-        Bientôt disponible
+        {available ? testMode ? "Mode test — aucun débit réel" : "Paiement sécurisé" : packId ? "Paiement indisponible" : "Bientôt disponible"}
       </span>
 
       <div className="transition-transform group-hover:scale-105">
@@ -50,15 +90,14 @@ export function CoinPackCard({
 
       <button
         type="button"
-        disabled
-        aria-disabled="true"
-        tabIndex={-1}
-        title="Ce pack n'est pas encore disponible"
-        className="mt-1 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-surface-raised px-4 py-2.5 font-display text-xs font-bold uppercase tracking-wider text-text-faint"
+        disabled={!available || busy}
+        onClick={buy}
+        className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-amber px-4 py-2.5 font-display text-xs font-bold uppercase tracking-wider text-void disabled:cursor-not-allowed disabled:bg-surface-raised disabled:text-text-faint"
       >
         <Lock className="h-3.5 w-3.5" strokeWidth={2.5} />
-        Acheter
+        {busy ? "Ouverture…" : testMode && available ? "Tester l’achat" : "Acheter"}
       </button>
+      {error && <p role="alert" className="font-body text-sm text-text-dim">{error}</p>}
     </div>
   );
 }
