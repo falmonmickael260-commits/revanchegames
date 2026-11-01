@@ -137,6 +137,7 @@ export type DirectMessageRow = {
   to_user_id: string;
   body: string;
   created_at: string;
+  invitation_id?: string | null;
 };
 
 export async function sendDirectMessage(

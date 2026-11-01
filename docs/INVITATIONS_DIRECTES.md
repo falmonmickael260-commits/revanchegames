@@ -1,5 +1,41 @@
 # Invitations directes — intégration
 
+## Invitations dans les messages privés
+
+Chaque nouvelle invitation crée automatiquement un message privé dans la
+conversation avec l'ami : « Alice t’invite à rejoindre sa partie de Président. »
+L'insertion du message et celle de l'invitation sont atomiques, y compris pour
+les invitations de groupe. Un identifiant d'invitation unique lie le message à
+sa vraie action ; recopier ce texte dans un message ordinaire ne crée aucun
+bouton d'entrée.
+
+Le destinataire reçoit le message en temps réel dans une conversation ouverte,
+ou le retrouve dans l'historique avec le compteur de messages non lus. Le bouton
+« Rejoindre » utilise l'admission sécurisée existante et ferme la conversation
+pour afficher directement le bon jeu et le bon salon. Une invitation acceptée
+peut afficher « Reprendre la partie ». Une invitation expirée, refusée ou annulée
+ne propose plus d'entrée ; les erreurs du serveur (salon complet ou fermé) sont
+affichées dans le message. L'expéditeur voit l'état de son invitation.
+
+Migration : `20261101040000_game_invitation_private_messages.sql`. Les messages
+précédents ne sont pas modifiés. Pour un envoi sans salon, le texte propose de
+jouer et le bouton affiche « Ouvrir le jeu », sans promettre une entrée dans un
+salon inexistant.
+
+Tests SQL dédiés : création unique, confidentialité, messages non lus, refus
+des faux messages d'invitation et absence de message parasite si l'envoi échoue.
+Recette navigateur réussie sur Président, La Meute, Quiz Master et 10000 : MP
+reçu en direct, clic « Rejoindre » dans la conversation, même salon, même identité,
+rechargement sans second siège et codes invités conservés. Deux comptes Supabase
+Auth temporaires et des serveurs de jeux locaux isolés ont été utilisés ; les
+comptes et leurs messages ont été nettoyés. Suite plateforme : 55 tests réussis,
+puis 16 contrôles du portefeuille ; TypeScript, lint ciblé et build réussis.
+La recette navigateur des invitations par message privé s'exécute avec :
+
+```sh
+RUN_INVITATION_E2E=1 DM_INVITATION_E2E=1 node scripts/test-direct-invitations-browser.mjs
+```
+
 ## Comportement
 
 Un compte crée ou rejoint un salon dans un jeu. Le pont d'iframe transmet sa

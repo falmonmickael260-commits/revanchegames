@@ -15,6 +15,8 @@ const work = '/private/tmp/revanche-invitation-e2e'; await mkdir(work, { recursi
 const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 const created = [], children = [], rooms = [];
 const key = randomBytes(32).toString('hex');
+const privateMessages = process.env.DM_INVITATION_E2E === '1';
+const gameNames = { president: 'Président', 'la-meute': 'La Meute', 'quiz-master': 'Quiz Master', '10000': '10000' };
 const specs = [
   ['president','presidente',3101,['run','dev','--','--webpack','--hostname','localhost','--port','3101']],
   ['la-meute','Leloupbo',3102,['start']],
@@ -109,6 +111,7 @@ try {
   for (const [slug,,port] of specs) {
     console.log('Parcours navigateur : ' + slug);
     await b.goto('http://localhost:3100/friends');
+    if (privateMessages) await b.getByRole('button', { name: /^Discuter avec AuditInviteAlice/ }).click();
     await a.goto(`http://localhost:3100/play/${slug}`);
     const frame = await gameFrame(a);
     const registered = a.waitForResponse(r => r.url().endsWith('/api/game/rooms/current') && r.status() === 200, { timeout: 90000 });
@@ -118,7 +121,12 @@ try {
     await a.getByRole('button', { name: 'Inviter', exact: true }).click();
     await b.getByRole('button', { name: 'Accepter', exact: true }).waitFor({ timeout: 30000 });
     const joined = b.waitForResponse(r => r.url().endsWith('/api/game/rooms/current') && r.status() === 200, { timeout: 90000 });
-    await b.getByRole('button', { name: 'Accepter', exact: true }).click();
+    if (privateMessages) {
+      await b.getByRole('button', { name: 'Masquer cette invitation', exact: true }).click();
+      const conversation = b.getByRole('dialog', { name: 'Conversation avec AuditInviteAlice' });
+      const card = conversation.locator(`[aria-label="Invitation privée à ${gameNames[slug]}"]`);
+      await card.getByRole('button', { name: 'Rejoindre', exact: true }).click();
+    } else await b.getByRole('button', { name: 'Accepter', exact: true }).click();
     await b.waitForURL(`**/play/${slug}?invitation=*`, { timeout: 60000 });
     const verified = await (await joined).json();
     if (verified.code !== room.code || verified.instance !== room.instance || verified.count !== 2) throw new Error('Mauvais salon ou siège en double : ' + slug);
@@ -129,6 +137,7 @@ try {
     await b.reload();
     if ((await (await reloaded).json()).count !== 2) throw new Error('Siège doublé après rechargement : ' + slug);
     console.log('OK — invitation Realtime, acceptation sans code, bon salon, identité vérifiée et reprise : ' + slug);
+    if (privateMessages) console.log('OK — MP reçu en direct dans la conversation, bouton Rejoindre, bon jeu et bon salon : ' + slug);
     await guestJoin(slug, room.code, port);
     await b.goto('http://localhost:3100/');
   }

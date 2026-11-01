@@ -20,6 +20,8 @@ export type ChatMessage = {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  /** Present only on genuine invitation messages created by the server. */
+  invitationId?: string | null;
 };
 
 export type ChatIdentity = { id: string; username: string; avatarUrl: string | null };

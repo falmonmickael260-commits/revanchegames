@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowDown } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { PlayerCardDialog } from "@/components/social/PlayerCardDialog";
@@ -23,6 +23,7 @@ export function ChatMessageList({
   loading,
   compact = false,
   unreadFrom,
+  renderAttachment,
 }: {
   messages: ChatMessage[];
   me: ChatIdentity | null;
@@ -31,6 +32,7 @@ export function ChatMessageList({
   /** Horodatage ISO du dernier message lu : trace un repere avant le premier
    * message plus recent, pour qu'on voie ou on s'etait arrete. */
   unreadFrom?: string;
+  renderAttachment?: (message: ChatMessage, own: boolean) => ReactNode;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   // Doublé en ref : l'effet de mise en page ci-dessous doit connaître la
@@ -180,6 +182,7 @@ export function ChatMessageList({
                     >
                       {message.body}
                     </p>
+                    {renderAttachment?.(message, own)}
                   </div>
                 </div>
                 </div>

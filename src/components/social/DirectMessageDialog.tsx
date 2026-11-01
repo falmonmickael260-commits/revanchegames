@@ -10,6 +10,7 @@ import { useKeyboardInset } from "@/lib/use-keyboard-inset";
 import { PresenceDot, presenceLabel } from "./PresenceDot";
 import type { ChatIdentity } from "@/lib/chat-shared";
 import type { FriendEntry } from "@/lib/social/types";
+import { PrivateGameInvitation } from './PrivateGameInvitation';
 
 /**
  * La conversation privée avec un ami, ouverte depuis le bouton « Chat » de la
@@ -90,7 +91,8 @@ export function DirectMessageDialog({
           </button>
         </header>
 
-        <ChatMessageList messages={messages} me={me} loading={loading} />
+        <ChatMessageList messages={messages} me={me} loading={loading}
+          renderAttachment={(message, own) => message.invitationId ? <PrivateGameInvitation id={message.invitationId} own={own} onJoined={onClose} /> : null} />
         <ChatComposer me={me} sending={sending} error={error} onSend={send} />
       </section>
     </div>

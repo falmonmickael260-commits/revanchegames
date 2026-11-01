@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { useSocial } from "./SocialProvider";
 import { respondToGameInvitation } from "@/lib/social/api";
 import { GAMES } from "@/data/games";
+import { invitationPath } from '@/lib/social/invitation-path';
 
 /**
  * L'invitation reçue, affichée par-dessus tout — y compris pendant une partie.
@@ -57,10 +58,7 @@ export function InvitationToast() {
     await refresh();
 
     if (accept && result.data?.status === "accepted") {
-      const slug = result.data.game_slug;
-      const room = result.data.room_code;
-      const id = result.data.invitation_id;
-      router.push(`/play/${slug}${id ? `?invitation=${encodeURIComponent(id)}` : room ? `?room=${encodeURIComponent(room)}` : ''}`);
+      router.push(invitationPath(result.data));
     }
   }
 
