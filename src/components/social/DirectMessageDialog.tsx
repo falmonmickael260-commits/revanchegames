@@ -11,6 +11,7 @@ import { PresenceDot, presenceLabel } from "./PresenceDot";
 import type { ChatIdentity } from "@/lib/chat-shared";
 import type { FriendEntry } from "@/lib/social/types";
 import { PrivateGameInvitation } from './PrivateGameInvitation';
+import { VoiceInvitation } from '@/components/voice/VoiceInvitation';
 
 /**
  * La conversation privée avec un ami, ouverte depuis le bouton « Chat » de la
@@ -92,7 +93,8 @@ export function DirectMessageDialog({
         </header>
 
         <ChatMessageList messages={messages} me={me} loading={loading}
-          renderAttachment={(message, own) => message.invitationId ? <PrivateGameInvitation id={message.invitationId} own={own} onJoined={onClose} /> : null} />
+          renderAttachment={(message, own) => message.invitationId ? <PrivateGameInvitation id={message.invitationId} own={own} onJoined={onClose} /> :
+            message.voiceInvitation ? <VoiceInvitation id={message.id} roomId={message.voiceInvitation.roomId} expiresAt={message.voiceInvitation.expiresAt} own={own} onJoined={onClose} /> : null} />
         <ChatComposer me={me} sending={sending} error={error} onSend={send} />
       </section>
     </div>

@@ -138,6 +138,8 @@ export type DirectMessageRow = {
   body: string;
   created_at: string;
   invitation_id?: string | null;
+  voice_room_id?: string | null;
+  voice_expires_at?: string | null;
 };
 
 export async function sendDirectMessage(

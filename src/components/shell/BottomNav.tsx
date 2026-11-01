@@ -6,10 +6,12 @@ import { NAV_ITEMS, MOBILE_NAV_IDS } from "@/data/nav";
 
 export function BottomNav() {
   const pathname = usePathname();
-  const items = NAV_ITEMS.filter((item) => MOBILE_NAV_IDS.includes(item.id));
+  const items = MOBILE_NAV_IDS.flatMap(id => NAV_ITEMS.filter(item => item.id === id));
+  const labels: Record<string, string> = { home: "Accueil", library: "Jeux", voice: "Salons", friends: "Amis", chat: "Chat", profile: "Profil" };
 
   return (
     <nav
+      aria-label="Navigation principale"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border-soft bg-abyss/90 backdrop-blur-lg lg:hidden"
       // Doit valoir exactement `--rg-bottom-nav-h`, la place que <ShellFrame />
       // reserve en bas des pages : 56 px utiles + la zone de securite.
@@ -36,7 +38,7 @@ export function BottomNav() {
                     active ? "text-text" : "text-text-faint"
                   }`}
                 >
-                  {item.label === "Tous les jeux" ? "Jeux" : item.label === "Mes favoris" ? "Favoris" : item.label}
+                  {labels[item.id] || item.label}
                 </span>
               </Link>
             </li>
