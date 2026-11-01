@@ -212,6 +212,19 @@ body {
   overflow: hidden;
 }
 
+/* A short viewport (including the mobile keyboard) gives priority to the
+ * message field and microphone controls inside the active voice room. */
+.rg-voice-room-stage {
+  container-type: size;
+}
+@container (max-height: 360px) {
+  .rg-voice-room-secondary,
+  .rg-voice-room-meta,
+  .rg-voice-chat-heading {
+    display: none;
+  }
+}
+
 /* L'iframe remplit toute la scène. `display: block` supprime l'espace
  * d'interligne que les éléments en ligne laissent sous eux. */
 .rg-game-frame {

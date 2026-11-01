@@ -17,6 +17,15 @@ micros coupés et un halo autour des personnes qui parlent. Les contrôles flott
 restent accessibles pendant la navigation et les jeux. Quitter coupe le micro
 et déconnecte l’audio. Une actualisation complète nécessite de rejoindre à nouveau.
 
+Dans une salle, la vue est bornée à la hauteur disponible entre l’en-tête et
+la navigation mobile. Le chat et les commandes restent visibles ; seul l’historique
+des messages défile. **Participants · N** ouvre un panneau compact avec les
+photos, noms, hôte et état du micro : les huit personnes tiennent dans une grille
+de deux colonnes. Les invitations et les autres salons ont leurs propres panneaux,
+sans allonger la page. Les panneaux gardent le focus, se ferment avec Échap et
+rendent le focus au bouton d’ouverture. Le clavier mobile est pris en compte via
+`visualViewport` par le hook existant `useKeyboardInset`.
+
 Une salle sans participant disparaît après 60 secondes : ce délai permet une
 reconnexion après une coupure. Le créateur reste identifié comme hôte tant que
 la salle existe ; son départ ne coupe pas la conversation des autres membres.

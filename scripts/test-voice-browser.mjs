@@ -1,12 +1,12 @@
 // Opt-in: temporary Supabase users and a bounded room on the existing LiveKit.
 // No payment endpoint, game server or existing room is modified.
 import { execFileSync, spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { open, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { createClient } from '@supabase/supabase-js';
-import { RoomServiceClient } from 'livekit-server-sdk';
+import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 const require = createRequire(import.meta.url);
 require('@next/env').loadEnvConfig(process.cwd());
 if (process.env.RUN_VOICE_E2E !== '1') throw new Error('RUN_VOICE_E2E=1 obligatoire');
@@ -41,6 +41,63 @@ async function login(user, mobile = false) {
   await page.goto('http://localhost:3198/voice');
   await page.getByRole('button', { name: 'Créer une salle éphémère', exact: true }).waitFor();
   return page;
+}
+async function participants(page, check) {
+  await page.getByRole('button', { name: /^Participants ·/ }).click();
+  await check(page.getByRole('dialog'));
+  await page.getByRole('button', { name: 'Fermer le panneau', exact: true }).click();
+}
+async function friendsFromRoom(page) {
+  await page.getByRole('button', { name: 'Autres salons', exact: true }).click();
+  await page.getByRole('link', { name: 'Retrouver mes amis', exact: true }).click();
+}
+async function compactLayout(page, admission) {
+  const peers = await browser.newPage();
+  try {
+    await peers.goto('http://localhost:3198/voice');
+    await peers.addScriptTag({ path: process.cwd() + '/node_modules/livekit-client/dist/livekit-client.umd.js' });
+    const tokens = [];
+    for (const name of ['Charlotte','Alexandre','Camille','Raphael','Noemie','Gabriel']) {
+      const token = new AccessToken(voiceEnv.LIVEKIT_API_KEY, voiceEnv.LIVEKIT_API_SECRET, { identity: randomUUID(), name,
+        metadata: JSON.stringify({ avatarUrl: 'http://localhost:3198/icons/icon-192.png' }), ttl: 120 });
+      token.addGrant({ room: roomId, roomJoin: true, canPublish: false, canSubscribe: true });
+      tokens.push(await token.toJwt());
+    }
+    await peers.evaluate(async ({ serverUrl, tokens }) => {
+      window.layoutPeers = [];
+      for (const token of tokens) { const room = new window.LivekitClient.Room(); window.layoutPeers.push(room); await room.connect(serverUrl, token); }
+    }, { serverUrl: admission.serverUrl, tokens });
+    await page.getByRole('button', { name: 'Participants · 8', exact: true }).waitFor();
+    for (const [width, height] of [[320,568],[360,640],[390,844],[1280,800]]) {
+      await page.setViewportSize({ width, height });
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const dimensions = await page.evaluate(() => ({ h: innerHeight, w: innerWidth, docH: document.documentElement.scrollHeight, docW: document.documentElement.scrollWidth }));
+      assert.ok(dimensions.docW <= dimensions.w + 1 && dimensions.docH <= dimensions.h + 1, `page sans défilement ${width}x${height}`);
+      for (const locator of [page.getByRole('region', { name: 'Chat de la salle', exact: true }).getByLabel('Votre message'),
+        page.getByRole('button', { name: 'Activer le micro', exact: true }), page.getByRole('button', { name: 'Quitter la salle', exact: true })]) {
+        const bounds = await locator.boundingBox();
+        const nav = await page.getByRole('navigation', { name: 'Navigation principale' }).isVisible();
+        assert.ok(bounds && bounds.y >= 0 && bounds.y + bounds.height <= height - (nav ? 56 : 0) + 1, 'chat et commandes visibles sans swipe');
+      }
+      await page.getByRole('button', { name: 'Participants · 8', exact: true }).click();
+      const dialog = page.getByRole('dialog');
+      assert.equal(await dialog.getByRole('list', { name: 'Participants', exact: true }).getByRole('listitem').count(), 8);
+      assert.ok(await dialog.evaluate(el => {
+        const list = el.querySelector('ul').getBoundingClientRect(), box = el.getBoundingClientRect();
+        return list.top >= box.top && list.bottom <= box.bottom && box.top >= 0 && box.bottom <= innerHeight;
+      }), 'les huit participants visibles ensemble');
+      await page.keyboard.press('Tab');
+      assert.ok(await dialog.evaluate(el => el.contains(document.activeElement)), 'focus contenu dans le panneau');
+      if (width === 320) await page.screenshot({ path: work + '/participants-8-compact.png' });
+      await page.keyboard.press('Escape');
+      await dialog.waitFor({ state: 'detached' });
+      assert.equal(await page.getByRole('button', { name: 'Participants · 8', exact: true }).evaluate(el => el === document.activeElement), true);
+      if (width === 320) await page.screenshot({ path: work + '/voice-compact-320.png' });
+    }
+    console.log('OK — 8 participants dans un panneau, focus et Échap ; chat/micro sans swipe sur 320x568, 360x640, 390x844 et ordinateur');
+  } finally { await peers.evaluate(async () => { await Promise.all((window.layoutPeers || []).map(room => room.disconnect())); }).catch(() => {}); await peers.close(); }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Participants · 2', exact: true }).waitFor();
 }
 try {
   const log = await open(work + '/platform.log', 'w');
@@ -95,11 +152,15 @@ try {
   await a.getByRole('button', { name: 'Inviter AuditVoiceBob au vocal', exact: true }).click();
   const invitation = await (await invitationResponse).json();
   assert.ok(invitation.messageId, invitation.error);
+  await a.getByRole('button', { name: 'Fermer le panneau', exact: true }).click();
   await b.getByRole('dialog', { name: 'Conversation avec AuditVoiceAlice' }).getByRole('button', { name: 'Rejoindre le salon vocal', exact: true }).click({ timeout: 30000 });
   await b.getByRole('region', { name: 'Ta salle vocale' }).waitFor({ timeout: 60000 });
-  await a.getByRole('list', { name: 'Participants' }).getByText(/AuditVoiceBob/).waitFor();
-  await a.getByRole('list', { name: 'Participants' }).getByAltText('AuditVoiceBob').waitFor();
-  await a.waitForFunction(() => [...document.querySelectorAll('[aria-label="Participants"] img')].every(img => img.complete && img.naturalWidth > 0));
+  await participants(a, async dialog => {
+    await dialog.getByText(/AuditVoiceBob/).waitFor();
+    await dialog.getByAltText('AuditVoiceBob').waitFor();
+    await a.waitForFunction(() => [...document.querySelectorAll('[aria-label="Participants"] img')].every(img => img.complete && img.naturalWidth > 0));
+  });
+  await compactLayout(b, admission);
   assert.equal((await c.request.get('http://localhost:3198/api/voice')).status(), 200);
   const listed = await (await c.request.get('http://localhost:3198/api/voice')).json();
   assert.ok(!listed.rooms.some(r => r.id === roomId));
@@ -151,23 +212,23 @@ try {
   console.log('OK — chat dans les deux sens, texte rendu sans exécution, isolation entre salles, découverte publique, mobile 320px');
   await a.getByRole('region', { name: 'Ta salle vocale' }).getByRole('button', { name: 'Activer le micro', exact: true }).click();
   await b.getByRole('region', { name: 'Ta salle vocale' }).getByRole('button', { name: 'Activer le micro', exact: true }).click();
-  await a.getByRole('list', { name: 'Participants' }).getByText(/AuditVoiceBob.*(Micro actif|Parle)/).waitFor({ timeout: 30000 });
-  await b.getByRole('list', { name: 'Participants' }).getByText(/AuditVoiceAlice.*(Micro actif|Parle)/).waitFor({ timeout: 30000 });
+  await participants(a, dialog => dialog.getByText(/AuditVoiceBob.*(Micro actif|Parle)/).waitFor({ timeout: 30000 }));
+  await participants(b, dialog => dialog.getByText(/AuditVoiceAlice.*(Micro actif|Parle)/).waitFor({ timeout: 30000 }));
   for (const page of [a, b]) {
     await page.locator('audio').waitFor({ state: 'attached' });
     await page.waitForFunction(() => [...document.querySelectorAll('audio')].some(el => el.currentTime > 0 && !el.paused && el.srcObject?.getAudioTracks().some(t => t.readyState === 'live')));
   }
   await a.getByRole('region', { name: 'Ta salle vocale' }).getByRole('button', { name: 'Couper le micro', exact: true }).click();
-  await b.getByRole('list', { name: 'Participants' }).getByText(/AuditVoiceAlice.*Micro coupé/).waitFor();
+  await participants(b, dialog => dialog.getByText(/AuditVoiceAlice.*Micro coupé/).waitFor());
   console.log('OK — microphones synthétiques publiés/reçus dans les deux sens et mute distant');
-  await a.getByRole('link', { name: 'Retrouver mes amis', exact: true }).click();
+  await friendsFromRoom(a);
   await a.getByRole('complementary', { name: 'Vocal en cours' }).waitFor();
   await a.getByRole('link', { name: /Salons vocaux · Créer/ }).click();
   await a.getByRole('region', { name: 'Ta salle vocale' }).waitFor();
   await a.reload();
   await a.locator('section').filter({ has: a.getByRole('heading', { name: 'Vocal Audit', exact: true }) }).getByRole('button', { name: 'Rejoindre le vocal', exact: true }).click();
   await a.getByRole('region', { name: 'Ta salle vocale' }).waitFor();
-  await a.getByRole('link', { name: 'Retrouver mes amis' }).click();
+  await friendsFromRoom(a);
   await a.getByRole('complementary', { name: 'Vocal en cours' }).waitFor();
   assert.equal((await service.listParticipants(roomId)).length, 2);
   await a.getByRole('complementary', { name: 'Vocal en cours' }).getByRole('button', { name: 'Quitter', exact: true }).click();
