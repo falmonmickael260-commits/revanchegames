@@ -28,7 +28,7 @@ export function InviteFriendDialog({
 
   const [slug, setSlug] = useState(() => active?.slug ?? PLAYABLE[0]?.id ?? "");
   // Pré-rempli seulement si l'on invite dans la partie en cours.
-  const [roomCode, setRoomCode] = useState(() => active?.roomCode ?? "");
+  const roomCode = active?.slug === slug ? active.roomCode : null;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -38,7 +38,7 @@ export function InviteFriendDialog({
   async function submit() {
     setPending(true);
     setError("");
-    const result = await sendGameInvitation(friend.id, slug, roomCode.trim() || null);
+    const result = await sendGameInvitation(friend.id, slug, roomCode || null);
     setPending(false);
     if (!result.ok) {
       setError(result.error);
@@ -107,8 +107,6 @@ export function InviteFriendDialog({
                 value={slug}
                 onChange={(event) => {
                   setSlug(event.target.value);
-                  // Le salon appartient au jeu : changer de jeu l'invalide.
-                  setRoomCode(active?.slug === event.target.value ? (active?.roomCode ?? "") : "");
                 }}
                 className="w-full rounded-lg border border-border-soft bg-void px-3 py-2.5 font-body text-base text-text focus:border-cyan/50 focus:outline-none sm:text-sm"
               >
@@ -121,21 +119,9 @@ export function InviteFriendDialog({
               </select>
             </label>
 
-            <label className="flex flex-col gap-1.5">
-              <span className="font-display text-xs font-semibold uppercase tracking-[0.15em] text-text-faint">
-                Code de salon (facultatif)
-              </span>
-              <input
-                value={roomCode}
-                onChange={(event) => setRoomCode(event.target.value)}
-                maxLength={32}
-                placeholder={inOwnGame ? "Ta partie en cours" : "Laisse vide pour inviter sur le jeu"}
-                className="w-full rounded-lg border border-border-soft bg-void px-3 py-2.5 font-body text-base text-text placeholder:text-text-faint focus:border-cyan/50 focus:outline-none sm:text-sm"
-              />
-              <span className="font-body text-[11px] text-text-faint">
-                Sans code, l&apos;invitation ouvre simplement le jeu.
-              </span>
-            </label>
+            <p className="font-body text-xs text-text-dim">
+              {inOwnGame && roomCode ? 'Ton ami rejoindra directement ta partie, sans code à saisir.' : 'Crée ou rejoins un salon dans ce jeu pour inviter directement ton ami dans ta partie.'}
+            </p>
 
             {error && <p className="font-body text-xs text-violet-soft">{error}</p>}
 

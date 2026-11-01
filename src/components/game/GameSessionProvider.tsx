@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import type { NativeSession } from '@/lib/game-connector/protocol';
 
 export type ActiveGame = {
   slug: string;
@@ -13,13 +14,16 @@ export type ActiveGame = {
    * nouvelle partie, même sur le même jeu.
    */
   roomCode: string | null;
+  launchRoom?: string | null;
+  admission?: { id: string; session: NativeSession };
   startedAt: number;
 };
 
 type GameSessionValue = {
   active: ActiveGame | null;
   /** Déclare la partie en cours. Sans effet si ce jeu est déjà celui qui tourne. */
-  start: (game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode">) => void;
+  start: (game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission">) => void;
+  reportRoom: (slug: string, code: string | null) => void;
   /** Termine la partie : démonte l'iframe et ferme ses connexions. */
   stop: () => void;
 };
@@ -48,7 +52,7 @@ const GameSessionContext = createContext<GameSessionValue | null>(null);
 export function GameSessionProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState<ActiveGame | null>(null);
 
-  const start = useCallback((game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode">) => {
+  const start = useCallback((game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission">) => {
     setActive((previous) => {
       // Le point crucial de tout ce fichier. Revenir sur /play/<slug> fait
       // re-rendre la page côté serveur, qui re-signe un jeton et produit donc
@@ -59,16 +63,19 @@ export function GameSessionProvider({ children }: { children: React.ReactNode })
       // Le salon compte autant que le jeu : accepter une invitation vers un
       // autre salon du même jeu doit bien recharger la partie, alors qu'un
       // simple retour sur /play/<slug> ne doit rien toucher.
-      if (previous && previous.slug === game.slug && previous.roomCode === game.roomCode) {
+      if (previous && previous.slug === game.slug && (!game.admission || previous.admission?.id === game.admission.id) &&
+          (!game.roomCode || previous.launchRoom === game.roomCode)) {
         return previous;
       }
-      return { ...game, startedAt: Date.now() };
+      return { ...game, launchRoom: game.roomCode, startedAt: Date.now() };
     });
   }, []);
 
   const stop = useCallback(() => setActive(null), []);
+  const reportRoom = useCallback((slug: string, code: string | null) => setActive(previous =>
+    previous?.slug === slug && previous.roomCode !== code ? { ...previous, roomCode: code } : previous), []);
 
-  const value = useMemo<GameSessionValue>(() => ({ active, start, stop }), [active, start, stop]);
+  const value = useMemo<GameSessionValue>(() => ({ active, start, stop, reportRoom }), [active, start, stop, reportRoom]);
 
   return <GameSessionContext.Provider value={value}>{children}</GameSessionContext.Provider>;
 }

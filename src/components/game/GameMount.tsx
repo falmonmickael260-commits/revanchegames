@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useGameSession } from "./GameSessionProvider";
+import type { NativeSession } from '@/lib/game-connector/protocol';
 
 /**
  * Déclare auprès de la coquille quelle partie doit tourner.
@@ -16,11 +17,13 @@ export function GameMount({
   name,
   src,
   roomCode = null,
+  admission,
 }: {
   slug: string;
   name: string;
   src: string;
   roomCode?: string | null;
+  admission?: { id: string; session: NativeSession };
 }) {
   const { start } = useGameSession();
 
@@ -28,8 +31,8 @@ export function GameMount({
     // `start` ignore un couple (slug, salon) déjà actif, donc ni le double
     // appel du mode strict de React, ni un retour sur cette page, ne
     // rechargent la partie.
-    start({ slug, name, src, roomCode });
-  }, [start, slug, name, src, roomCode]);
+    start({ slug, name, src, roomCode, admission });
+  }, [start, slug, name, src, roomCode, admission]);
 
   return null;
 }

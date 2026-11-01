@@ -93,7 +93,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
 
       {/* Invitation reçue : par-dessus tout, y compris l'écran de jeu, où
           l'en-tête et sa cloche sont masqués. Une invitation est périssable. */}
-      <InvitationToast />
+      <Suspense fallback={null}><InvitationToast /></Suspense>
 
       {/* Proposition d'activer les notifications — seulement hors partie, pour
           ne jamais concurrencer l'écran de jeu ou son chat flottant. */}

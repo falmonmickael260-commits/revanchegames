@@ -32,7 +32,13 @@ export default function SignInPage() {
       return;
     }
 
-    router.push("/profile");
+    const requested = new URLSearchParams(window.location.search).get('next');
+    let destination = '/profile';
+    if (requested?.startsWith('/') && !requested.startsWith('//') && !requested.includes('\\')) {
+      const parsed = new URL(requested, window.location.origin);
+      if (parsed.origin === window.location.origin) destination = parsed.pathname + parsed.search + parsed.hash;
+    }
+    router.push(destination);
     router.refresh();
   }
 

@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     message_ = `${actorName} t'invite à jouer${label ? ` à ${label}` : ""}.`;
     // Ouvre directement le jeu concerné ; la validité de l'invitation est
     // revérifiée à l'arrivée par la bannière d'invitation.
-    url = `/play/${invitation.game_slug}`;
+    url = `/play/${invitation.game_slug}?invite=${encodeURIComponent(body.invitationId)}`;
     tag = `rg-invitation-${invitation.game_slug}`;
   } else if (body.type === "platform_invite") {
     if (typeof body.toUserId !== "string") {

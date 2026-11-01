@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Gamepad2, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useSocial } from "./SocialProvider";
@@ -23,13 +23,14 @@ import { GAMES } from "@/data/games";
 export function InvitationToast() {
   const { invitations, refresh } = useSocial();
   const router = useRouter();
+  const requested = useSearchParams().get('invite');
   const [busy, setBusy] = useState(false);
   // L'erreur est rattachée à l'invitation qui l'a produite : elle disparaît
   // d'elle-même quand on passe à une autre, sans effet de synchronisation.
   const [failure, setFailure] = useState<{ invitationId: string; message: string } | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
 
-  const invitation = invitations.find((item) => !dismissed.includes(item.id));
+  const invitation = invitations.find(item => item.id === requested && !dismissed.includes(item.id)) || invitations.find((item) => !dismissed.includes(item.id));
   const error = failure && invitation && failure.invitationId === invitation.id ? failure.message : "";
 
   if (!invitation) return null;
@@ -58,7 +59,8 @@ export function InvitationToast() {
     if (accept && result.data?.status === "accepted") {
       const slug = result.data.game_slug;
       const room = result.data.room_code;
-      router.push(`/play/${slug}${room ? `?room=${encodeURIComponent(room)}` : ""}`);
+      const id = result.data.invitation_id;
+      router.push(`/play/${slug}${id ? `?invitation=${encodeURIComponent(id)}` : room ? `?room=${encodeURIComponent(room)}` : ''}`);
     }
   }
 
@@ -69,7 +71,7 @@ export function InvitationToast() {
       // sous le grain décoratif. Centré en haut pour ne pas recouvrir les
       // commandes de jeu, qui sont presque toujours en bas.
       className="fixed left-2 right-2 z-[55] mx-auto flex max-w-sm flex-col gap-2.5 rounded-2xl border border-cyan/40 bg-surface/98 p-3 shadow-[0_12px_48px_rgba(0,0,0,0.6)] backdrop-blur-lg sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
-      style={{ top: "calc(var(--rg-game-bar-h) + 0.5rem)" }}
+      style={{ top: "calc(var(--rg-game-bar-h) + 0.5rem)", zIndex: 60 }}
     >
       <div className="flex items-start gap-2.5">
         <Avatar
@@ -115,7 +117,7 @@ export function InvitationToast() {
           className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan to-violet px-3 py-2 font-display text-xs font-semibold text-void disabled:opacity-50"
         >
           <Gamepad2 className="h-3.5 w-3.5" />
-          {busy ? "…" : "Rejoindre"}
+          {busy ? "…" : "Accepter"}
         </button>
         <button
           type="button"

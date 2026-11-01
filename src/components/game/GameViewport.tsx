@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft, Maximize2, Minimize2, PowerOff } from "lucide-react";
 import { useGameSession } from "./GameSessionProvider";
 import { ReportIssueButton } from "@/components/social/ReportIssueButton";
+import { validRoom } from '@/lib/game-connector/protocol';
 
 /**
  * L'écran de jeu immersif, et le seul endroit où l'iframe du jeu est rendue.
@@ -15,17 +16,50 @@ import { ReportIssueButton } from "@/components/social/ReportIssueButton";
  * le moteur du jeu continue de tourner, connexion temps réel comprise.
  */
 export function GameViewport() {
-  const { active, stop } = useGameSession();
+  const { active, stop, reportRoom } = useGameSession();
   const pathname = usePathname();
   const router = useRouter();
   const stageRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [bridgeError, setBridgeError] = useState('');
 
   // Quel jeu a fini de charger. Dérivé plutôt que remis à zéro par un effet :
   // changer de partie suffit à faire repasser `loaded` à faux, sans rendu
   // intermédiaire ni effet en cascade.
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
-  const activeKey = active ? `${active.slug}:${active.roomCode ?? ""}` : null;
+  const activeKey = active ? `${active.slug}:${active.startedAt}` : null;
   const loaded = activeKey !== null && loadedKey === activeKey;
+  const launch = activeKey;
+  const target = active ? new URL(active.src).origin : null;
+  const slug = active?.slug;
+  const admission = active?.admission;
+  useEffect(() => {
+    if (!slug || !target || !launch) return;
+    let cancelled = false;
+    let inFlight = false;
+    const receive = async (event: MessageEvent) => {
+      const data = event.data;
+      if (event.source !== iframeRef.current?.contentWindow || event.origin !== target || data?.v !== 1 || data.game !== slug) return;
+      if (data.type === 'rg:ready') {
+        iframeRef.current?.contentWindow?.postMessage({ type: 'rg:bootstrap', v: 1, game: slug, launch, admission }, target);
+        return;
+      }
+      if (data.launch !== launch) return;
+      if (data.type === 'rg:join-error') { setBridgeError('Connexion au salon interrompue. Réessaie depuis ton invitation.'); return; }
+      if (data.type !== 'rg:room' || inFlight) return;
+      if (!data.session) { reportRoom(slug, null); return; }
+      if (!validRoom(data.session.code) || JSON.stringify(data.session).length > 4096) return;
+      inFlight = true;
+      try {
+        const response = await fetch('/api/game/rooms/current', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: slug, session: data.session }) });
+        if (response.ok && !cancelled) { const room = await response.json(); reportRoom(slug, room.code); setBridgeError(''); }
+        else if (response.status !== 401 && !cancelled) { const body = await response.json(); setBridgeError(body.error || 'La connexion aux invitations est momentanément indisponible.'); }
+      } finally { inFlight = false; }
+    };
+    const listener = (event: MessageEvent) => { void receive(event).catch(() => {}); };
+    window.addEventListener('message', listener);
+    return () => { cancelled = true; window.removeEventListener('message', listener); };
+  }, [slug, target, launch, admission, reportRoom]);
 
   // État du plein écran, lu directement de l'API du navigateur.
   // `useSyncExternalStore` est l'outil prévu pour ça — c'est aussi ce
@@ -134,6 +168,7 @@ export function GameViewport() {
           </div>
         </div>
       )}
+      {bridgeError && onThisGame && <p role="alert" className="fixed left-3 right-3 top-16 z-50 rounded-xl bg-surface p-3 text-sm text-text">{bridgeError}</p>}
 
       <div
         ref={stageRef}
@@ -158,11 +193,12 @@ export function GameViewport() {
             conserve telle quelle — `src` est figée par le fournisseur de
             session (voir son commentaire). */}
         <iframe
-          key={`${active.slug}:${active.roomCode ?? ""}`}
+          ref={iframeRef}
+          key={activeKey}
           src={active.src}
           title={active.name}
           className="rg-game-frame"
-          onLoad={() => setLoadedKey(`${active.slug}:${active.roomCode ?? ""}`)}
+          onLoad={() => setLoadedKey(activeKey)}
           allow="fullscreen; autoplay; clipboard-write; gamepad; microphone"
         />
       </div>

@@ -96,20 +96,28 @@ export function inviteToPlatform(toUserId: string) {
   return rpc<boolean>("invite_to_platform", { p_to_user_id: toUserId });
 }
 
-export function sendGameInvitation(toUserId: string, gameSlug: string, roomCode?: string | null) {
-  return rpc<string>("send_game_invitation", {
-    p_to_user_id: toUserId,
-    p_game_slug: gameSlug,
-    p_room_code: roomCode ?? null,
-  });
+export async function sendGameInvitation(toUserId: string, gameSlug: string, roomCode?: string | null): Promise<ActionResult<string>> {
+  try {
+    const response = await fetch('/api/game/invitations', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: toUserId, game: gameSlug, room: roomCode || null }) });
+    const body = await response.json();
+    return response.ok ? { ok: true, data: body.id } : { ok: false, error: body.error || 'Invitation indisponible.' };
+  } catch { return { ok: false, error: 'Problème de connexion — réessaie.' }; }
 }
 
-export type InvitationOutcome = { status: string; game_slug: string; room_code: string | null };
+export type InvitationOutcome = { status: string; game_slug: string; room_code: string | null; invitation_id?: string };
 
 export async function respondToGameInvitation(
   invitationId: string,
   accept: boolean,
 ): Promise<ActionResult<InvitationOutcome | null>> {
+  if (accept) {
+    try {
+      const response = await fetch(`/api/game/invitations/${encodeURIComponent(invitationId)}/accept`, { method: 'POST' });
+      const body = await response.json();
+      return response.ok ? { ok: true, data: body } : { ok: false, error: body.error || 'Connexion au salon impossible.' };
+    } catch { return { ok: false, error: 'Problème de connexion — réessaie.' }; }
+  }
   const result = await rpc<InvitationOutcome[]>("respond_to_game_invitation", {
     p_invitation_id: invitationId,
     p_accept: accept,

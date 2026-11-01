@@ -39,6 +39,7 @@ export function InGameInviteDock({
   async function invite(friendId: string) {
     setBusyId(friendId);
     setError("");
+    if (!roomCode) { setError('Crée ou rejoins un salon dans le jeu avant d’inviter un ami.'); setBusyId(null); return; }
     const result = await sendGameInvitation(friendId, gameSlug, roomCode);
     setBusyId(null);
 
@@ -49,7 +50,7 @@ export function InGameInviteDock({
     if (result.data) {
       void requestPushDelivery({ type: "game_invitation", invitationId: result.data });
     }
-    setSentTo((set) => new Set(set).add(friendId));
+    setSentTo((set) => new Set(set).add(`${roomCode}:${friendId}`));
   }
 
   return (
@@ -62,7 +63,7 @@ export function InGameInviteDock({
         className={`fixed left-3 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface-raised/90 text-text shadow-[0_6px_24px_rgba(0,0,0,0.45)] backdrop-blur transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50 sm:left-4 ${
           open ? "opacity-100" : "opacity-75"
         }`}
-        style={{ bottom: "calc(0.75rem + var(--rg-safe-bottom))" }}
+        style={{ bottom: "calc(0.75rem + var(--rg-safe-bottom))", zIndex: 55 }}
       >
         {open ? <X className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
       </button>
@@ -71,7 +72,7 @@ export function InGameInviteDock({
         <section
           aria-label="Inviter un ami dans cette partie"
           className="fixed left-2 right-2 z-50 flex max-h-[60dvh] flex-col overflow-hidden rounded-2xl border border-border bg-surface/95 shadow-[0_12px_48px_rgba(0,0,0,0.6)] backdrop-blur-lg sm:left-4 sm:right-auto sm:w-[320px]"
-          style={{ bottom: "calc(3.75rem + 0.75rem + var(--rg-safe-bottom))" }}
+          style={{ bottom: "calc(3.75rem + 0.75rem + var(--rg-safe-bottom))", zIndex: 56 }}
         >
           <header className="flex shrink-0 items-center justify-between border-b border-border-soft px-3 py-2.5">
             <p className="font-display text-sm font-semibold text-text">Inviter dans la partie</p>
@@ -93,7 +94,7 @@ export function InGameInviteDock({
 
           <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2">
             {friends.map((friend) => {
-              const sent = sentTo.has(friend.id);
+              const sent = sentTo.has(`${roomCode}:${friend.id}`);
               return (
                 <li
                   key={friend.id}
