@@ -118,6 +118,23 @@ arrière-plan et le parcours autonome complet restent à vérifier sur appareils
 
 ## Déploiement
 
+Les cinq branches `codex/direct-invitations` sont publiées dans leurs dépôts.
+Les services existants Président, La Meute et Quiz Master ont été reliés à ces
+branches, sans modification des règles, domaines, volumes ou autres variables.
+
+| Jeu | Commit de l'adaptateur | Déploiement |
+| --- | --- | --- |
+| Président | `9f33b06` | Railway, `dad9f8bd-5f1d-43ef-bd8d-a099084b06a0` |
+| La Meute | `50db19a` | Railway SUCCESS, `d167497d-cbde-479f-a7da-3b28527fdc85` |
+| Quiz Master | `1f4c1c4` | Railway SUCCESS, `8f8fc878-aa0a-4879-831c-3b3be20cb11b` |
+| 10000 | `1954a26` | Publié également sur `main` ; connecteur Render confirmé par une sonde signée HTTP 409 sur salon fictif |
+| Kilomax | `5fcd56e` | Branche publiée ; configuration Supabase distante manquante, pas de déploiement Vercel de l'adaptateur |
+
+Les sondes sur un salon volontairement inexistant vérifient l'authentification
+backend sans créer de partie ni connecter un joueur. Le serveur doit répondre
+409 après reconnaissance de la signature, et 403 sans signature. Elles ne
+remplacent pas les parcours navigateur de recette.
+
 Les résultats navigateur ci-dessus portent sur les serveurs locaux, pas une
 preuve de parcours entre deux joueurs de production. Déployer les adaptateurs
 avant la plateforme, vérifier les signatures avec des sondes sans salon, puis
