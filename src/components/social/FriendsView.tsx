@@ -500,6 +500,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         title="Amis"
         subtitle="Une seule liste d'amis pour tous les jeux de la plateforme."
       />
+      <Link href="/voice" className="inline-flex min-h-11 items-center self-start rounded-xl border border-border-soft bg-surface px-4 py-2 text-sm text-cyan">Salons vocaux · Créer ou rejoindre une salle</Link>
       {children}
     </div>
   );
