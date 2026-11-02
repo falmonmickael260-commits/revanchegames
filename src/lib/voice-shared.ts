@@ -1,6 +1,6 @@
 export const VOICE_PREFIX = "rg-social-";
 export const VOICE_CAPACITY = 8;
-export type VoiceRoom = { id: string; title: string; hostId: string; hostName: string; count: number; visibility: "public" | "friends"; hostAvatar: string | null; instanceId?: string };
+export type VoiceRoom = { id: string; title: string; hostId: string; hostName: string; count: number; visibility: "public" | "friends"; hostAvatar: string | null; locked: boolean; instanceId?: string };
 export const VOICE_CHAT_TOPIC = "rg-social-chat-v1";
 
 export function voiceMetadata(name: string, metadata: string): Omit<VoiceRoom, "count"> | null {
@@ -11,7 +11,8 @@ export function voiceMetadata(name: string, metadata: string): Omit<VoiceRoom, "
       typeof value.hostName !== "string" || typeof value.title !== "string") return null;
     if (name !== VOICE_PREFIX + value.hostId) return null;
     return { id: name, hostId: value.hostId, hostName: value.hostName, title: value.title,
-      visibility: value.visibility === "public" ? "public" : "friends", hostAvatar: typeof value.hostAvatar === "string" ? value.hostAvatar : null };
+      visibility: value.visibility === "public" ? "public" : "friends", hostAvatar: typeof value.hostAvatar === "string" ? value.hostAvatar : null,
+      locked: value.hasPasscode === true };
   } catch { return null; }
 }
 

@@ -12,7 +12,7 @@ type VoiceState = {
   reconnecting: boolean; error: string; needsAudio: boolean;
   messages: ChatMessage[]; sending: boolean; chatError: string;
   sendMessage: (body: string) => Promise<boolean>;
-  join: (action: "create" | "join" | "joinInvitation", value: string, visibility?: "public" | "friends") => Promise<void>;
+  join: (action: "create" | "join" | "joinInvitation", value: string, visibility?: "public" | "friends", passcode?: string) => Promise<void>;
   leave: () => void; toggleMic: () => Promise<void>; enableAudio: () => Promise<void>;
 };
 const VoiceContext = createContext<VoiceState | null>(null);
@@ -48,14 +48,14 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   // Stop capture and subscriptions on logout/account switch and on unmount.
   useEffect(() => () => leave(), [me?.id, leave]);
 
-  const join = useCallback(async (action: "create" | "join" | "joinInvitation", value: string, visibility: "public" | "friends" = "public") => {
+  const join = useCallback(async (action: "create" | "join" | "joinInvitation", value: string, visibility: "public" | "friends" = "public", passcode?: string) => {
     if (connection.current || busy) return;
     const attempt = ++epoch.current;
     setError(""); setBusy(true);
     let room: Room | null = null;
     try {
       const response = await fetch("/api/voice", { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(action === "create" ? { action, title: value, visibility } : action === "joinInvitation" ? { action, messageId: value } : { action, roomId: value }) });
+        body: JSON.stringify(action === "create" ? { action, title: value, visibility, passcode: passcode || undefined } : action === "joinInvitation" ? { action, messageId: value } : { action, roomId: value, passcode }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Connexion impossible.");
       if (attempt !== epoch.current) return;
