@@ -2,13 +2,9 @@ import Image from "next/image";
 import type { Game } from "@/types/game";
 import { GAME_ICON_MAP } from "@/lib/game-icon-map";
 
-/**
- * Card illustration: the game's real cover art when one is set in games.ts,
- * otherwise a generated placeholder built from its accent theme + motif icon.
- * Decorative only (alt="") — the game name is already announced by the
- * heading that follows it in GameCard.
- */
+/** Selected covers use decorative art with the exact game name rendered as live text. */
 export function GameArt({ game, className = "", eager = false }: { game: Game; className?: string; eager?: boolean }) {
+  const hasCustomCover = game.image?.endsWith("-cover.webp") ?? false;
   if (game.image) {
     return (
       <div className={`relative overflow-hidden ${className}`}>
@@ -20,10 +16,7 @@ export function GameArt({ game, className = "", eager = false }: { game: Game; c
           sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover"
         />
-        <div
-          className="absolute inset-x-0 bottom-0 h-10"
-          style={{ background: "linear-gradient(to top, var(--rg-surface), transparent)" }}
-        />
+        {hasCustomCover && <><div className="rg-game-art-vignette" aria-hidden="true" /><span className="rg-game-art-title" aria-hidden="true" style={{ borderColor: `${game.theme.accent}b8`, boxShadow: `0 0 24px ${game.theme.accent}45` }}>{game.name}</span></>}
       </div>
     );
   }
@@ -73,10 +66,6 @@ function GeneratedArt({ game, className }: { game: Game; className: string }) {
         strokeWidth={1.8}
       />
 
-      <div
-        className="absolute inset-x-0 bottom-0 h-10"
-        style={{ background: "linear-gradient(to top, var(--rg-surface), transparent)" }}
-      />
     </div>
   );
 }
