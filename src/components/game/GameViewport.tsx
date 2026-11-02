@@ -1,5 +1,7 @@
 "use client";
 
+import { VoiceGameControl } from "@/components/voice/VoiceDock";
+
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft, Maximize2, Minimize2, PowerOff } from "lucide-react";
@@ -136,6 +138,7 @@ export function GameViewport() {
           </p>
 
           <div className="flex shrink-0 items-center gap-0.5">
+            <VoiceGameControl />
             {/* Signaler un souci sans quitter la partie : c'est ici qu'on est
                 quand un jeu ne se lance pas ou qu'un joueur dérape, et le
                 contexte (jeu + salon) part avec le signalement. */}

@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { Room } from "livekit-client";
 import { useSocial } from "@/components/social/SocialProvider";
@@ -21,7 +19,6 @@ const VoiceContext = createContext<VoiceState | null>(null);
 
 export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const { me } = useSocial();
-  const pathname = usePathname();
   const connection = useRef<Room | null>(null);
   const epoch = useRef(0);
   const audio = useRef<HTMLDivElement>(null);
@@ -148,16 +145,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     messages, sending, chatError, sendMessage }}>
     {children}
     <div ref={audio} className="hidden" aria-hidden="true" />
-    {current && pathname !== "/voice" && <aside aria-label="Vocal en cours" className="fixed right-3 z-[70] max-w-[calc(100vw-24px)] rounded-xl border border-cyan/40 bg-abyss p-3 text-sm shadow-xl" style={{ bottom: "calc(var(--rg-bottom-nav-h) + 12px)" }}>
-      <Link href="/voice" className="font-semibold text-cyan">{current.title} · {members.length} en vocal</Link>
-      <div className="mt-2 flex flex-wrap gap-3">
-        <button type="button" onClick={() => void toggleMic()} className="min-h-11">{muted ? "Activer le micro" : "Couper le micro"}</button>
-        {needsAudio && <button type="button" onClick={() => void enableAudio()} className="min-h-11 text-cyan">Activer le son</button>}
-        <button type="button" onClick={leave} className="min-h-11 text-rose-300">Quitter</button>
-      </div>
-      {reconnecting && <p role="status">Reconnexion…</p>}
-      {error && <p role="alert" className="max-w-72 text-rose-300">{error}</p>}
-    </aside>}
+
   </VoiceContext.Provider>;
 }
 

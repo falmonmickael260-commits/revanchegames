@@ -221,6 +221,44 @@ try {
   await a.getByRole('region', { name: 'Ta salle vocale' }).getByRole('button', { name: 'Couper le micro', exact: true }).click();
   await participants(b, dialog => dialog.getByText(/AuditVoiceAlice.*Micro coupé/).waitFor());
   console.log('OK — microphones synthétiques publiés/reçus dans les deux sens et mute distant');
+  // The native game is replaced with an inert iframe; only the platform toolbar is exercised.
+  const fakeGame = async route => {
+    if (route.request().resourceType() === 'document' && route.request().frame().parentFrame()) {
+      await route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Jeu de test</title><body style="margin:0;background:#18212c;color:white">Zone de jeu de test</body>' });
+    } else await route.continue();
+  };
+  await a.route('**/*', fakeGame);
+  await a.locator('a[href="/library"]').first().click();
+  await a.locator('a[href="/play/president"]').first().click();
+  const gameVoice = a.getByRole('button', { name: 'Commandes du vocal', exact: true });
+  await gameVoice.waitFor();
+  assert.equal(await gameVoice.getAttribute('aria-expanded'), 'false');
+  assert.equal(await a.getByRole('complementary', { name: 'Vocal en cours', exact: true }).count(), 0);
+  assert.equal(await a.getByRole('complementary', { name: 'Commandes du vocal', exact: true }).count(), 0);
+  for (const [width, height] of [[320,568],[390,844],[1280,800]]) {
+    await a.setViewportSize({ width, height });
+    const bar = await gameVoice.boundingBox();
+    const frame = await a.locator('iframe.rg-game-frame').boundingBox();
+    assert.ok(bar && frame && bar.y >= 0 && bar.y + bar.height <= frame.y + 1, 'vocal réduit dans la barre au-dessus du jeu');
+    await gameVoice.click();
+    const controls = a.getByRole('complementary', { name: 'Commandes du vocal', exact: true });
+    await controls.waitFor();
+    const box = await controls.boundingBox();
+    assert.ok(box && box.x >= 0 && box.x + box.width <= width && box.y >= frame.y, 'commandes déployées en haut, dans l’écran');
+    if (width === 320) await a.screenshot({ path: work + '/voice-in-game-expanded.png' });
+    await controls.getByRole('button', { name: 'Réduire le vocal', exact: true }).click();
+    assert.equal(await gameVoice.getAttribute('aria-expanded'), 'false');
+    if (width === 320) await a.screenshot({ path: work + '/voice-in-game-collapsed.png' });
+    await gameVoice.click();
+    await a.keyboard.press('Escape');
+    assert.equal(await gameVoice.getAttribute('aria-expanded'), 'false');
+  }
+  assert.equal((await service.listParticipants(roomId)).length, 2);
+  await gameVoice.click();
+  await a.getByRole('complementary', { name: 'Commandes du vocal', exact: true }).getByRole('link').click();
+  await a.getByRole('region', { name: 'Ta salle vocale' }).waitFor();
+  await a.unroute('**/*', fakeGame);
+  console.log('OK — vocal réduit par défaut dans la barre haute du jeu, ouverture/réduction/Échap, audio conservé sur trois formats');
   await friendsFromRoom(a);
   await a.getByRole('complementary', { name: 'Vocal en cours' }).waitFor();
   await a.getByRole('link', { name: /Salons vocaux · Créer/ }).click();

@@ -26,6 +26,13 @@ sans allonger la page. Les panneaux gardent le focus, se ferment avec Échap et
 rendent le focus au bouton d’ouverture. Le clavier mobile est pris en compte via
 `visualViewport` par le hook existant `useKeyboardInset`.
 
+Pendant un jeu, le vocal est réduit par défaut dans la barre de jeu existante,
+en haut : il n’occupe aucune place dans la zone de jeu. Son bouton affiche le
+nombre de participants et l’état du micro. Un appui ouvre les commandes sous
+la barre ; Réduire ou Échap les replie sans déconnecter l’audio. Le retour au
+salon et Quitter restent disponibles dans ces commandes. Sur les autres pages,
+le panneau flottant conserve aussi un bouton de réduction.
+
 Une salle sans participant disparaît après 60 secondes : ce délai permet une
 reconnexion après une coupure. Le créateur reste identifié comme hôte tant que
 la salle existe ; son départ ne coupe pas la conversation des autres membres.

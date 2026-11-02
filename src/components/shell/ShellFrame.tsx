@@ -1,5 +1,7 @@
 "use client";
 
+import { VoiceDock } from "@/components/voice/VoiceDock";
+
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
@@ -79,6 +81,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
 
       {/* Le jeu en cours : visible sur sa route, maintenu en vie ailleurs. */}
       <GameViewport />
+      <VoiceDock />
 
       {/* Retour à la partie — seulement quand on l'a quittée des yeux. */}
       {active && !immersive && <ResumeGamePill />}
