@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0d18",
+  themeColor: "#f6f4ef",
   width: "device-width",
   initialScale: 1,
   // La vue s'étend sous l'encoche et l'indicateur d'accueil ; les zones de
