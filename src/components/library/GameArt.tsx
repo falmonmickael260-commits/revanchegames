@@ -7,7 +7,7 @@ export function GameArt({ game, className = "", eager = false }: { game: Game; c
   const hasCustomCover = game.image?.endsWith("-cover.webp") ?? false;
   if (game.image) {
     return (
-      <div className={`relative overflow-hidden ${className}`}>
+        <div className={`rg-game-art${game.id === "la-meute" ? " rg-game-art-wolf" : ""} relative overflow-hidden ${className}`}>
         <Image
           src={game.image}
           alt=""
