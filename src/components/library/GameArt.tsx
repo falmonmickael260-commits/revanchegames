@@ -4,13 +4,15 @@ import { GAME_ICON_MAP } from "@/lib/game-icon-map";
 
 /** Selected covers use decorative art with the exact game name rendered as live text. */
 export function GameArt({ game, className = "", eager = false }: { game: Game; className?: string; eager?: boolean }) {
-  const hasCustomCover = game.image?.endsWith("-cover.webp") ?? false;
+  const isAnimated = game.image?.endsWith("-animated.webp") ?? false;
+  const hasCustomCover = isAnimated || (game.image?.endsWith("-cover.webp") ?? false);
   if (game.image) {
     return (
-        <div className={`rg-game-art${game.id === "la-meute" ? " rg-game-art-wolf" : ""} relative overflow-hidden ${className}`}>
+      <div className={`rg-game-art relative overflow-hidden ${className}`}>
         <Image
           src={game.image}
           alt=""
+          unoptimized={isAnimated}
           loading={eager ? "eager" : "lazy"}
           fill
           sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"

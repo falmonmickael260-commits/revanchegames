@@ -63,7 +63,7 @@ export const GAMES: Game[] = [
     enabled: true,
     url: "https://www.lameutenoire.fr/",
     icon: "moon-star",
-    image: "/games/la-meute-anime-cover.webp",
+    image: "/games/la-meute-anime-animated.webp",
     theme: { accent: "#7c5cff", accentSoft: "#b9a6ff" },
     addedAt: "2026-10-21",
     players: "6 à 15 joueurs",
