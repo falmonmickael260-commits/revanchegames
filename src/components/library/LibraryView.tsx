@@ -1,108 +1,24 @@
 "use client";
-
-import { Suspense, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
-import { SearchX } from "lucide-react";
+import { Suspense } from "react";
+import { useRouter,useSearchParams } from "next/navigation";
+import { Search, SearchX } from "lucide-react";
 import { GAMES } from "@/data/games";
-import type { GameCategory } from "@/types/game";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { SectionBanner } from "@/components/ui/SectionBanner";
 import { CategoryFilter } from "./CategoryFilter";
 import { GameGrid } from "./GameGrid";
 import { EmptyState } from "./EmptyState";
-import { FeaturedCarousel } from "./FeaturedCarousel";
-import { Shelf } from "./Shelf";
-
-const FEATURED_IDS = ["president", "neon-hockey", "la-meute", "fortune-empire", "kilomax", "quiz-master"];
-
-/**
- * The app's main screen: the full, searchable, filterable catalog.
- * Rendered directly on "/" (Accueil) and "/library" (Tous les jeux) — both
- * land here immediately, no landing-page detour before reaching real content.
- */
+function searchable(value:string) { return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase(); }
 function LibraryContent() {
-  const searchParams = useSearchParams();
-  const query = (searchParams.get("q") ?? "").trim().toLowerCase();
-  const category = searchParams.get("category") as GameCategory | null;
-  const browsing = !query && !category;
-
-  const filtered = useMemo(() => {
-    return GAMES.filter((game) => {
-      const matchesQuery = query ? game.name.toLowerCase().includes(query) : true;
-      const matchesCategory = category ? game.categories.includes(category) : true;
-      return matchesQuery && matchesCategory;
-    });
-  }, [query, category]);
-
-  const availableCount = useMemo(() => GAMES.filter((g) => g.enabled).length, []);
-  const featured = useMemo(
-    () => FEATURED_IDS.map((id) => GAMES.find((g) => g.id === id)).filter((g): g is (typeof GAMES)[number] => !!g),
-    [],
-  );
-  const availableGames = useMemo(() => GAMES.filter((g) => g.enabled), []);
-
-  return (
-    <div className="flex flex-col gap-7 overflow-x-hidden py-6">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <PageHeader
-          eyebrow="Revanche Games"
-          title="Bibliothèque"
-          subtitle={`${GAMES.length} jeux au catalogue — ${availableCount} disponibles, ${
-            GAMES.length - availableCount
-          } en développement.`}
-        />
-      </div>
-
-      {browsing && (
-        <>
-          <section className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div
-              className="pointer-events-none absolute -inset-x-10 -top-16 -bottom-10 -z-10 opacity-60"
-              style={{
-                background:
-                  "radial-gradient(ellipse 50% 60% at 15% 20%, rgba(178,75,255,0.16), transparent 70%), radial-gradient(ellipse 45% 55% at 85% 60%, rgba(47,230,255,0.14), transparent 70%)",
-              }}
-            />
-            <div className="mb-3">
-              <SectionBanner label="En vedette" color="#b24bff" />
-            </div>
-            <FeaturedCarousel games={featured} />
-          </section>
-
-          <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-3">
-              <SectionBanner label="Disponibles maintenant" color="#2fe6ff" />
-            </div>
-            <Shelf games={availableGames} />
-          </section>
-        </>
-      )}
-
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 sm:px-6 lg:px-8">
-        <SectionBanner
-          label={browsing ? "Toute la bibliothèque" : "Résultats"}
-          color={browsing ? "#f2994a" : "#2fe6ff"}
-        />
-        <CategoryFilter />
-
-        {filtered.length > 0 ? (
-          <GameGrid games={filtered} />
-        ) : (
-          <EmptyState
-            icon={SearchX}
-            title="Aucun résultat"
-            message={`Aucun jeu ne correspond à « ${searchParams.get("q") ?? ""} ». Essayez un autre terme ou une autre catégorie.`}
-          />
-        )}
-      </div>
-    </div>
-  );
+  const params=useSearchParams(),router=useRouter();
+  const query=(params.get("q")??"").trim(),category=params.get("category"),availability=params.get("availability")??"all";
+  const filtered=GAMES.filter(game=>(!query||searchable(`${game.name} ${game.description}`).includes(searchable(query)))&&(!category||game.categories.some(value=>value===category))&&(availability==="all"||(availability==="playable"?game.enabled:!game.enabled))).sort((a,b)=>Number(b.enabled)-Number(a.enabled));
+  const filter=(value:string)=>{const next=new URLSearchParams(params.toString());if(value==="all")next.delete("availability");else next.set("availability",value);router.push(`/library?${next}`);};
+  return <div className="rg-page rg-library-page"><PageHeader eyebrow="À toi de choisir" title="Trouve ton prochain jeu." subtitle={`${GAMES.filter(game=>game.enabled).length} jeux disponibles, et d’autres aventures en préparation.`} />
+    <form action="/library" method="get" className="rg-search-field" onSubmit={event=>{event.preventDefault();const next=new URLSearchParams(params.toString());const value=new FormData(event.currentTarget).get("q") as string;if(value.trim())next.set("q",value.trim());else next.delete("q");router.push(`/library?${next}`);}}><Search className="h-4 w-4" /><input key={query} name="q" aria-label="Rechercher un jeu" placeholder="Quel jeu te tente ?" defaultValue={query} /><button type="submit" className="rg-icon-button" aria-label="Lancer la recherche"><Search className="h-4 w-4" /></button></form>
+    <div className="rg-social-tabs">{[["all","Tous"],["playable","Jouer maintenant"],["upcoming","À venir"]].map(([value,label])=><button key={value} type="button" aria-pressed={availability===value} onClick={()=>filter(value)}>{label}</button>)}</div>
+    <CategoryFilter />
+    <div className="rg-library-results"><p>{filtered.length} jeu{filtered.length>1?"x":""}{query?` pour « ${query} »`:""}</p>{query&&<button type="button" onClick={()=>router.push("/library")}>Effacer la recherche</button>}</div>
+    {filtered.length?<GameGrid games={filtered} />:<EmptyState icon={SearchX} title="Pas de jeu trouvé" message="Essaie un autre nom ou une autre catégorie." />}
+  </div>;
 }
-
-export function LibraryView() {
-  return (
-    <Suspense>
-      <LibraryContent />
-    </Suspense>
-  );
-}
+export function LibraryView(){return <Suspense fallback={<div className="rg-page"><div className="rg-skeleton h-60" /></div>}><LibraryContent /></Suspense>;}

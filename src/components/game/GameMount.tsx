@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { recordRecentGame } from "@/lib/use-recent-games";
 import { useGameSession } from "./GameSessionProvider";
 import type { NativeSession } from '@/lib/game-connector/protocol';
 
@@ -32,6 +33,7 @@ export function GameMount({
     // appel du mode strict de React, ni un retour sur cette page, ne
     // rechargent la partie.
     start({ slug, name, src, roomCode, admission });
+    recordRecentGame(slug);
   }, [start, slug, name, src, roomCode, admission]);
 
   return null;

@@ -167,10 +167,10 @@ export function GroupChatDialog({
       role="dialog"
       aria-modal="true"
       aria-label={`Groupe ${group.name}`}
-      className="fixed inset-0 z-[65] flex items-end justify-center bg-void/80 p-2 backdrop-blur-sm sm:items-center sm:p-3"
+      className="rg-group-dialog"
     >
       <div
-        className="flex w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_12px_48px_rgba(0,0,0,0.6)]"
+        className="rg-group-conversation"
         style={{
           // La hauteur suit le clavier virtuel : sans ça, sur iOS, la zone de
           // saisie se retrouve dessous (cf. useKeyboardInset).

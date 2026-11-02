@@ -18,7 +18,7 @@ export function CategoryFilter() {
   }
 
   return (
-    <div className="rg-rail gap-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    <div className="rg-category-filter">
       {CATEGORIES.map((cat) => {
         const isActive = active === cat.id;
         return (
@@ -27,12 +27,8 @@ export function CategoryFilter() {
             type="button"
             onClick={() => select(cat.id)}
             aria-pressed={isActive}
-            className="shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 font-body text-sm font-semibold transition-all"
-            style={
-              isActive
-                ? { background: cat.color, borderColor: cat.color, color: "var(--rg-void)" }
-                : { borderColor: "var(--rg-border-soft)", background: "var(--rg-surface)", color: "var(--rg-text-dim)" }
-            }
+            className="rg-category-chip"
+
           >
             {cat.label}
           </button>

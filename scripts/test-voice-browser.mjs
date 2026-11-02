@@ -37,7 +37,7 @@ async function login(user, mobile = false) {
   await page.getByLabel('Adresse e-mail').fill(user.email);
   await page.getByLabel('Mot de passe').fill(user.password);
   await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
-  await page.waitForURL('**/profile', { timeout: 60000 });
+  await page.waitForURL(url => url.pathname === '/' || url.pathname === '/profile', { timeout: 60000 });
   await page.goto('http://localhost:3198/voice');
   await page.getByRole('button', { name: 'Créer une salle éphémère', exact: true }).waitFor();
   return page;
@@ -130,7 +130,7 @@ try {
   const { error } = await admin.from('friendships').insert({ requester_id: alice.id, addressee_id: bob.id, status: 'accepted' });
   if (error) throw error;
   const a = await login(alice), b = await login(bob, true), c = await login(outsider);
-  assert.deepEqual(await b.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link').allTextContents(), ['Accueil','Jeux','Salons','Amis','Chat','Profil']);
+  assert.deepEqual(await b.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link').allTextContents(), ['Accueil','Jeux','Communauté','Messages','Profil']);
   const anon = await browser.newPage();
   await anon.goto('http://localhost:3198/voice');
   assert.equal((await anon.request.get('http://localhost:3198/api/voice')).status(), 401);

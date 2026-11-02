@@ -8,13 +8,14 @@ import { GAME_ICON_MAP } from "@/lib/game-icon-map";
  * Decorative only (alt="") — the game name is already announced by the
  * heading that follows it in GameCard.
  */
-export function GameArt({ game, className = "" }: { game: Game; className?: string }) {
+export function GameArt({ game, className = "", eager = false }: { game: Game; className?: string; eager?: boolean }) {
   if (game.image) {
     return (
       <div className={`relative overflow-hidden ${className}`}>
         <Image
           src={game.image}
           alt=""
+          loading={eager ? "eager" : "lazy"}
           fill
           sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover"

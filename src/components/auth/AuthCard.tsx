@@ -12,8 +12,8 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-[calc(100dvh-var(--rg-header-h))] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm rounded-2xl border border-border-soft bg-surface p-7 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+    <div className="rg-auth-page">
+      <div className="rg-auth-card">
         <p className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-cyan">
           {eyebrow}
         </p>

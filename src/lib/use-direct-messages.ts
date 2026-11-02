@@ -70,11 +70,11 @@ export function useDirectMessages({
     let cancelled = false;
     seenIds.current = new Set();
 
-    (async () => {
+    const load = async (initial = false) => {
       // `setLoading` est posé ici, dans la fonction asynchrone, et non dans
       // le corps de l'effet : un setState synchrone dans un effet provoque
       // un rendu en cascade (react-hooks/set-state-in-effect).
-      setLoading(true);
+      if (initial) setLoading(true);
       const supabase = createClient();
       const { data, error: loadError } = await supabase
         .from("direct_messages")
@@ -91,13 +91,23 @@ export function useDirectMessages({
       }
 
       const rows = (data ?? []).slice().reverse() as DirectMessageRow[];
+      const liveIds = new Set(seenIds.current);
       rows.forEach((row) => seenIds.current.add(row.id));
-      setMessages(rows.map(toChatMessage));
+      setMessages(previous => {
+        const values = new Map(rows.map(row => [row.id, toChatMessage(row)]));
+        for (const message of previous) if (!initial || liveIds.has(message.id)) values.set(message.id, message);
+        return [...values.values()].sort((a,b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)).slice(-HISTORY_LIMIT);
+      });
       setLoading(false);
-    })();
+    };
+    const first = setTimeout(() => void load(true), 0);
+    const resume = () => { if (document.visibilityState === "visible") void load(); };
+    document.addEventListener("visibilitychange", resume);
+    window.addEventListener("pageshow", resume);
 
     return () => {
-      cancelled = true;
+      cancelled = true; clearTimeout(first);
+      document.removeEventListener("visibilitychange", resume); window.removeEventListener("pageshow", resume);
     };
   }, [enabled, me, other, toChatMessage]);
 

@@ -11,6 +11,8 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { id: "home", label: "Accueil", href: "/", icon: Home },
   { id: "library", label: "Tous les jeux", href: "/library", icon: LayoutGrid },
+  { id: "community", label: "Communauté", href: "/community", icon: Users },
+  { id: "messages", label: "Messages", href: "/messages", icon: MessageCircle },
   { id: "favorites", label: "Mes favoris", href: "/favorites", icon: Heart },
   { id: "recent", label: "Récemment joués", href: "/recent", icon: History },
   { id: "new", label: "Nouveautés", href: "/new", icon: Sparkles },
@@ -23,13 +25,5 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "settings", label: "Paramètres", href: "/settings", icon: Settings },
 ];
 
-/**
- * Ce que la barre d'onglets du bas montre sur mobile.
- *
- * Six entrées avec des libellés courts, dont Salons juste après Jeux.
- * « Amis » y figure parce que c'est de là que partent les
- * invitations, et que la barre latérale qui le proposait n'existe pas sur
- * mobile. Les paramètres, eux, sont atteignables depuis la page Profil —
- * c'est là qu'on active les notifications, qui ne servent que sur téléphone.
- */
-export const MOBILE_NAV_IDS = ["home", "library", "voice", "friends", "chat", "profile"];
+/** Five stable mobile destinations; all secondary spaces remain accessible. */
+export const MOBILE_NAV_IDS = ["home", "library", "community", "messages", "profile"];

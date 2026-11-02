@@ -1,50 +1,23 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS, MOBILE_NAV_IDS } from "@/data/nav";
-
+import { useSocial } from "@/components/social/SocialProvider";
 export function BottomNav() {
   const pathname = usePathname();
-  const items = MOBILE_NAV_IDS.flatMap(id => NAV_ITEMS.filter(item => item.id === id));
-  const labels: Record<string, string> = { home: "Accueil", library: "Jeux", voice: "Salons", friends: "Amis", chat: "Chat", profile: "Profil" };
-
-  return (
-    <nav
-      aria-label="Navigation principale"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border-soft bg-abyss/90 backdrop-blur-lg lg:hidden"
-      // Doit valoir exactement `--rg-bottom-nav-h`, la place que <ShellFrame />
-      // reserve en bas des pages : 56 px utiles + la zone de securite.
-      style={{ height: "var(--rg-bottom-nav-h)", paddingBottom: "var(--rg-safe-bottom)" }}
-    >
-      <ul className="flex h-full items-stretch justify-around">
-        {items.map((item) => {
-          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <li key={item.id} className="flex-1">
-              <Link
-                href={item.href}
-                className="flex min-h-[56px] flex-col items-center justify-center gap-1 px-2 py-2"
-              >
-                <Icon
-                  className={`h-5 w-5 ${active ? "text-cyan" : "text-text-faint"}`}
-                  strokeWidth={2}
-                  fill={active ? "var(--rg-cyan)" : "none"}
-                  fillOpacity={active ? 0.15 : 0}
-                />
-                <span
-                  className={`font-body text-[10px] leading-none ${
-                    active ? "text-text" : "text-text-faint"
-                  }`}
-                >
-                  {labels[item.id] || item.label}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
+  const { dmUnread, unreadCount } = useSocial();
+  const messages = [...dmUnread.values()].reduce((sum, count) => sum + count, 0);
+  const community = unreadCount;
+  return <nav aria-label="Navigation principale" className="rg-bottom-nav" style={{ height: "var(--rg-bottom-nav-h)", paddingBottom: "var(--rg-safe-bottom)" }}>
+    {MOBILE_NAV_IDS.map(id => {
+      const item = NAV_ITEMS.find(item => item.id === id)!;
+      const active = id === "home" ? pathname === "/" : id === "community" ? ["/community","/voice","/friends","/chat"].some(route => pathname.startsWith(route)) : pathname.startsWith(item.href);
+      const count = id === "messages" ? messages : id === "community" ? community : 0;
+      const Icon = item.icon;
+      return <Link key={id} href={item.href} aria-current={active ? "page" : undefined} className={active ? "is-active" : ""}>
+        <span className="rg-nav-icon"><Icon strokeWidth={active ? 2.5 : 1.8} className="h-5 w-5" />{count > 0 && <span className="rg-count" aria-label={`${count} non lus`}>{count > 99 ? "99+" : count}</span>}</span>
+        <span>{id === "library" ? "Jeux" : item.label}</span>
+      </Link>;
+    })}
+  </nav>;
 }

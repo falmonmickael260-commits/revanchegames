@@ -51,8 +51,12 @@ export function useWallet(userId: string | null): { balance: number | null; read
       )
       .subscribe();
 
+    const resume = () => { if (document.visibilityState === "visible") void load(); };
+    document.addEventListener("visibilitychange", resume);
+
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", resume);
       supabase.removeChannel(channel);
     };
   }, [userId, instanceId]);

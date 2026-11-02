@@ -351,7 +351,7 @@ export function FriendsView() {
               return (
                 <li
                   key={friend.friendshipId}
-                  className="flex items-center gap-3 rounded-xl border border-border-soft bg-surface px-3 py-2.5"
+                  className="rg-friend-member"
                 >
                   <Link href={`/profile/${friend.id}`} className="shrink-0">
                     <Avatar username={friend.username} avatarUrl={friend.avatarUrl} size="sm" />
@@ -494,11 +494,11 @@ export function FriendsView() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div className="rg-page rg-friends-page flex flex-col gap-6">
       <PageHeader
-        eyebrow="Communauté"
-        title="Amis"
-        subtitle="Une seule liste d'amis pour tous les jeux de la plateforme."
+        eyebrow="Ton équipe, partout"
+        title="Mes amis"
+        subtitle="Retrouve les personnes avec qui tu aimes jouer."
       />
       <Link href="/voice" className="inline-flex min-h-11 items-center self-start rounded-xl border border-border-soft bg-surface px-4 py-2 text-sm text-cyan">Salons vocaux · Créer ou rejoindre une salle</Link>
       {children}

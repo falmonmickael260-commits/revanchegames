@@ -135,6 +135,20 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
     await Promise.all([loadFriendships(), loadNotifications(), loadInvitations(me.id), loadDmUnread()]);
   }, [me, loadFriendships, loadNotifications, loadInvitations, loadDmUnread]);
 
+  // Reconcile events missed while the operating system suspended the PWA.
+  // Never reset Auth, game sessions or the persistent game iframe on resume.
+  useEffect(() => {
+    if (!me) return;
+    let last = 0;
+    const resume = () => {
+      if (document.visibilityState !== "visible" || Date.now() - last < 5000) return;
+      last = Date.now(); void refresh().catch(() => {});
+    };
+    window.addEventListener("pageshow", resume); window.addEventListener("focus", resume);
+    document.addEventListener("visibilitychange", resume);
+    return () => { window.removeEventListener("pageshow", resume); window.removeEventListener("focus", resume); document.removeEventListener("visibilitychange", resume); };
+  }, [me, refresh]);
+
   // Chargement initial. Rien à vider à la déconnexion : les valeurs
   // exposées plus bas sont filtrées sur `me`, ce qui évite un `setState`
   // dans un effet (et un rendu en cascade).

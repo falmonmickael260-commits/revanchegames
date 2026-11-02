@@ -127,6 +127,7 @@ export function GameViewport() {
           <button
             type="button"
             onClick={minimize}
+            aria-label="Retour à l’accueil"
             className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 font-display text-xs font-semibold text-text-dim transition-colors hover:bg-surface hover:text-text"
           >
             <ChevronLeft className="h-4 w-4" />

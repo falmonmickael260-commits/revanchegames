@@ -29,16 +29,16 @@ async function ShopContent({ searchParams }: { searchParams: Promise<{ payment?:
       new RegExp(`^(rk|sk)_${live ? "live" : "test"}_`).test(process.env.STRIPE_SECRET_KEY || "");
   } catch { /* A missing configuration leaves checkout disabled. */ }
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="rg-page rg-shop-page flex flex-col gap-7">
       <PageHeader
         eyebrow="Boutique"
-        title="Pièces Revanche"
-        subtitle="Une monnaie commune aux cinq jeux. Achète tes pièces en toute sécurité ou utilise un code promo."
+        title="Ton prochain coup de pouce."
+        subtitle="Un portefeuille commun aux jeux compatibles. Retrouve tes pièces, tes achats et tes codes promo."
       />
 
       <ShopWalletSection />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="rg-coin-packs">
         {PACKS.map((pack) => (
           <CoinPackCard key={pack.name} {...pack} available={configured && "packId" in pack} testMode={testMode} />
         ))}

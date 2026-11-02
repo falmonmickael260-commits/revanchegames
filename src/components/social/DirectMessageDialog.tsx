@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, type CSSProperties } from "react";
 import { X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
@@ -61,19 +62,17 @@ export function DirectMessageDialog({
       role="dialog"
       aria-modal="true"
       aria-label={`Conversation avec ${friend.username}`}
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-void/70 p-0 backdrop-blur-sm sm:items-center sm:p-3"
+      className="rg-direct-dialog"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <section
-        className="flex w-full flex-col overflow-hidden border border-border bg-surface shadow-[0_12px_48px_rgba(0,0,0,0.6)] sm:w-[400px] sm:rounded-2xl"
-        style={{
-          height: `calc(min(85dvh, 640px) - ${keyboardInset}px)`,
-          marginBottom: keyboardInset,
-        }}
+        className="rg-direct-conversation"
+        style={{ "--rg-keyboard-inset": `${keyboardInset}px` } as CSSProperties}
       >
         <header className="flex shrink-0 items-center gap-2.5 border-b border-border-soft px-3 py-2.5">
+          <Link href={`/profile/${friend.id}`} aria-label={`Profil de ${friend.username}`} className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar username={friend.username} avatarUrl={friend.avatarUrl} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-sm font-semibold text-text">{friend.username}</p>
@@ -82,6 +81,7 @@ export function DirectMessageDialog({
               {presenceLabel(friend.presence)}
             </p>
           </div>
+          </Link>
           <button
             type="button"
             onClick={onClose}

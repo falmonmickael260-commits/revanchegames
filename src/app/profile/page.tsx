@@ -13,6 +13,7 @@ import { MatchList } from "@/components/stats/MatchList";
 import { LevelBadge, toProgress } from "@/components/stats/LevelBadge";
 import { toMatches } from "@/lib/social/stats";
 import { createClient } from "@/lib/supabase/server";
+import { ProfileShortcuts } from "@/components/profile/ProfileShortcuts";
 import { PurchaseHistory } from "@/components/shop/PurchaseHistory";
 
 type GameStatsRow = {
@@ -37,8 +38,8 @@ export default function ProfilePage() {
 
 function ProfileSkeleton() {
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-      <PageHeader eyebrow="Compte" title="Profil" />
+    <div className="rg-page rg-profile-page flex flex-col gap-6">
+      <PageHeader eyebrow="Ton espace joueur" title="Mon profil" />
       <div className="h-24 animate-pulse rounded-2xl border border-border-soft bg-surface" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -60,12 +61,12 @@ async function ProfileContent() {
 
   if (!user) {
     return (
-      <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-        <PageHeader eyebrow="Compte" title="Profil" />
+      <div className="rg-page rg-profile-page flex flex-col gap-6">
+        <PageHeader eyebrow="Ton espace joueur" title="Mon profil" />
         <EmptyState
           icon={UserPlus}
           title="Pas encore connecté"
-          message="Crée un compte Revanche Game pour retrouver tes statistiques sur Kilomax, Président, Quiz Master, La Meute et 10000 — depuis n'importe quel appareil."
+          message="Crée un compte pour retrouver tes amis, tes statistiques et tes conversations, depuis n’importe quel appareil."
           action={
             <div className="flex gap-2">
               <Link
@@ -126,15 +127,15 @@ async function ProfileContent() {
     : null;
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-      <PageHeader eyebrow="Compte" title="Profil" />
+    <div className="rg-page rg-profile-page flex flex-col gap-6">
+      <PageHeader eyebrow="Ton espace joueur" title="Mon profil" />
 
       {/* En colonne sur mobile, côte à côte à partir de sm : forcer le
           côte-à-côte plus tôt laissait à peine ~90px à l'avatar + pseudo +
           identifiant sur un écran étroit (« Déconnexion » ne masque jamais
           son texte, contrairement à « Paramètres ») — au point que le champ
           de saisie de l'identifiant devenait fonctionnellement invisible. */}
-      <div className="flex flex-col items-start gap-4 rounded-2xl border border-border-soft bg-surface p-5 sm:flex-row sm:justify-between">
+      <div className="rg-profile-identity flex flex-col items-start gap-4 p-6 sm:flex-row sm:justify-between">
         <div className="min-w-0 w-full sm:flex-1">
           <ProfileEditor
             userId={user.id}
@@ -168,9 +169,9 @@ async function ProfileContent() {
           explorant des réglages. C'est le même réglage des deux côtés. */}
       {progress && <LevelBadge progress={progress} />}
 
-      <GhostModeCard />
+      <ProfileShortcuts />
+      <details className="rg-profile-privacy"><summary>Ma présence et ma confidentialité</summary><div className="mt-3"><GhostModeCard /></div></details>
 
-      <PurchaseHistory />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <FavoritesTile />
@@ -183,70 +184,7 @@ async function ProfileContent() {
         />
       </div>
 
-      <div>
-        <p className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.3em] text-violet">
-          Statistiques par jeu
-        </p>
-        <div className="overflow-x-auto rounded-2xl border border-border-soft">
-          <table className="w-full min-w-[480px] border-collapse font-body text-sm">
-            <thead>
-              <tr className="border-b border-border-soft bg-surface-raised text-left">
-                <th className="px-4 py-3 font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                  Jeu
-                </th>
-                <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                  Parties
-                </th>
-                <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                  Victoires
-                </th>
-                <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                  Défaites
-                </th>
-                <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                  Taux
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {(catalog ?? []).map((game) => {
-                const row = statsBySlug.get(game.slug);
-                return (
-                  <tr key={game.slug} className="border-b border-border-soft bg-surface last:border-0">
-                    <td className="px-4 py-3 font-display font-semibold text-text">{game.display_name}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-text-dim">
-                      {row?.games_played ?? 0}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-cyan">{row?.wins ?? 0}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-text-dim">{row?.losses ?? 0}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-text-dim">
-                      {row?.win_rate != null ? `${row.win_rate}%` : "—"}
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr className="bg-surface-raised">
-                <td className="px-4 py-3 font-display font-bold text-text">Total</td>
-                <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">
-                  {totals?.games_played ?? 0}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums font-semibold text-cyan">
-                  {totals?.wins ?? 0}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">
-                  {totals?.losses ?? 0}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">
-                  {totals?.win_rate != null ? `${totals.win_rate}%` : "—"}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-2 font-body text-xs text-text-faint">
-          Alimentées par les résultats réels, envoyés par chaque jeu à la fin de la partie.
-        </p>
-      </div>
+      <section><h2 className="mb-4 text-lg font-bold">Mes statistiques par jeu</h2><div className="rg-profile-game-stats">{(catalog??[]).map(game=>{const row=statsBySlug.get(game.slug);return <article key={game.slug}><h3>{game.display_name}</h3><div><span><strong>{row?.games_played??0}</strong>Parties</span><span><strong>{row?.wins??0}</strong>Victoires</span><span><strong>{row?.losses??0}</strong>Défaites</span><span><strong>{row?.win_rate!=null?`${row.win_rate}%`:"—"}</strong>Réussite</span></div></article>;})}</div><p className="mt-3 text-xs text-text-faint">Résultats réellement transmis par les jeux après les parties.</p></section>
 
       {/* ---- Historique ---- */}
       <section className="flex flex-col gap-3">
@@ -259,6 +197,7 @@ async function ProfileContent() {
           emptyMessage="Aucune partie enregistrée pour l'instant. Lance une partie : le résultat apparaîtra ici dès qu'elle sera terminée."
         />
       </section>
+      <PurchaseHistory />
     </div>
   );
 }

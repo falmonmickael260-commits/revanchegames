@@ -1,29 +1,13 @@
-import Link from "next/link";
-import { History } from "lucide-react";
+"use client";
+import { GAMES } from "@/data/games";
+import { useSocial } from "@/components/social/SocialProvider";
+import { useRecentGames } from "@/lib/use-recent-games";
+import { GameTile } from "@/components/home/GameTile";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { EmptyState } from "@/components/library/EmptyState";
-
+import Link from "next/link";
 export default function RecentPage() {
-  return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-      <PageHeader
-        eyebrow="Historique"
-        title="Récemment joués"
-        subtitle="Vos dernières parties apparaîtront ici."
-      />
-      <EmptyState
-        icon={History}
-        title="Pas encore de partie"
-        message="Le suivi des parties arrivera avec le compte joueur Revanche Games. En attendant, lancez un jeu disponible depuis la bibliothèque."
-        action={
-          <Link
-            href="/library"
-            className="rounded-full border border-border-soft bg-surface px-4 py-2 font-body text-sm text-text-dim transition-colors hover:border-border hover:text-text"
-          >
-            Voir la bibliothèque
-          </Link>
-        }
-      />
-    </div>
-  );
+  const {me}=useSocial();
+  const recent = useRecentGames(me?.id);
+  const games = recent.flatMap(entry => GAMES.filter(game => game.id === entry.id && game.enabled));
+  return <div className="rg-page"><PageHeader eyebrow="Mes jeux" title="On reprend ?" subtitle="Tes parties terminées et les jeux récemment ouverts sur cet appareil." />{games.length ? <div className="rg-home-games mt-6">{games.map(game => <GameTile key={game.id} game={game} />)}</div> : <div className="rg-inline-empty mt-6"><p>Aucun jeu ouvert pour l’instant.</p><Link href="/library">Découvrir les jeux</Link></div>}</div>;
 }

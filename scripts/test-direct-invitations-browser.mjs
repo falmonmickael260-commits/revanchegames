@@ -53,7 +53,7 @@ async function login(user) {
   await page.getByLabel('Adresse e-mail').fill(user.email);
   await page.getByLabel('Mot de passe').fill(user.password);
   await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
-  await page.waitForURL('**/profile', { timeout: 45000 });
+  await page.waitForURL(url => url.pathname === '/' || url.pathname === '/profile', { timeout: 45000 });
   return page;
 }
 async function gameFrame(page) {
@@ -115,12 +115,14 @@ try {
     await a.goto(`http://localhost:3100/play/${slug}`);
     const frame = await gameFrame(a);
     const registered = a.waitForResponse(r => r.url().endsWith('/api/game/rooms/current') && r.status() === 200, { timeout: 90000 });
+    void registered.catch(() => {});
     await createNative(frame, slug);
     const room = await (await registered).json(); rooms.push({ slug, ...room });
     await a.getByRole('button', { name: 'Inviter un ami dans cette partie', exact: true }).click();
     await a.getByRole('button', { name: 'Inviter', exact: true }).click();
     await b.getByRole('button', { name: 'Accepter', exact: true }).waitFor({ timeout: 30000 });
     const joined = b.waitForResponse(r => r.url().endsWith('/api/game/rooms/current') && r.status() === 200, { timeout: 90000 });
+    void joined.catch(() => {}); // Keep cleanup running if the browser closes after an earlier assertion.
     if (privateMessages) {
       await b.getByRole('button', { name: 'Masquer cette invitation', exact: true }).click();
       const conversation = b.getByRole('dialog', { name: 'Conversation avec AuditInviteAlice' });
@@ -134,6 +136,7 @@ try {
     const retry = await b.request.post(`http://localhost:3100/api/game/invitations/${id}/accept`, { headers: { origin: 'http://localhost:3100' } });
     if (retry.status() !== 200) throw new Error('Reprise acceptation refusée : ' + slug);
     const reloaded = b.waitForResponse(r => r.url().endsWith('/api/game/rooms/current') && r.status() === 200, { timeout: 90000 });
+    void reloaded.catch(() => {});
     await b.reload();
     if ((await (await reloaded).json()).count !== 2) throw new Error('Siège doublé après rechargement : ' + slug);
     console.log('OK — invitation Realtime, acceptation sans code, bon salon, identité vérifiée et reprise : ' + slug);

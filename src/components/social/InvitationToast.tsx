@@ -65,11 +65,11 @@ export function InvitationToast() {
   return (
     <section
       aria-label="Invitation à jouer"
-      // z-[55] : au-dessus du chat flottant (z-50) et de la scène de jeu,
-      // sous le grain décoratif. Centré en haut pour ne pas recouvrir les
+      // Above the game and full-screen private conversations so invitations
+      // remain actionable. Centré en haut pour ne pas recouvrir les
       // commandes de jeu, qui sont presque toujours en bas.
-      className="fixed left-2 right-2 z-[55] mx-auto flex max-w-sm flex-col gap-2.5 rounded-2xl border border-cyan/40 bg-surface/98 p-3 shadow-[0_12px_48px_rgba(0,0,0,0.6)] backdrop-blur-lg sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
-      style={{ top: "calc(var(--rg-game-bar-h) + 0.5rem)", zIndex: 60 }}
+      className="fixed left-2 right-2 z-[100] mx-auto flex max-w-sm flex-col gap-2.5 rounded-2xl border border-cyan/40 bg-surface/98 p-3 shadow-[0_12px_48px_rgba(0,0,0,0.6)] backdrop-blur-lg sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
+      style={{ top: "calc(var(--rg-game-bar-h) + 0.5rem)", zIndex: 100 }}
     >
       <div className="flex items-start gap-2.5">
         <Avatar

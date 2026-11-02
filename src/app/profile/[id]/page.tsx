@@ -124,7 +124,7 @@ async function FriendProfileContent({
 
   return (
     <Shell>
-      <div className="flex items-start gap-4 rounded-2xl border border-border-soft bg-surface p-5">
+      <div className="rg-profile-identity flex items-start gap-4 p-6">
         <Avatar username={profile.username} avatarUrl={profile.avatarUrl} />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 font-display text-lg font-semibold text-text">
@@ -173,50 +173,7 @@ async function FriendProfileContent({
             />
           </div>
 
-          <div>
-            <p className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.3em] text-violet">
-              Statistiques par jeu
-            </p>
-            <div className="overflow-x-auto rounded-2xl border border-border-soft">
-              <table className="w-full min-w-[480px] border-collapse font-body text-sm">
-                <thead>
-                  <tr className="border-b border-border-soft bg-surface-raised text-left">
-                    <th className="px-4 py-3 font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                      Jeu
-                    </th>
-                    <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                      Parties
-                    </th>
-                    <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                      Victoires
-                    </th>
-                    <th className="px-4 py-3 text-right font-display text-xs font-semibold uppercase tracking-wider text-text-faint">
-                      Taux
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(catalog ?? []).map((game) => {
-                    const row = perGameBySlug.get(game.slug);
-                    return (
-                      <tr key={game.slug} className="border-b border-border-soft bg-surface last:border-0">
-                        <td className="px-4 py-3 font-display font-semibold text-text">
-                          {game.display_name}
-                        </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-text-dim">
-                          {row?.gamesPlayed ?? 0}
-                        </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-cyan">{row?.wins ?? 0}</td>
-                        <td className="px-4 py-3 text-right tabular-nums text-text-dim">
-                          {row?.winRate != null ? `${row.winRate}%` : "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <section><h2 className="mb-4 text-lg font-bold">Statistiques par jeu</h2><div className="rg-profile-game-stats">{(catalog??[]).map(game=>{const row=perGameBySlug.get(game.slug);return <article key={game.slug}><h3>{game.display_name}</h3><div><span><strong>{row?.gamesPlayed??0}</strong>Parties</span><span><strong>{row?.wins??0}</strong>Victoires</span><span><strong>{row?.winRate!=null?`${row.winRate}%`:"—"}</strong>Réussite</span></div></article>;})}</div></section>
 
           <div>
             <p className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.3em] text-violet">

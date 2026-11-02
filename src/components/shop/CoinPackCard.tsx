@@ -54,7 +54,7 @@ export function CoinPackCard({
   }
   return (
     <div
-      className={`group relative flex flex-col items-center gap-4 rounded-2xl border px-6 py-8 text-center transition-all hover:-translate-y-0.5 ${
+      className={`rg-coin-pack group relative flex flex-col items-center gap-4 rounded-2xl border px-6 py-8 text-center transition-all hover:-translate-y-0.5 ${
         highlight
           ? "border-amber/50 bg-surface-raised shadow-[0_0_0_1px_rgba(240,169,62,0.15),0_12px_32px_rgba(240,169,62,0.08)]"
           : "border-border-soft bg-surface hover:border-border"
@@ -62,7 +62,7 @@ export function CoinPackCard({
     >
       {highlight && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-amber to-cyan px-3 py-1 font-display text-[10px] font-bold uppercase tracking-[0.15em] text-void">
-          Le plus populaire
+          {available ? "Grand format" : "À venir"}
         </span>
       )}
 

@@ -27,6 +27,18 @@ function json(data: unknown) {
   return Response.json(data, { headers: { "Cache-Control": "no-store" } });
 }
 
+async function findRoom(service: RoomServiceClient, name: string) {
+  if (!/^rg-social-[0-9a-f-]{36}$/.test(name)) return undefined;
+  // A room can be connected before it appears in the provider's full-room
+  // inventory. Resolve the requested room directly, with a short bounded retry.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const room = (await service.listRooms([name])).find(room => room.name === name);
+    if (room && voiceMetadata(room.name, room.metadata)) return room;
+    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  return undefined;
+}
+
 export async function GET() {
   try {
     const ctx = await context();
@@ -55,21 +67,20 @@ export async function POST(request: Request) {
         || !ctx.friendIds.has(message.from_user_id)) throw new RequestError("Invitation expirée ou indisponible.", 410);
       body = { action: "join", roomId: message.voice_room_id, roomSid: message.voice_room_sid };
     }
-    const rooms = await ctx.service.listRooms();
     let native;
     if (body.action === "create") {
       const title = typeof body.title === "string" ? body.title.trim() : "";
       if (!title || title.length > 60) throw new RequestError("Choisis un nom de 1 à 60 caractères.");
       // A deterministic owner room name prevents parallel creates from allocating extra rooms.
       const id = VOICE_PREFIX + ctx.user.id;
-      const existing = rooms.find(r => r.name === id);
+      const existing = await findRoom(ctx.service, id);
       native = existing ?? await ctx.service.createRoom({
         name: id, maxParticipants: VOICE_CAPACITY, emptyTimeout: 60, departureTimeout: 60,
         metadata: JSON.stringify({ kind: "rg-social-voice-v1", hostId: ctx.user.id, hostName: ctx.profile.username,
           hostAvatar: ctx.profile.avatar_url, title, visibility: body.visibility === "friends" ? "friends" : "public" }),
       });
     } else if ((body.action === "join" || body.action === "invite") && typeof body.roomId === "string") {
-      native = rooms.find(r => r.name === body.roomId);
+      native = await findRoom(ctx.service, body.roomId);
     } else { throw new RequestError("Demande invalide."); }
     const room = native && voiceMetadata(native.name, native.metadata);
     if (!native || !room || (body.roomSid && body.roomSid !== native.sid)

@@ -22,7 +22,7 @@ export function VoiceInvitation({ id, roomId, expiresAt, own = false, onJoined }
     <button type="button" disabled={voice.busy || Boolean(otherRoom)} className="min-h-11 rounded-lg bg-cyan px-4 py-2 text-sm font-semibold text-void disabled:opacity-50"
       onClick={async () => {
         if (voice.current?.id !== roomId) await voice.join("joinInvitation", id);
-        router.push("/voice"); onJoined?.();
+        onJoined?.(); router.push("/voice");
       }}>{voice.busy ? "Connexion…" : voice.current?.id === roomId ? "Ouvrir le salon" : "Rejoindre le salon vocal"}</button>
     {otherRoom && <p className="text-xs text-text-dim">Quitte ton vocal actuel pour rejoindre cette salle.</p>}
   </div>;

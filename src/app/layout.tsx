@@ -1,15 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Chakra_Petch, Manrope } from "next/font/google";
-import { IntroGate } from "@/components/intro/IntroGate";
+import { Manrope } from "next/font/google";
 import { AppShell } from "@/components/shell/AppShell";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import "./globals.css";
-
-const chakra = Chakra_Petch({
-  variable: "--font-chakra",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -19,7 +12,7 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "Revanche Games",
   description:
-    "Revanche Games — la bibliothèque de jeux entre amis. Cartes, plateau, bluff, stratégie et action, réunis dans un seul launcher.",
+    "Revanche Games — joue, discute et retrouve tes amis. Tes jeux, messages, groupes et salons vocaux dans une seule application.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
@@ -37,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05070d",
+  themeColor: "#0b0d18",
   width: "device-width",
   initialScale: 1,
   // La vue s'étend sous l'encoche et l'indicateur d'accueil ; les zones de
@@ -55,13 +48,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${chakra.variable} ${manrope.variable} h-full antialiased`}
+      className={`${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <ServiceWorkerRegister />
-        <IntroGate>
-          <AppShell>{children}</AppShell>
-        </IntroGate>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

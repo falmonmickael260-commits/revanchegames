@@ -1,66 +1,16 @@
 "use client";
-
-import { motion } from "framer-motion";
-import { Users } from "lucide-react";
+import Link from "next/link";
+import { Users, Gamepad2 } from "lucide-react";
 import type { Game } from "@/types/game";
 import { GameArt } from "./GameArt";
-import { StatusBadge } from "./StatusBadge";
-import { CategoryPill } from "./CategoryPill";
 import { FavoriteButton } from "./FavoriteButton";
 import { PlayButton } from "./PlayButton";
 import { useFavorites } from "@/lib/use-favorites";
-
-export function GameCard({ game, index = 0 }: { game: Game; index?: number }) {
+export function GameCard({ game }: { game: Game; index?: number }) {
   const { isFavorite, toggleFavorite } = useFavorites();
-
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.3), ease: "easeOut" }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition-colors hover:border-border"
-    >
-      <GameArt game={game} className="aspect-[16/10] w-full" />
-
-      <div className="absolute right-3 top-3">
-        <FavoriteButton
-          active={isFavorite(game.id)}
-          onToggle={() => toggleFavorite(game.id)}
-          label={game.name}
-        />
-      </div>
-
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div>
-          <h3 className="font-display text-base font-semibold tracking-wide text-text">
-            {game.name}
-          </h3>
-          <p className="mt-0.5 font-body text-sm text-text-dim">{game.tagline}</p>
-        </div>
-
-        <p className="font-body text-xs leading-relaxed text-text-faint">
-          {game.description}
-        </p>
-
-        <div className="flex flex-wrap gap-1.5">
-          {game.categories.map((c) => (
-            <CategoryPill key={c} category={c} />
-          ))}
-        </div>
-
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <div className="flex flex-col gap-1.5">
-            <StatusBadge status={game.status} />
-            <span className="inline-flex items-center gap-1 font-body text-[11px] text-text-faint">
-              <Users className="h-3 w-3" strokeWidth={2} />
-              {game.players}
-            </span>
-          </div>
-
-          <PlayButton game={game} />
-        </div>
-      </div>
-    </motion.article>
-  );
+  const art=<GameArt game={game} className="aspect-[4/3] w-full" />;
+  return <article className={`rg-library-card ${game.enabled?"":"is-upcoming"}`}>
+    <div className="relative">{game.enabled?<Link href={`/play/${game.id}`} aria-label={`Jouer à ${game.name}`}>{art}</Link>:art}<span className="rg-game-status">{game.enabled?"Disponible":game.status==="coming-soon"?"Bientôt":"En création"}</span><div className="absolute right-2 top-2"><FavoriteButton active={isFavorite(game.id)} onToggle={()=>toggleFavorite(game.id)} label={game.name} /></div></div>
+    <div className="rg-library-card-body"><h3>{game.name}</h3><p className="rg-game-tagline">{game.tagline}</p><p className="rg-game-mode"><Users className="h-3.5 w-3.5" />{game.players}<span>{game.supportsRooms===false?"Solo":"Multijoueur"}</span></p><details className="rg-game-details"><summary>À propos du jeu</summary><p>{game.description}</p></details><div className="rg-game-card-action"><Gamepad2 className="h-4 w-4 text-text-faint" /><PlayButton game={game} /></div></div>
+  </article>;
 }
