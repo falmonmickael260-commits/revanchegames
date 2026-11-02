@@ -2,7 +2,7 @@
 
 import { VoiceDock } from "@/components/voice/VoiceDock";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
@@ -38,6 +38,11 @@ import { GAMES } from "@/data/games";
 export function ShellFrame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { active } = useGameSession();
+  const mainRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!pathname.startsWith("/play/")) mainRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
 
   const immersive = pathname.startsWith("/play/");
   // La page /chat tient son propre abonnement sur le même salon : le chat
@@ -66,6 +71,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
         )}
 
         <main
+          ref={mainRef}
           className="rg-app-main min-w-0 flex-1"
           // Place réservée à la barre d'app mobile et à la zone de sécurité.
           // La navigation fixe fait 76 px (safe area comprise) et tombe à 0
