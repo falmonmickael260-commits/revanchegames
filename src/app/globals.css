@@ -736,10 +736,10 @@ html[data-theme="light"] .rg-shell-root {
 .rg-voice-listing { padding:18px; border:1px solid #654080; border-radius:20px; background:radial-gradient(ellipse at 100% 0%,#8b38c327,transparent 60%),linear-gradient(145deg,#211431ed,#130d20ed); box-shadow:0 12px 28px #0005,inset 0 1px #ffffff0a; }
 .rg-game-art-vignette { position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg,#08051218 0%,transparent 27%,transparent 62%,#08051266 100%),radial-gradient(ellipse at center,#08051225 0%,transparent 70%); }
 .rg-game-art-title { position:absolute; top:50%; left:50%; z-index:2; display:block; max-width:88%; transform:translate(-50%,-50%); padding:8px 11px; border:1px solid; border-radius:13px; background:#0b0718bf; color:#fff; font-size:clamp(10px,2.1vw,22px); font-weight:950; letter-spacing:.035em; line-height:1.05; text-align:center; text-wrap:balance; text-transform:uppercase; text-shadow:0 2px 10px #000,0 0 12px #ffffff5e; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
-.rg-game-art-wolf > img { transform-origin:50% 48%; animation:rg-wolf-pan 14s ease-in-out infinite; }
-.rg-game-art-wolf::after { position:absolute; inset:0; z-index:1; pointer-events:none; content:""; background:radial-gradient(ellipse at 68% 14%,#d7dcff36,transparent 42%),linear-gradient(180deg,#7ba5ff0c,transparent 58%,#15102b20); animation:rg-wolf-moon 8s ease-in-out infinite; }
-@keyframes rg-wolf-pan { 0%,100% { transform:scale(1.035) translate3d(0,0,0); } 50% { transform:scale(1.085) translate3d(-.55%,-.5%,0); } }
-@keyframes rg-wolf-moon { 0%,100% { opacity:.42; } 50% { opacity:.95; } }
+.rg-game-art-wolf > img { transform-origin:50% 48%; animation:rg-wolf-pan 6s ease-in-out infinite; will-change:transform; }
+.rg-game-art-wolf::after { position:absolute; inset:0; z-index:1; pointer-events:none; content:""; background:radial-gradient(ellipse at 68% 14%,#e4e9ff70,transparent 44%),linear-gradient(180deg,#91aaff1d,transparent 58%,#15102b35); animation:rg-wolf-moon 4s ease-in-out infinite; }
+@keyframes rg-wolf-pan { 0%,100% { transform:scale(1.025) translate3d(0,0,0); } 42% { transform:scale(1.16) translate3d(-1.5%,-1.2%,0); } 72% { transform:scale(1.105) translate3d(1%,-.6%,0); } }
+@keyframes rg-wolf-moon { 0%,100% { opacity:.22; } 50% { opacity:1; } }
 @media(max-width:639px) { .rg-game-art-title { padding:7px 8px; border-radius:10px; font-size:clamp(9px,3vw,14px); } }
 .rg-voice-listing.is-locked { border-color:#a66bd0; box-shadow:0 0 18px #8738c32b,0 12px 28px #0005; }
 .rg-passcode-dialog { width:min(390px,calc(100vw - 28px)); max-width:none; max-height:calc(100dvh - 28px); margin:auto; padding:0; overflow:visible; border:0; background:transparent; color:var(--rg-text); }
