@@ -44,6 +44,8 @@ export type Game = {
   categories: GameCategory[];
   status: GameStatus;
   enabled: boolean;
+  /** False for solo games that have no multiplayer rooms. */
+  supportsRooms?: boolean;
   url?: string;
   theme: GameTheme;
   /** Decorative motif icon for the generated fallback illustration — resolved via GAME_ICON_MAP. */

@@ -2,8 +2,7 @@ import type { Game } from "@/types/game";
 
 /**
  * Official Revanche Games catalog — 17 titles, launch roster.
- * Every game ships `enabled: false` with no `url`: nothing here is playable yet.
- * To activate a game later: set `status: "available"`, `enabled: true`, and supply
+ * To activate a game: set `status: "available"`, `enabled: true`, and supply
  * a real, verified `url`. Do that in this one file — cards, buttons and routing
  * all read from it, so nothing else needs to change.
  */
@@ -176,16 +175,18 @@ export const GAMES: Game[] = [
   {
     id: "bombshift",
     name: "BombShift",
-    tagline: "Posez la charge. Changez de camp. Survivez.",
-    description: "Jeu d'action et de stratégie inspiré de Bomberman.",
+    tagline: "Neuf niveaux. Trois boss. Une seule mèche.",
+    description: "Jeu d’action en solo : labyrinthes de bombes, neuf niveaux et trois boss.",
     categories: ["action", "strategie"],
-    status: "development",
-    enabled: false,
+    status: "available",
+    enabled: true,
+    supportsRooms: false,
+    url: "https://bombshift-production-81b4.up.railway.app/",
     icon: "bomb",
     image: "/games/bombshift.webp",
     theme: { accent: "#ff5c3d", accentSoft: "#ffab8a" },
     addedAt: "2026-10-21",
-    players: "2 à 4 joueurs",
+    players: "1 joueur",
   },
   {
     id: "worms",

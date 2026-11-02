@@ -15,6 +15,7 @@ import { ChatDock } from "@/components/chat/ChatDock";
 import { InvitationToast } from "@/components/social/InvitationToast";
 import { PushInstallPrompt } from "@/components/social/PushInstallPrompt";
 import { InGameInviteDock } from "@/components/social/InGameInviteDock";
+import { GAMES } from "@/data/games";
 
 /**
  * La coquille de la plateforme, et l'arbitre de ce qui s'affiche autour du
@@ -92,7 +93,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
       {/* Inviter un ami sans quitter l'écran de jeu — seulement là, pour ne
           pas dupliquer le sélecteur de jeu de <InviteFriendDialog /> (ouvert
           depuis /friends), où le jeu reste à choisir. */}
-      {active && immersive && <InGameInviteDock gameSlug={active.slug} roomCode={active.roomCode} />}
+      {active && immersive && GAMES.find(game => game.id === active.slug)?.supportsRooms !== false && <InGameInviteDock gameSlug={active.slug} roomCode={active.roomCode} />}
 
       {/* Invitation reçue : par-dessus tout, y compris l'écran de jeu, où
           l'en-tête et sa cloche sont masqués. Une invitation est périssable. */}
