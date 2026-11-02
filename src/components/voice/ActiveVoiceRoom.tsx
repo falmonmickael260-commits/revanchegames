@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { Crown, LayoutGrid, LogOut, Mic, MicOff, UserPlus, Users, Volume2, X } from "lucide-react";
+import { LayoutGrid, LogOut, Mic, MicOff, UserPlus, Users, Volume2, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ChatMessageList } from "@/components/chat/ChatMessageList";
 import { ChatComposer } from "@/components/chat/ChatComposer";
@@ -10,6 +10,7 @@ import { useSocial } from "@/components/social/SocialProvider";
 import { useKeyboardInset } from "@/lib/use-keyboard-inset";
 import { VOICE_CAPACITY, type VoiceRoom } from "@/lib/voice-shared";
 import { useVoice } from "./VoiceProvider";
+import { VoiceSeats } from "./VoiceSeats";
 
 function RoomPanel({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -57,18 +58,20 @@ export function ActiveVoiceRoom({ rooms, invite, inviting, sent, inviteError }: 
   return <div className="rg-chat-page-stage rg-voice-room-stage p-2 sm:p-4 lg:p-6" style={{ bottom: keyboardInset ? `${keyboardInset}px` : "var(--rg-bottom-nav-h)" }}>
     <section aria-label="Ta salle vocale" className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-cyan/25 bg-surface shadow-xl">
       <header className="flex shrink-0 flex-col gap-2 border-b border-border-soft bg-gradient-to-r from-violet/15 to-cyan/5 px-3 py-2.5">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1"><h1 className="truncate font-display text-base font-semibold" title={room.title}>{room.title}</h1>
             <p className="rg-voice-room-meta mt-0.5 text-[10px] text-text-faint">{room.visibility === "public" ? "Salle publique" : "Amis uniquement"} · {voice.members.length}/{VOICE_CAPACITY}</p>
           </div>
+          <div className="rg-voice-room-secondary flex shrink-0 items-center gap-1">
+            <button type="button" onClick={() => setPanel("participants")} className={button + " min-w-11 gap-1 px-2"} aria-label={`Participants · ${voice.members.length}`} title={`Participants · ${voice.members.length}`} aria-haspopup="dialog"><Users className="h-4 w-4 text-cyan" /><span className="hidden sm:inline">Participants · </span>{voice.members.length}</button>
+            {canInvite && <button type="button" className={button + " h-11 w-11 shrink-0 px-0 text-cyan"} aria-label="Inviter des amis" title="Inviter des amis" onClick={() => setPanel("invite")} aria-haspopup="dialog"><UserPlus className="h-4 w-4" /></button>}
+          </div>
           <button type="button" className={button + " h-11 w-11 shrink-0 px-0"} aria-label="Autres salons" title="Autres salons" onClick={() => setPanel("rooms")}><LayoutGrid className="h-4 w-4" /></button>
         </div>
-        <div className="rg-voice-room-secondary flex items-center gap-2">
-          <div className="flex shrink-0 -space-x-3" aria-hidden="true">{voice.members.slice(0, 2).map(member => <span key={member.id} className={`rounded-full border-2 border-surface ${member.speaking ? "ring-2 ring-cyan" : ""}`}><Avatar username={member.name} avatarUrl={member.avatarUrl} size="sm" /></span>)}</div>
-          <button type="button" onClick={() => setPanel("participants")} className={button + " flex-1"} aria-haspopup="dialog"><Users className="h-4 w-4 text-cyan" />Participants · {voice.members.length}</button>
-          {canInvite && <button type="button" className={button + " h-11 w-11 shrink-0 px-0 text-cyan"} aria-label="Inviter des amis" title="Inviter des amis" onClick={() => setPanel("invite")} aria-haspopup="dialog"><UserPlus className="h-4 w-4" /></button>}
-        </div>
       </header>
+      <div className="rg-voice-seats shrink-0 border-b border-border-soft bg-gradient-to-b from-violet/5 to-abyss/20 px-3 py-2">
+        <VoiceSeats members={voice.members} hostId={room.hostId} compact onMember={() => setPanel("participants")} onInvite={canInvite ? () => setPanel("invite") : undefined} />
+      </div>
       {voice.error && <p role="alert" className="shrink-0 px-3 py-1 text-xs text-rose-300">{voice.error}</p>}
       <section aria-label="Chat de la salle" className="flex min-h-0 flex-1 flex-col bg-abyss/40">
         <div className="rg-voice-chat-heading flex min-h-8 shrink-0 items-center justify-between gap-2 px-3 py-1 text-[10px]">
@@ -84,11 +87,8 @@ export function ActiveVoiceRoom({ rooms, invite, inviting, sent, inviteError }: 
         <button type="button" className={button + " text-rose-300"} onClick={voice.leave} aria-label="Quitter la salle"><LogOut className="h-4 w-4" />Quitter</button>
       </footer>
     </section>
-    {panel && <RoomPanel title={panel === "participants" ? `Participants · ${voice.members.length}/${VOICE_CAPACITY}` : panel === "invite" ? "Inviter des amis" : "Autres salons"} onClose={() => setPanel(null)}>
-      {panel === "participants" && <ul aria-label="Participants" className="grid grid-cols-2 gap-2">{voice.members.map(member => <li key={member.id} className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 ${member.speaking ? "border-cyan/60 bg-cyan/5" : "border-border-soft bg-abyss/50"}`}>
-        <span className="relative shrink-0"><Avatar username={member.name} avatarUrl={member.avatarUrl} size="sm" />{member.id === room.hostId && <Crown aria-label="Hôte" className="absolute -right-1 -top-2 h-3.5 w-3.5 fill-amber-300 text-amber-300" />}</span>
-        <span className="min-w-0"><span className="block break-words text-[11px] font-semibold leading-4">{member.name}</span><span className={`mt-0.5 block text-[9px] ${member.speaking ? "text-cyan" : "text-text-faint"}`}>{member.id === room.hostId ? "Hôte · " : ""}{member.muted ? "Micro coupé" : member.speaking ? "Parle" : "Micro actif"}</span></span>
-      </li>)}</ul>}
+    {panel && <RoomPanel key={panel} title={panel === "participants" ? `Participants · ${voice.members.length}/${VOICE_CAPACITY}` : panel === "invite" ? "Inviter des amis" : "Autres salons"} onClose={() => setPanel(null)}>
+      {panel === "participants" && <VoiceSeats members={voice.members} hostId={room.hostId} onInvite={canInvite ? () => setPanel("invite") : undefined} />}
       {panel === "invite" && <>
         {inviteError && <p role="alert" className="mb-3 text-xs text-rose-300">{inviteError}</p>}
         {!friends.length && <p className="p-3 text-sm text-text-dim">Ajoute des amis depuis l’onglet Amis pour les inviter.</p>}

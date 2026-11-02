@@ -109,11 +109,11 @@ export function ChatMessageList({
         }`}
       >
         {loading ? (
-          <p className="py-10 text-center font-body text-sm text-text-faint">
+          <p className={`text-center font-body text-text-faint ${compact ? "py-2 text-xs" : "py-10 text-sm"}`}>
             Chargement des messages…
           </p>
         ) : messages.length === 0 ? (
-          <p className="py-10 text-center font-body text-sm text-text-faint">
+          <p className={`text-center font-body text-text-faint ${compact ? "py-2 text-xs" : "py-10 text-sm"}`}>
             Aucun message pour l&apos;instant — sois le premier à dire bonjour !
           </p>
         ) : (

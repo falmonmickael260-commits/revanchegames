@@ -73,6 +73,11 @@ async function compactLayout(page, admission) {
       await page.evaluate(() => window.scrollTo(0, 0));
       const dimensions = await page.evaluate(() => ({ h: innerHeight, w: innerWidth, docH: document.documentElement.scrollHeight, docW: document.documentElement.scrollWidth }));
       assert.ok(dimensions.docW <= dimensions.w + 1 && dimensions.docH <= dimensions.h + 1, `page sans défilement ${width}x${height}`);
+      const seats = page.getByRole('list', { name: 'Sièges de la salle', exact: true });
+      assert.equal(await seats.getByRole('listitem').count(), 8);
+      assert.equal(await seats.locator('img').count(), 8);
+      const seatsBox = await seats.boundingBox();
+      assert.ok(seatsBox && seatsBox.y > 0 && seatsBox.y + seatsBox.height < height - 100, 'les huit sièges restent au-dessus du chat');
       for (const locator of [page.getByRole('region', { name: 'Chat de la salle', exact: true }).getByLabel('Votre message'),
         page.getByRole('button', { name: 'Activer le micro', exact: true }), page.getByRole('button', { name: 'Quitter la salle', exact: true })]) {
         const bounds = await locator.boundingBox();

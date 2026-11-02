@@ -220,7 +220,8 @@ body {
 @container (max-height: 360px) {
   .rg-voice-room-secondary,
   .rg-voice-room-meta,
-  .rg-voice-chat-heading {
+  .rg-voice-chat-heading,
+  .rg-voice-seats {
     display: none;
   }
 }

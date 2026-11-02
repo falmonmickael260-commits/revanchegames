@@ -19,9 +19,14 @@ et déconnecte l’audio. Une actualisation complète nécessite de rejoindre à
 
 Dans une salle, la vue est bornée à la hauteur disponible entre l’en-tête et
 la navigation mobile. Le chat et les commandes restent visibles ; seul l’historique
-des messages défile. **Participants · N** ouvre un panneau compact avec les
-photos, noms, hôte et état du micro : les huit personnes tiennent dans une grille
-de deux colonnes. Les invitations et les autres salons ont leurs propres panneaux,
+des messages défile. Huit sièges ronds sont visibles au-dessus du chat, en deux
+rangées de quatre, avec les photos, la couronne de l’hôte et le halo de parole.
+Les places vides ont une icône de fauteuil et ouvrent les invitations lorsque
+l’utilisateur peut inviter. Toucher une photo ouvre **Participants · N**, qui
+affiche les sièges en plus grand, avec les noms complets et l’état du micro.
+Les sièges se masquent lorsque le clavier ou une faible hauteur d’écran impose
+de donner la priorité au chat et aux commandes.
+Les invitations et les autres salons ont leurs propres panneaux,
 sans allonger la page. Les panneaux gardent le focus, se ferment avec Échap et
 rendent le focus au bouton d’ouverture. Le clavier mobile est pris en compte via
 `visualViewport` par le hook existant `useKeyboardInset`.
