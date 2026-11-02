@@ -1,23 +1,62 @@
 "use client";
+
 import Link from "next/link";
-import { MessageCircle, Search, UserRound } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { MessageCircle, Search, Settings, SquarePen, UserPlus, UserRound } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { Logo } from "@/components/ui/Logo";
 import { useSocial } from "@/components/social/SocialProvider";
 import { NotificationCenter } from "@/components/social/NotificationCenter";
 import { WalletPill } from "./WalletPill";
+
+const TITLES: Record<string, string> = {
+  "/library": "Jeux",
+  "/community": "Communauté",
+  "/messages": "Messages",
+  "/profile": "Profil",
+  "/friends": "Mes amis",
+  "/voice": "Salons vocaux",
+  "/shop": "Boutique",
+  "/settings": "Paramètres",
+  "/classement": "Classement",
+};
+
+function pageTitle(pathname: string) {
+  if (pathname.startsWith("/profile/")) return "Profil joueur";
+  if (pathname.startsWith("/settings")) return "Paramètres";
+  if (pathname === "/favorites") return "Mes favoris";
+  if (pathname === "/recent") return "Récemment joués";
+  if (pathname === "/new") return "Nouveautés";
+  if (pathname === "/chat") return "Chat général";
+  return TITLES[pathname] ?? "Revanche Games";
+}
+
 export function Header() {
-  const { me, ready, dmUnread } = useSocial();
+  const pathname = usePathname();
+  const { me, dmUnread } = useSocial();
   const unread = [...dmUnread.values()].reduce((sum, count) => sum + count, 0);
-  return <header className="rg-app-header" style={{ height: "var(--rg-header-h)", paddingTop: "var(--rg-safe-top)" }}>
-    <Link href={me ? "/profile" : "/sign-in"} aria-label={me ? `Profil de ${me.username}` : "Se connecter"} className="rg-player-heading">
-      {me ? <Avatar username={me.username} avatarUrl={me.avatarUrl} size="sm" /> : <span className="rg-guest-avatar"><UserRound className="h-4 w-4" /></span>}
-      <span className="min-w-0"><span className="block text-[9px] font-medium uppercase tracking-[.16em] text-text-faint">Revanche Games</span><span className="block truncate text-sm font-bold">{me?.username || (ready ? "À toi de jouer" : "Bienvenue")}</span></span>
-    </Link>
-    <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
-      <WalletPill />
-      <Link href="/library?search=1" aria-label="Rechercher un jeu" className="rg-icon-button rg-header-search"><Search className="h-4 w-4" /></Link>
-      <Link href="/messages" aria-label={`Messages${unread ? `, ${unread} non lus` : ""}`} className="rg-icon-button relative"><MessageCircle className="h-4 w-4" />{unread > 0 && <span className="rg-count">{unread > 99 ? "99+" : unread}</span>}</Link>
-      <NotificationCenter />
-    </div>
-  </header>;
+
+  return (
+    <header className="rg-app-header" style={{ height: "var(--rg-header-h)", paddingTop: "var(--rg-safe-top)" }}>
+      <div className="rg-header-brand">
+        {pathname === "/" ? <Logo /> : <h1>{pageTitle(pathname)}</h1>}
+      </div>
+      <div className="rg-header-tools">
+        {pathname === "/community" && <Link href="/friends" className="rg-icon-button" aria-label="Ajouter un ami"><UserPlus /></Link>}
+        {pathname === "/messages" && <Link href="/friends" className="rg-icon-button" aria-label="Nouvelle conversation"><SquarePen /></Link>}
+        {pathname === "/profile" && <Link href="/settings" className="rg-icon-button" aria-label="Paramètres"><Settings /></Link>}
+        {pathname === "/library" && <Link href="/library?search=1" className="rg-icon-button" aria-label="Rechercher un jeu"><Search /></Link>}
+        {me && <Link href="/profile" className="rg-header-player" aria-label={`Profil de ${me.username}`}>
+          <Avatar username={me.username} avatarUrl={me.avatarUrl} size="sm" />
+          <span>{me.username}</span>
+        </Link>}
+        <div className="rg-desktop-wallet"><WalletPill /></div>
+        <Link href="/messages" aria-label={`Messages${unread ? `, ${unread} non lus` : ""}`} className="rg-icon-button rg-desktop-message">
+          <MessageCircle className="h-4 w-4" />{unread > 0 && <span className="rg-count">{unread > 99 ? "99+" : unread}</span>}
+        </Link>
+        {!me && <Link href="/sign-in" aria-label="Se connecter" className="rg-header-login"><UserRound /></Link>}
+        <NotificationCenter />
+      </div>
+    </header>
+  );
 }

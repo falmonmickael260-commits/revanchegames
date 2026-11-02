@@ -5,7 +5,7 @@ import { createLocalStore } from "@/lib/create-local-store";
 
 export type AppTheme = "light" | "dark";
 
-const themeStore = createLocalStore<AppTheme>("theme", "light");
+const themeStore = createLocalStore<AppTheme>("theme", "dark");
 
 /** Applies the saved app appearance to the whole platform without touching game iframes. */
 export function ThemePreferenceSync() {

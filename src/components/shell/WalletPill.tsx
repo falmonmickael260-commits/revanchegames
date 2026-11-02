@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Coins } from "lucide-react";
+import { Coins, Plus } from "lucide-react";
 import { useSocial } from "@/components/social/SocialProvider";
 import { useWallet } from "@/lib/use-wallet";
 
@@ -24,6 +24,7 @@ export function WalletPill() {
     >
       <Coins className="h-3.5 w-3.5" strokeWidth={2.5} />
       <span className="tabular-nums">{ready && balance !== null ? balance.toLocaleString("fr-FR") : ready ? "—" : "…"}</span>
+      <span className="rg-wallet-add"><Plus className="h-3.5 w-3.5" /></span>
     </Link>
   );
 }
