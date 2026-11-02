@@ -23,8 +23,8 @@ import { GAMES } from "@/data/games";
  *
  * Deux modes :
  *
- *  • Mode plateforme — en-tête avec recherche, barre latérale sur ordinateur,
- *    barre d'onglets sur mobile. Inchangé.
+ *  • Mode plateforme — en-tête, navigation latérale sur ordinateur et barre
+ *    d'app fixe sur mobile. Le contenu mobile défile dans sa propre surface.
  *  • Mode immersif, sur /play/<slug> — toute cette chrome est masquée au
  *    profit de la seule barre de jeu de <GameViewport />. Sur mobile, cela
  *    rend au jeu la hauteur de l'en-tête et celle de la barre d'onglets
@@ -45,13 +45,13 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
   const onChatPage = pathname === "/chat";
 
   return (
-    <div className="flex min-h-dvh bg-void">
+    <div className="rg-shell-root flex min-h-dvh bg-void">
       <div className="rg-grain" />
       <AuthHashErrorRedirect />
 
       {!immersive && <Sidebar />}
 
-      <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
+      <div className="rg-shell-content flex min-h-dvh min-w-0 flex-1 flex-col">
         {!immersive && (
           <Suspense
             fallback={
@@ -66,12 +66,10 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
         )}
 
         <main
-          className="min-w-0 flex-1"
-          // Place réservée à la barre d'onglets du bas, mesurée et non estimée.
-          // `--rg-bottom-nav-h` vaut 56 px + la zone de sécurité de l'appareil,
-          // et tombe à 0 en lg où la barre latérale prend le relais. L'ancien
-          // `pb-20` (80 px fixes) était trop court sur un iPhone à indicateur
-          // d'accueil (56 + 34 = 90 px) : le bas des pages passait dessous.
+          className="rg-app-main min-w-0 flex-1"
+          // Place réservée à la barre d'app mobile et à la zone de sécurité.
+          // La navigation fixe fait 76 px (safe area comprise) et tombe à 0
+          // sur ordinateur où la navigation latérale prend le relais.
           style={immersive ? undefined : { paddingBottom: "var(--rg-bottom-nav-h)" }}
         >
           {children}

@@ -2,7 +2,7 @@
 // Scope: install the app shell for faster repeat loads and a friendly
 // offline fallback. This does NOT make the app fully offline-capable —
 // game data loaded at runtime still needs the network.
-const CACHE_VERSION = "rg-v3";
+const CACHE_VERSION = "rg-v4";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/manifest.webmanifest", "/icons/icon-192.png"];
 

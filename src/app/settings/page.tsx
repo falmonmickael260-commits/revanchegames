@@ -8,6 +8,7 @@ import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { useFavorites } from "@/lib/use-favorites";
 import { SupportLink } from "@/components/support/SupportLink";
 import Link from "next/link";
+import { ThemeSetting } from "@/components/settings/ThemeSetting";
 
 function SettingRow({
   icon: Icon,
@@ -48,8 +49,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="rg-settings-page mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
       <PageHeader eyebrow="Préférences" title="Paramètres" />
+
+      <ThemeSetting />
 
       <SupportLink />
       <Link href="/profile#mes-achats" className="rounded-xl border border-border-soft bg-surface p-4 font-display text-sm font-semibold text-cyan">Mes achats et reçus de paiement</Link>
