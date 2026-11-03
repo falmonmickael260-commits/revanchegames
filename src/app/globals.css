@@ -734,7 +734,15 @@ html[data-theme="light"] .rg-shell-root {
   linear-gradient(90deg,#6e4a8b12 1px,transparent 1px);
 }
 .rg-voice-listing { padding:18px; border:1px solid #654080; border-radius:20px; background:radial-gradient(ellipse at 100% 0%,#8b38c327,transparent 60%),linear-gradient(145deg,#211431ed,#130d20ed); box-shadow:0 12px 28px #0005,inset 0 1px #ffffff0a; }
-.rg-game-art-vignette { position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg,#08051218 0%,transparent 27%,transparent 62%,#08051266 100%),radial-gradient(ellipse at center,#08051225 0%,transparent 70%); }
+.rg-game-art-vignette { position:absolute; z-index:0; inset:0; pointer-events:none; background:linear-gradient(180deg,#08051218 0%,transparent 27%,transparent 62%,#08051266 100%),radial-gradient(ellipse at center,#08051225 0%,transparent 70%); }
+.rg-game-motion-sprite { position:absolute; z-index:1; height:auto; pointer-events:none; object-fit:contain; will-change:transform,filter; }
+.rg-game-motion-die { top:2%; left:52%; width:40%; animation:rg-die-roll 2.4s cubic-bezier(.45,.05,.55,.95) infinite; transform-origin:50% 55%; }
+.rg-game-motion-robot { top:51%; left:27%; width:47%; animation:rg-robot-run 850ms ease-in-out infinite; transform-origin:52% 78%; }
+.rg-game-motion-question { top:1%; left:35%; width:30%; animation:rg-question-float 2.2s ease-in-out infinite; transform-origin:50% 58%; }
+@keyframes rg-die-roll { 0%,100% { transform:perspective(700px) translate3d(0,0,0) rotateY(0) rotateZ(0); } 24% { transform:perspective(700px) translate3d(-5px,5px,0) rotateY(55deg) rotateZ(8deg); } 52% { transform:perspective(700px) translate3d(-13px,12px,0) rotateY(175deg) rotateZ(24deg); } 78% { transform:perspective(700px) translate3d(-7px,6px,0) rotateY(295deg) rotateZ(10deg); } }
+@keyframes rg-robot-run { 0%,100% { transform:translate3d(0,0,0) rotate(-2deg); } 25% { transform:translate3d(5px,-5px,0) rotate(1deg); } 50% { transform:translate3d(10px,1px,0) rotate(3deg); } 75% { transform:translate3d(4px,-4px,0) rotate(0); } }
+@keyframes rg-question-float { 0%,100% { transform:translate3d(0,0,0) rotate(-1deg); filter:drop-shadow(0 0 8px #40ffc8a0); } 50% { transform:translate3d(0,-11px,0) rotate(2deg); filter:drop-shadow(0 0 24px #40ffc8ef) brightness(1.2); } }
+@media(prefers-reduced-motion:reduce) { .rg-game-motion-sprite { animation:none !important; } }
 .rg-game-art-title { position:absolute; top:50%; left:50%; z-index:2; display:block; max-width:88%; transform:translate(-50%,-50%); padding:8px 11px; border:1px solid; border-radius:13px; background:#0b0718bf; color:#fff; font-size:clamp(10px,2.1vw,22px); font-weight:950; letter-spacing:.035em; line-height:1.05; text-align:center; text-wrap:balance; text-transform:uppercase; text-shadow:0 2px 10px #000,0 0 12px #ffffff5e; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
 @media(max-width:639px) { .rg-game-art-title { padding:7px 8px; border-radius:10px; font-size:clamp(9px,3vw,14px); } }
 .rg-voice-listing.is-locked { border-color:#a66bd0; box-shadow:0 0 18px #8738c32b,0 12px 28px #0005; }

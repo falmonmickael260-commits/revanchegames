@@ -5,7 +5,14 @@ import { GAME_ICON_MAP } from "@/lib/game-icon-map";
 /** Selected covers use decorative art with the exact game name rendered as live text. */
 export function GameArt({ game, className = "", eager = false }: { game: Game; className?: string; eager?: boolean }) {
   const isAnimated = game.image?.endsWith("-animated.webp") ?? false;
-  const hasCustomCover = isAnimated || (game.image?.endsWith("-cover.webp") ?? false);
+  const hasCustomCover = isAnimated || (game.image?.endsWith("-cover.webp") ?? false) || (game.image?.endsWith("-motion-bg.webp") ?? false);
+  const motionSprite = game.id === "10000"
+    ? { src: "/games/10000-die-sprite.webp", width: 480, height: 439, className: "rg-game-motion-die" }
+    : game.id === "bombshift"
+      ? { src: "/games/bombshift-robot-sprite.webp", width: 480, height: 436, className: "rg-game-motion-robot" }
+      : game.id === "quiz-master"
+        ? { src: "/games/quiz-master-question-sprite.webp", width: 480, height: 600, className: "rg-game-motion-question" }
+        : null;
   if (game.image) {
     return (
       <div className={`rg-game-art relative overflow-hidden ${className}`}>
@@ -18,6 +25,14 @@ export function GameArt({ game, className = "", eager = false }: { game: Game; c
           sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover"
         />
+        {motionSprite && <Image
+          src={motionSprite.src}
+          alt=""
+          aria-hidden="true"
+          width={motionSprite.width}
+          height={motionSprite.height}
+          className={`rg-game-motion-sprite ${motionSprite.className}`}
+        />}
         {hasCustomCover && <><div className="rg-game-art-vignette" aria-hidden="true" /><span className="rg-game-art-title" aria-hidden="true" style={{ borderColor: `${game.theme.accent}b8`, boxShadow: `0 0 24px ${game.theme.accent}45` }}>{game.name}</span></>}
       </div>
     );
