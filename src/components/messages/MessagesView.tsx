@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { DirectMessageDialog } from "@/components/social/DirectMessageDialog";
 import { GroupsSection } from "@/components/social/GroupsSection";
+import { PageHeader } from "@/components/ui/PageHeader";
 import type { FriendEntry } from "@/lib/social/types";
 type Conversation = { other_id:string; username:string; avatar_url:string|null; last_body:string; last_at:string; unread:number };
 export function MessagesView() {
@@ -41,6 +42,7 @@ export function MessagesView() {
   const selected:FriendEntry|null=selectedId ? friends.find(friend=>friend.id===selectedId) ?? (selectedRow?{id:selectedRow.other_id,username:selectedRow.username,avatarUrl:selectedRow.avatar_url,friendshipId:"",presence:presence.get(selectedRow.other_id)?.status??"offline",gameSlug:null}:null) : null;
   const open=(row:Conversation)=>router.push(`/messages?with=${encodeURIComponent(row.other_id)}`,{scroll:false});
   return <div className="rg-page rg-messages-page">
+    <PageHeader eyebrow="Tes échanges" title="Messages" subtitle="Retrouve tes discussions privées et tes groupes d’amis." />
     <div className="rg-social-tabs rg-message-tabs"><button type="button" aria-pressed={tab==="all"} onClick={()=>setTab("all")}><MessageCircle className="h-4 w-4" />Tous</button><button type="button" aria-pressed={tab==="private"} onClick={()=>setTab("private")}><MessageCircle className="h-4 w-4" />Privés</button><button type="button" aria-pressed={tab==="groups"} onClick={()=>setTab("groups")}><Users className="h-4 w-4" />Groupes</button><Link href="/chat">Chat global<ArrowUpRight className="h-4 w-4" /></Link></div>
     {!ready ? <div className="rg-skeleton h-40" /> : !me ? <div className="rg-signin-card"><MessageCircle /><h2>Retrouve tes conversations.</h2><p>Connecte-toi pour écrire à tes amis, recevoir leurs invitations et rejoindre tes groupes.</p><Link href="/sign-in?next=/messages" className="rg-primary-button">Se connecter</Link></div> : tab==="groups" ? <GroupsSection /> : <>
       <label className="rg-search-field"><Search className="h-4 w-4" /><input aria-label="Rechercher une conversation" placeholder="Un ami, une conversation…" value={query} onChange={event=>setQuery(event.target.value)} /></label>

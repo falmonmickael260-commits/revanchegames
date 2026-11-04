@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import { AppShell } from "@/components/shell/AppShell";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import "./globals.css";
+import "./refonte.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#090612",
+  themeColor: "#080d16",
   width: "device-width",
   initialScale: 1,
   // La vue s'étend sous l'encoche et l'indicateur d'accueil ; les zones de

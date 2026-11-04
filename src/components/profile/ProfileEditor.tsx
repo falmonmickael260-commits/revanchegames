@@ -241,7 +241,7 @@ export function ProfileEditor({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="rg-profile-editor flex flex-col gap-3">
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
           <Avatar username={username} avatarUrl={avatarUrl} />

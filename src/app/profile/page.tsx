@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/library/EmptyState";
 import { FavoritesTile } from "@/components/profile/FavoritesTile";
 import { SignOutButton } from "@/components/profile/SignOutButton";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
+import { BannerEditor } from "@/components/profile/BannerEditor";
 import { GhostModeCard } from "@/components/social/GhostModeCard";
 import { MatchList } from "@/components/stats/MatchList";
 import { LevelBadge, toProgress } from "@/components/stats/LevelBadge";
@@ -125,6 +126,9 @@ async function ProfileContent() {
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long" })
     : null;
+  // Requête séparée pour que le profil reste accessible avant l'application
+  // de la migration qui ajoute la colonne de couverture.
+  const { data: bannerProfile } = await supabase.from("profiles").select("banner_url").eq("id", user.id).maybeSingle();
 
   return (
     <div className="rg-page rg-profile-page flex flex-col gap-6">
@@ -136,6 +140,7 @@ async function ProfileContent() {
           son texte, contrairement à « Paramètres ») — au point que le champ
           de saisie de l'identifiant devenait fonctionnellement invisible. */}
       <div className="rg-profile-identity flex flex-col items-start gap-4 p-6 sm:flex-row sm:justify-between">
+        <BannerEditor initialUrl={bannerProfile?.banner_url ?? null} />
         <div className="min-w-0 w-full sm:flex-1">
           <ProfileEditor
             userId={user.id}

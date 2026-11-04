@@ -116,6 +116,7 @@ async function FriendProfileContent({
   }
 
   const profile = toFriendProfile(rows[0] as FriendProfileRow);
+  const { data: bannerUrl } = await supabase.rpc("get_friend_banner", { p_user_id: id });
   const memberSince = new Date(profile.memberSince).toLocaleDateString("fr-FR", {
     year: "numeric",
     month: "long",
@@ -124,7 +125,8 @@ async function FriendProfileContent({
 
   return (
     <Shell>
-      <div className="rg-profile-identity flex items-start gap-4 p-6">
+      <div className="rg-profile-identity rg-public-profile-identity flex items-start gap-4 p-6">
+        <div className="rg-profile-banner rg-profile-banner-public" style={typeof bannerUrl === "string" && bannerUrl ? { backgroundImage: `linear-gradient(0deg,#0d1420aa,transparent 72%),url(${JSON.stringify(bannerUrl)})` } : undefined} />
         <Avatar username={profile.username} avatarUrl={profile.avatarUrl} />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 font-display text-lg font-semibold text-text">
