@@ -53,6 +53,7 @@ export function useDirectMessages({
         avatarUrl: isMine ? (me?.avatarUrl ?? null) : (other?.avatarUrl ?? null),
         invitationId: row.invitation_id ?? null,
         voiceInvitation: row.voice_room_id && row.voice_expires_at ? { roomId: row.voice_room_id, expiresAt: row.voice_expires_at } : null,
+        giftBatchId: row.gift_batch_id ?? null,
       };
     },
     [me, other],
@@ -78,7 +79,7 @@ export function useDirectMessages({
       const supabase = createClient();
       const { data, error: loadError } = await supabase
         .from("direct_messages")
-        .select("id, from_user_id, to_user_id, body, created_at, invitation_id, voice_room_id, voice_expires_at")
+        .select("id, from_user_id, to_user_id, body, created_at, invitation_id, voice_room_id, voice_expires_at, gift_batch_id")
         .eq("pair_key", pairKey(me.id, other.id))
         .order("created_at", { ascending: false })
         .limit(HISTORY_LIMIT);

@@ -23,6 +23,7 @@ export type ChatMessage = {
   /** Present only on genuine invitation messages created by the server. */
   invitationId?: string | null;
   voiceInvitation?: { roomId: string; expiresAt: string } | null;
+  giftBatchId?: string | null;
 };
 
 export type ChatIdentity = { id: string; username: string; avatarUrl: string | null };

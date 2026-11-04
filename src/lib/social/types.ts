@@ -45,7 +45,8 @@ export type NotificationKind =
   | "invitation_declined"
   | "platform_invite"
   | "group_added"
-  | "group_removed";
+  | "group_removed"
+  | "gift_received";
 
 export type PlatformNotification = {
   id: string;
@@ -55,6 +56,7 @@ export type PlatformNotification = {
   actorAvatarUrl: string | null;
   gameSlug: string | null;
   invitationId: string | null;
+  giftBatchId: string | null;
   readAt: string | null;
   createdAt: string;
 };
@@ -79,6 +81,7 @@ export type NotificationRow = {
   actor_id: string | null;
   game_slug: string | null;
   invitation_id: string | null;
+  gift_batch_id: string | null;
   read_at: string | null;
   created_at: string;
   actor: ProfileJoin;
@@ -116,6 +119,7 @@ export function toNotification(row: NotificationRow): PlatformNotification {
     actorAvatarUrl: row.actor?.avatar_url ?? null,
     gameSlug: row.game_slug,
     invitationId: row.invitation_id,
+    giftBatchId: row.gift_batch_id,
     readAt: row.read_at,
     createdAt: row.created_at,
   };

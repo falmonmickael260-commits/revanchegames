@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, Check, Gamepad2, Radio, UserPlus, UserCheck, X, Users } from "lucide-react";
+import { Bell, Check, Gamepad2, Gift, Radio, UserPlus, UserCheck, X, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useSocial } from "./SocialProvider";
 import { respondToFriendRequest } from "@/lib/social/api";
@@ -48,6 +48,8 @@ function describe(notification: PlatformNotification): { icon: typeof Bell; text
       return { icon: X, text: `${who} a refusé ton invitation${game ? ` à ${game}` : ""}.` };
     case "platform_invite":
       return { icon: Radio, text: `${who} t'invite à le/la retrouver sur Revanche Games.` };
+    case "gift_received":
+      return { icon: Gift, text: `${who} t'a offert un cadeau. Retrouve-le dans ta collection.` };
   }
 }
 
@@ -191,6 +193,7 @@ export function NotificationCenter() {
                         <p className="mt-0.5 font-body text-[11px] text-text-faint">
                           {relativeTime(notification.createdAt)}
                         </p>
+                        {notification.kind === "gift_received" && <Link href="/profile#mes-cadeaux" onClick={() => setOpen(false)} className="mt-1 inline-block text-xs font-semibold text-amber">Voir mes cadeaux</Link>}
 
                         {actionable && (
                           <div className="mt-2 flex gap-2">
