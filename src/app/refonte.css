@@ -137,3 +137,86 @@ html:not([data-theme="light"]) .rg-voice-listing.is-locked { border-color:#b8784
 @media(prefers-reduced-motion:reduce) {
   .rg-game-tile,.rg-library-card,.rg-home-feature { transition:none!important; }
 }
+
+/* Profil de joueur : une couverture, une identité, puis le parcours réel. */
+.rg-profile-page { max-width:1120px; gap:26px; }
+.rg-profile-page .rg-profile-identity { display:block; min-height:0; padding:0!important; overflow:hidden; border-radius:26px; }
+html:not([data-theme="light"]) .rg-profile-page .rg-profile-identity { background:#111a28; border:1px solid #ffffff25; box-shadow:0 24px 60px #0007; }
+.rg-profile-page .rg-profile-identity::before { display:none; }
+.rg-profile-page .rg-profile-identity > .rg-profile-banner { height:clamp(225px,25vw,305px); border-radius:25px 25px 0 0; background-image:url('/images/profile-cover-default.webp'); background-position:center 46%; }
+.rg-profile-page .rg-profile-banner::after { background:linear-gradient(0deg,#111a28 0%,#111a2880 35%,transparent 70%); }
+.rg-profile-page .rg-profile-banner button { right:20px; top:19px; bottom:auto; border-color:#ffffff6b; background:#090d19aa; }
+.rg-profile-hero-main { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; padding:175px 22px 0; }
+.rg-profile-hero-main .rg-profile-editor { width:min(100%,600px); align-items:center; }
+.rg-profile-hero-main .rg-profile-editor > div:first-child { flex-direction:column; align-items:center; gap:10px; width:100%; text-align:center; }
+.rg-profile-hero-main .rg-profile-editor > div:first-child > div:first-child { margin:0; transform:none; }
+.rg-profile-hero-main .rg-profile-editor > div:first-child > div:first-child > span { width:118px; height:118px; border:5px solid #111a28; box-shadow:0 0 0 3px #e6b863,0 12px 26px #000b; font-size:42px; }
+.rg-profile-hero-main .rg-profile-editor > div:first-child > div:first-child > button { width:30px; height:30px; background:#e43e4a; color:white; }
+.rg-profile-hero-main .rg-profile-editor > div:first-child > div:nth-child(2) { display:flex; flex-direction:column; align-items:center; }
+.rg-profile-hero-main .rg-profile-editor > div:first-child > div:nth-child(2) > button:first-child p { font-size:clamp(23px,4vw,32px); font-weight:850; letter-spacing:-.035em; }
+.rg-profile-hero-main .rg-profile-editor > div:nth-child(2) { width:min(100%,490px); border:0; background:none; padding:4px 8px; text-align:center; }
+.rg-profile-hero-main .rg-profile-editor > div:nth-child(2) > div { align-items:center; }
+.rg-profile-hero-main .rg-profile-editor > div:nth-child(2) p { font-size:14px; }
+.rg-profile-member-meta { display:flex; align-items:center; gap:6px; margin-top:8px; color:#a8b0c0; font-size:11px; }
+.rg-profile-hero-actions { position:relative; z-index:2; display:flex; justify-content:center; flex-wrap:wrap; gap:9px; padding:18px 16px 22px; }
+.rg-profile-hero-actions > * { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:39px; padding:9px 15px; border:1px solid #ffffff30; border-radius:10px; background:#ffffff0d; color:#e8ebf2; font-size:11px; font-weight:700; letter-spacing:.04em; }
+.rg-profile-hero-actions > *:hover { background:#e7424a24; border-color:#e7424a8a; }
+.rg-profile-hero-level { position:relative; z-index:1; width:min(100% - 36px,540px); margin:0 auto 24px; }
+.rg-profile-hero-level > div { border:0; background:#ffffff0b; padding:15px 18px; }
+.rg-profile-hero-level > div > div:first-child > span:first-child { background:#e8b95b23; }
+.rg-profile-hero-level > div > div:first-child > span:first-child span:first-child,.rg-profile-hero-level .text-cyan { color:#f4c570; }
+.rg-profile-hero-level [role="progressbar"] { background:#080d16; }
+.rg-profile-hero-level [role="progressbar"] > div { background:linear-gradient(90deg,#e13d4a,#f0b753); }
+.rg-profile-record { position:relative; z-index:1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid #ffffff20; background:linear-gradient(90deg,#121b2a,#1b2330,#121b2a); }
+.rg-profile-record > div { display:grid; justify-items:center; gap:3px; min-width:0; padding:17px 6px 20px; }
+.rg-profile-record > div + div { border-left:1px solid #ffffff18; }
+.rg-profile-record svg { width:18px; height:18px; color:#e7b45f; }
+.rg-profile-record strong { color:#fff; font-size:clamp(23px,4vw,32px); font-weight:850; line-height:1.1; }
+.rg-profile-record span { color:#b6bdca; font-size:11px; }
+.rg-profile-section-nav { display:flex; gap:8px; width:100%; padding:5px; border:1px solid #ffffff1f; border-radius:14px; background:#111a28; }
+.rg-profile-section-nav a { display:flex; justify-content:center; align-items:center; gap:8px; min-width:0; flex:1; padding:11px 7px; border-radius:10px; color:#bec5d0; font-size:12px; font-weight:750; }
+.rg-profile-section-nav a:first-child,.rg-profile-section-nav a:hover { background:linear-gradient(120deg,#e4404a,#a8293b); color:#fff; }
+.rg-profile-overview,.rg-profile-games-section,.rg-profile-history { scroll-margin-top:90px; }
+.rg-profile-section-heading { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:15px; }
+.rg-profile-section-heading div > span { color:#e8b95f; font-size:10px; font-weight:850; letter-spacing:.2em; }
+.rg-profile-section-heading h2 { margin-top:3px; color:var(--rg-text); font-size:clamp(22px,3vw,28px); font-weight:850; letter-spacing:-.025em; }
+.rg-profile-section-heading > a,.rg-profile-section-heading > span { color:#aeb8c8; font-size:11px; }
+.rg-profile-overview .rg-profile-shortcuts a { border-radius:16px; background:#192537; padding:18px; }
+.rg-profile-overview .rg-profile-shortcuts svg:first-child { color:#efba61; }
+.rg-profile-overview .rg-profile-shortcuts strong { color:#fff; font-size:27px; }
+.rg-profile-favorites { margin-top:12px; }
+.rg-profile-favorites .rg-stat-tile { width:100%; border-radius:13px; padding:12px 18px; }
+.rg-profile-privacy { margin-top:12px; border:1px solid #ffffff1d; background:#182332; }
+.rg-profile-game-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+.rg-profile-page .rg-profile-game-stats .rg-profile-game-row { display:flex; align-items:center; gap:13px; min-width:0; min-height:105px; padding:10px; border-radius:16px; background:#182232; }
+.rg-profile-game-thumb { position:relative; flex:none; width:78px; height:82px; overflow:hidden; border-radius:11px; background:#0c1522; }
+.rg-profile-game-thumb > svg { width:100%; height:100%; padding:22px; color:#e7b563; }
+.rg-profile-game-thumb .rg-game-art-title { display:none; }
+.rg-profile-game-detail { min-width:0; flex:1; }
+.rg-profile-game-detail h3 { margin:0!important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#f1f3f7; font-size:15px!important; }
+.rg-profile-game-detail p { margin:6px 0 10px; color:#aeb7c6; font-size:11px; }
+.rg-profile-game-meter { width:100%; height:5px; overflow:hidden; border-radius:5px; background:#0b121e; }
+.rg-profile-game-meter span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#d93c49,#efb657); }
+.rg-profile-game-row > strong { flex:none; align-self:center; color:#efbb65!important; font-size:16px!important; }
+html[data-theme="light"] .rg-profile-page .rg-profile-identity { background:#fff; }
+html[data-theme="light"] .rg-profile-section-nav,html[data-theme="light"] .rg-profile-page .rg-profile-game-stats .rg-profile-game-row { background:#fff; border-color:#d9d0dd; }
+html[data-theme="light"] .rg-profile-game-detail h3,html[data-theme="light"] .rg-profile-hero-actions > * { color:#261e31; }
+html[data-theme="light"] .rg-profile-hero-actions > * { border-color:#d9d0dd; background:#f7f3f7; }
+html[data-theme="light"] .rg-profile-section-nav a { color:#493d52; }
+html[data-theme="light"] .rg-profile-section-nav a:first-child,html[data-theme="light"] .rg-profile-section-nav a:hover { color:#fff; }
+html[data-theme="light"] .rg-profile-game-detail p { color:#766d7c; }
+
+@media(max-width:639px) {
+  .rg-profile-page .rg-profile-identity > .rg-profile-banner { height:205px; background-position:70% center; }
+  .rg-profile-hero-main { padding-top:125px; }
+  .rg-profile-page .rg-profile-banner button { top:13px; right:12px; min-height:32px; padding:6px 9px; font-size:10px; }
+  .rg-profile-hero-actions { padding:12px 16px 15px; }
+  .rg-profile-hero-level { margin-bottom:15px; }
+  .rg-profile-hero-level > div { padding:12px 14px; }
+  .rg-profile-hero-level > div > p:last-child { display:none; }
+  .rg-profile-record > div { padding:12px 6px 14px; }
+  .rg-profile-game-stats { grid-template-columns:1fr; }
+  .rg-profile-overview .rg-profile-shortcuts a { padding:14px 10px; }
+  .rg-profile-overview .rg-profile-shortcuts strong { font-size:22px; }
+  .rg-profile-section-nav a { font-size:11px; }
+}

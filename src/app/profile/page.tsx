@@ -1,9 +1,8 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Link from "next/link";
-import { Gamepad2, Trophy, Target, UserPlus, Settings } from "lucide-react";
+import { Gamepad2, Trophy, Target, UserPlus, Settings, CalendarDays, BarChart3, History, LayoutGrid } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { StatTile } from "@/components/ui/StatTile";
 import { EmptyState } from "@/components/library/EmptyState";
 import { FavoritesTile } from "@/components/profile/FavoritesTile";
 import { SignOutButton } from "@/components/profile/SignOutButton";
@@ -16,6 +15,8 @@ import { toMatches } from "@/lib/social/stats";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileShortcuts } from "@/components/profile/ProfileShortcuts";
 import { PurchaseHistory } from "@/components/shop/PurchaseHistory";
+import { GAMES } from "@/data/games";
+import { GameArt } from "@/components/library/GameArt";
 
 type GameStatsRow = {
   game_slug: string;
@@ -134,14 +135,9 @@ async function ProfileContent() {
     <div className="rg-page rg-profile-page flex flex-col gap-6">
       <PageHeader eyebrow="Ton espace joueur" title="Mon profil" />
 
-      {/* En colonne sur mobile, côte à côte à partir de sm : forcer le
-          côte-à-côte plus tôt laissait à peine ~90px à l'avatar + pseudo +
-          identifiant sur un écran étroit (« Déconnexion » ne masque jamais
-          son texte, contrairement à « Paramètres ») — au point que le champ
-          de saisie de l'identifiant devenait fonctionnellement invisible. */}
-      <div className="rg-profile-identity flex flex-col items-start gap-4 p-6 sm:flex-row sm:justify-between">
+      <section className="rg-profile-identity" aria-label="Carte de joueur">
         <BannerEditor initialUrl={bannerProfile?.banner_url ?? null} />
-        <div className="min-w-0 w-full sm:flex-1">
+        <div className="rg-profile-hero-main">
           <ProfileEditor
             userId={user.id}
             initialUsername={username}
@@ -149,53 +145,48 @@ async function ProfileContent() {
             initialPlayerTag={profile?.player_tag ?? null}
             initialSignature={profile?.signature ?? null}
           />
-          <p className="mt-2 font-body text-sm text-text-faint">
-            {memberSince ? `Membre depuis ${memberSince}` : "Membre Revanche Game"}
-          </p>
+          <div className="rg-profile-member-meta"><CalendarDays size={14} /> {memberSince ? `Membre depuis ${memberSince}` : "Membre Revanche Games"}</div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {/* Seul accès aux paramètres sur mobile : la barre latérale qui les
-              proposait n'existe qu'à partir de lg, et c'est là qu'on active
-              les notifications — le réglage le plus utile sur téléphone. */}
+        <div className="rg-profile-hero-actions">
           <Link
             href="/settings"
-            aria-label="Paramètres"
-            className="flex items-center gap-1.5 rounded-lg border border-border-soft px-3 py-2 font-display text-xs font-semibold text-text-dim transition-colors hover:border-border hover:text-text"
+            className="rg-profile-settings-link"
           >
             <Settings className="h-4 w-4" strokeWidth={2} />
-            <span className="hidden sm:inline">Paramètres</span>
+            <span>Paramètres</span>
           </Link>
           <SignOutButton />
         </div>
-      </div>
+        {progress && <div className="rg-profile-hero-level"><LevelBadge progress={progress} /></div>}
+        <div className="rg-profile-record" aria-label="Bilan du joueur">
+          <div><Trophy aria-hidden="true" /><strong>{totals?.wins ?? 0}</strong><span>Victoires</span></div>
+          <div><Gamepad2 aria-hidden="true" /><strong>{totals?.games_played ?? 0}</strong><span>Parties</span></div>
+          <div><Target aria-hidden="true" /><strong>{totals?.win_rate != null ? `${totals.win_rate}%` : "—"}</strong><span>Réussite</span></div>
+        </div>
+      </section>
 
-      {/* Le mode fantôme est ici, et pas seulement dans les paramètres : on
-          décide de se rendre invisible au moment d'aller jouer, pas en
-          explorant des réglages. C'est le même réglage des deux côtés. */}
-      {progress && <LevelBadge progress={progress} />}
+      <nav className="rg-profile-section-nav" aria-label="Sections du profil">
+        <a href="#profil-apercu"><LayoutGrid size={16} /> Aperçu</a>
+        <a href="#profil-jeux"><BarChart3 size={16} /> Jeux</a>
+        <a href="#profil-historique"><History size={16} /> Historique</a>
+      </nav>
 
-      <ProfileShortcuts />
-      <details className="rg-profile-privacy"><summary>Ma présence et ma confidentialité</summary><div className="mt-3"><GhostModeCard /></div></details>
+      <section id="profil-apercu" className="rg-profile-overview">
+        <div className="rg-profile-section-heading"><div><span>TON UNIVERS</span><h2>Vue d’ensemble</h2></div><span>Revanche Games</span></div>
+        <ProfileShortcuts />
+        <div className="rg-profile-favorites"><FavoritesTile /></div>
+        <details className="rg-profile-privacy"><summary>Ma présence et ma confidentialité</summary><div className="mt-3"><GhostModeCard /></div></details>
+      </section>
 
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <FavoritesTile />
-        <StatTile icon={Gamepad2} label="Parties jouées" value={totals?.games_played ?? 0} />
-        <StatTile icon={Trophy} label="Victoires" value={totals?.wins ?? 0} />
-        <StatTile
-          icon={Target}
-          label="Taux de victoire"
-          value={totals?.win_rate != null ? `${totals.win_rate}%` : "—"}
-        />
-      </div>
-
-      <section><h2 className="mb-4 text-lg font-bold">Mes statistiques par jeu</h2><div className="rg-profile-game-stats">{(catalog??[]).map(game=>{const row=statsBySlug.get(game.slug);return <article key={game.slug}><h3>{game.display_name}</h3><div><span><strong>{row?.games_played??0}</strong>Parties</span><span><strong>{row?.wins??0}</strong>Victoires</span><span><strong>{row?.losses??0}</strong>Défaites</span><span><strong>{row?.win_rate!=null?`${row.win_rate}%`:"—"}</strong>Réussite</span></div></article>;})}</div><p className="mt-3 text-xs text-text-faint">Résultats réellement transmis par les jeux après les parties.</p></section>
+      <section id="profil-jeux" className="rg-profile-games-section">
+        <div className="rg-profile-section-heading"><div><span>TON PARCOURS</span><h2>Mes jeux</h2></div><Link href="/library">Voir les jeux</Link></div>
+        <div className="rg-profile-game-stats">{(catalog??[]).map(game=>{const row=statsBySlug.get(game.slug);const art=GAMES.find(item=>item.id===game.slug);return <article key={game.slug} className="rg-profile-game-row"><div className="rg-profile-game-thumb">{art ? <GameArt game={art} className="h-full w-full" /> : <Gamepad2 aria-hidden="true" />}</div><div className="rg-profile-game-detail"><h3>{game.display_name}</h3><p>{row?.games_played??0} parties · {row?.wins??0} victoires</p><div className="rg-profile-game-meter" aria-label={`Taux de victoire : ${row?.win_rate!=null?`${row.win_rate}%`:"aucune donnée"}`}><span style={{width:`${Math.max(0,Math.min(100,Number(row?.win_rate??0)))}%`}} /></div></div><strong>{row?.win_rate!=null?`${row.win_rate}%`:"—"}</strong></article>;})}</div>
+        <p className="mt-3 text-xs text-text-faint">Résultats réellement transmis par les jeux après les parties.</p>
+      </section>
 
       {/* ---- Historique ---- */}
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-text-faint">
-          Mes dernières parties
-        </h2>
+      <section id="profil-historique" className="rg-profile-history flex flex-col gap-3">
+        <div className="rg-profile-section-heading"><div><span>TES MOMENTS</span><h2>Dernières parties</h2></div></div>
         <MatchList
           matches={matches}
           highlightUserId={user.id}

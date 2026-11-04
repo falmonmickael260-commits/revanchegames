@@ -19,7 +19,7 @@ Le chemin fourni `~/Downloads/Revanche_Games_Refonte_Reference.png` n'existe pas
 - Thème sombre bleu nuit, rouge et or, avec le choix clair/foncé conservé.
 - Bannière d'accueil issue d'une véritable jaquette de jeu, et trois jeux mis à l'honneur dans la bibliothèque.
 - Présentation distincte des six espaces, y compris navigation mobile et salons existants.
-- Couverture de profil indépendante de l'avatar, avec recadrage en aperçu, modération et publication côté serveur ; affichage sur le profil personnel et celui des amis.
+- Page profil reconstruite autour d'une couverture illustrée, d'un grand avatar superposé, d'un bilan de joueur, d'un niveau intégré, de raccourcis et d'une liste de jeux avec progression réelle. Couverture indépendante de l'avatar, avec recadrage en aperçu, modération et publication côté serveur ; affichage sur le profil personnel et celui des amis.
 - Migration Supabase pour la colonne `banner_url`, le bucket de couvertures et la lecture réservée aux amis.
 
 ## Vérifications et limites
