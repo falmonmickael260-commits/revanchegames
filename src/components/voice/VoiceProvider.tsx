@@ -3,14 +3,16 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { Room } from "livekit-client";
 import { useSocial } from "@/components/social/SocialProvider";
-import { readVoiceChat, voiceAvatar, VOICE_CHAT_TOPIC, type VoiceRoom } from "@/lib/voice-shared";
+import { readVoiceChat, voiceAvatar, VOICE_CHAT_TOPIC, VOICE_GIFT_TOPIC, type VoiceRoom } from "@/lib/voice-shared";
 import type { ChatMessage } from "@/lib/chat-shared";
+import { celebrateGift, type GiftEvent } from "@/lib/gifts/types";
 
 type Member = { id: string; name: string; avatarUrl: string | null; speaking: boolean; muted: boolean };
 type VoiceState = {
   current: VoiceRoom | null; members: Member[]; busy: boolean; muted: boolean;
   reconnecting: boolean; error: string; needsAudio: boolean;
   messages: ChatMessage[]; sending: boolean; chatError: string;
+  giftEvents: GiftEvent[];
   sendMessage: (body: string) => Promise<boolean>;
   join: (action: "create" | "join" | "joinInvitation", value: string, visibility?: "public" | "friends", passcode?: string) => Promise<void>;
   leave: () => void; toggleMic: () => Promise<void>; enableAudio: () => Promise<void>;
@@ -30,6 +32,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const [needsAudio, setNeedsAudio] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [giftEvents, setGiftEvents] = useState<GiftEvent[]>([]);
   const [sending, setSending] = useState(false);
   const [chatError, setChatError] = useState("");
   const sendingRef = useRef(false);
@@ -42,7 +45,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     void room?.disconnect();
     audio.current?.replaceChildren();
     setCurrent(null); setMembers([]); setMuted(true); setBusy(false); setReconnecting(false); setNeedsAudio(false);
-    setMessages([]); setChatError(""); setSending(false); sendingRef.current = false; receivedAt.current.clear();
+    setMessages([]); setGiftEvents([]); setChatError(""); setSending(false); sendingRef.current = false; receivedAt.current.clear();
   }, []);
 
   // Stop capture and subscriptions on logout/account switch and on unmount.
@@ -64,6 +67,17 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       room = new LiveRoom({ adaptiveStream: true, audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true } });
       const live = room;
       connection.current = live;
+      const refreshGiftEvents = async () => {
+        try {
+          const response = await fetch(`/api/gifts/room?roomId=${encodeURIComponent(data.room.id)}`, { cache: "no-store" });
+          if (!response.ok || connection.current !== live) return;
+          const result = await response.json() as { events: GiftEvent[] };
+          setGiftEvents(previous => {
+            const known = new Set(previous.map(item => item.id));
+            return [...previous, ...result.events.filter(item => !known.has(item.id))].slice(-100);
+          });
+        } catch { /* historique conservé côté serveur, prochain retour visible */ }
+      };
       const update = () => {
         if (connection.current !== live) return;
         setMembers([live.localParticipant, ...live.remoteParticipants.values()]
@@ -73,7 +87,21 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         setMuted(!live.localParticipant.isMicrophoneEnabled);
       };
       live.on(RoomEvent.DataReceived, (payload, participant, _kind, topic) => {
-        if (connection.current !== live || !participant || topic !== VOICE_CHAT_TOPIC) return;
+        if (connection.current !== live) return;
+        if (topic === VOICE_GIFT_TOPIC) {
+          try {
+            const value = JSON.parse(new TextDecoder().decode(payload));
+            if (typeof value.id !== "string" || !/^[0-9a-f-]{36}$/.test(value.id)) return;
+            void fetch(`/api/gifts/events?id=${encodeURIComponent(value.id)}`, { cache: "no-store" }).then(async response => {
+              if (!response.ok || connection.current !== live) return;
+              const gift = await response.json() as GiftEvent;
+              setGiftEvents(previous => previous.some(item => item.id === gift.id) ? previous : [...previous, gift].slice(-100));
+              if (gift.senderId !== live.localParticipant.identity) celebrateGift(gift);
+            }).catch(() => {});
+          } catch { /* signal invalide ignoré ; le serveur reste la source de vérité */ }
+          return;
+        }
+        if (!participant || topic !== VOICE_CHAT_TOPIC) return;
         const message = readVoiceChat(payload);
         if (!message) return;
         const last = receivedAt.current.get(participant.identity) || 0;
@@ -93,7 +121,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       for (const event of [RoomEvent.ParticipantConnected, RoomEvent.ParticipantDisconnected, RoomEvent.ActiveSpeakersChanged,
         RoomEvent.TrackMuted, RoomEvent.TrackUnmuted, RoomEvent.LocalTrackPublished, RoomEvent.LocalTrackUnpublished, RoomEvent.ParticipantMetadataChanged]) live.on(event, update);
       live.on(RoomEvent.Reconnecting, () => setReconnecting(true));
-      live.on(RoomEvent.Reconnected, () => { setReconnecting(false); update(); });
+      live.on(RoomEvent.Reconnected, () => { setReconnecting(false); update(); void refreshGiftEvents(); });
       live.on(RoomEvent.AudioPlaybackStatusChanged, () => setNeedsAudio(!live.canPlaybackAudio));
       live.on(RoomEvent.Disconnected, () => {
         if (connection.current === live) { leave(); setError("Tu as quitté le salon vocal. Tu peux le rejoindre à nouveau."); }
@@ -101,6 +129,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       await live.connect(data.serverUrl, data.token);
       if (attempt !== epoch.current) { await live.disconnect(); return; }
       setCurrent(data.room); update();
+      void refreshGiftEvents();
       await live.startAudio().catch(() => setNeedsAudio(true));
     } catch (cause) {
       if (attempt === epoch.current) {
@@ -142,7 +171,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   };
 
   return <VoiceContext.Provider value={{ current, members, busy, muted, reconnecting, error, needsAudio, join, leave, toggleMic, enableAudio,
-    messages, sending, chatError, sendMessage }}>
+    messages, giftEvents, sending, chatError, sendMessage }}>
     {children}
     <div ref={audio} className="hidden" aria-hidden="true" />
 

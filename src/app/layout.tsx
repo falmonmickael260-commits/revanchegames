@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import { AppShell } from "@/components/shell/AppShell";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+import { GiftCelebrationLayer } from "@/components/gifts/GiftCelebrationLayer";
 import "./globals.css";
 import "./refonte.css";
+import "./gifts.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -54,6 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full">
         <ServiceWorkerRegister />
         <AppShell>{children}</AppShell>
+        <GiftCelebrationLayer />
       </body>
     </html>
   );

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:wallet": "node scripts/test-wallet.mjs",
-    "test": "node --import tsx --test test/*.test.ts && npm run test:wallet"
+    "test:gifts": "node scripts/test-gifts.mjs",
+    "test": "node --import tsx --test test/*.test.ts && npm run test:wallet && npm run test:gifts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

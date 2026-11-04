@@ -10,6 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 import { toFriendProfile, type FriendProfileRow } from "@/lib/social/friend-profile";
 import { ReportPlayerButton } from "@/components/social/ReportPlayerButton";
 import { LevelBadge } from "@/components/stats/LevelBadge";
+import { RevProgress, type RevProgressRow } from "@/components/gifts/RevProgress";
+import { GiftWall } from "@/components/gifts/GiftWall";
 
 // `id` est un identifiant de compte quelconque, impossible à énumérer à
 // l'avance via `generateStaticParams` (contrairement à /play/<slug>, dont la
@@ -117,6 +119,7 @@ async function FriendProfileContent({
 
   const profile = toFriendProfile(rows[0] as FriendProfileRow);
   const { data: bannerUrl } = await supabase.rpc("get_friend_banner", { p_user_id: id });
+  const { data: revRows } = await supabase.rpc("get_rev_progress", { p_user_id: id });
   const memberSince = new Date(profile.memberSince).toLocaleDateString("fr-FR", {
     year: "numeric",
     month: "long",
@@ -165,6 +168,7 @@ async function FriendProfileContent({
         />
       ) : (
         <>
+          <RevProgress userId={id} initial={(revRows?.[0] ?? null) as RevProgressRow | null} />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <StatTile icon={Gamepad2} label="Parties jouées" value={profile.gamesPlayed ?? 0} />
             <StatTile icon={Trophy} label="Victoires" value={profile.wins ?? 0} />
@@ -176,6 +180,8 @@ async function FriendProfileContent({
           </div>
 
           <section><h2 className="mb-4 text-lg font-bold">Statistiques par jeu</h2><div className="rg-profile-game-stats">{(catalog??[]).map(game=>{const row=perGameBySlug.get(game.slug);return <article key={game.slug}><h3>{game.display_name}</h3><div><span><strong>{row?.gamesPlayed??0}</strong>Parties</span><span><strong>{row?.wins??0}</strong>Victoires</span><span><strong>{row?.winRate!=null?`${row.winRate}%`:"—"}</strong>Réussite</span></div></article>;})}</div></section>
+
+          <GiftWall userId={id} />
 
           <div>
             <p className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.3em] text-violet">

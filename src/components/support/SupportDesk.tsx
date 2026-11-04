@@ -110,7 +110,7 @@ export function SupportDesk({ admin = false, transaction = "" }: { admin?: boole
       <div className="flex flex-wrap gap-4 text-sm text-cyan">
         <Link href="/settings">Paramètres</Link><Link href="/profile#mes-achats">Mes achats</Link>
         {!admin && isAdmin && <Link href="/settings/support/admin">Administration</Link>}
-        {admin && <Link href="/settings/support">Mes demandes</Link>}
+        {admin && <><Link href="/settings/support">Mes demandes</Link><Link href="/settings/gifts/admin">Cadeaux</Link></>}
       </div>
       {loading ? <p className="text-text-dim">Chargement…</p> : !user || user.is_anonymous ? <Link href="/sign-in" className="text-cyan">Connecte-toi pour créer et consulter tes demandes.</Link> : <>
         {error && <p role="alert" className="rounded-xl border border-amber/30 p-4 text-sm text-amber">{error}</p>}

@@ -11,6 +11,9 @@ import { useKeyboardInset } from "@/lib/use-keyboard-inset";
 import { VOICE_CAPACITY, type VoiceRoom } from "@/lib/voice-shared";
 import { useVoice } from "./VoiceProvider";
 import { VoiceSeats } from "./VoiceSeats";
+import { GiftLauncher } from "@/components/gifts/GiftLauncher";
+import { GiftMessageAttachment } from "@/components/gifts/GiftMessageAttachment";
+import type { ChatMessage } from "@/lib/chat-shared";
 
 function RoomPanel({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -53,6 +56,12 @@ export function ActiveVoiceRoom({ rooms, invite, inviting, sent, inviteError }: 
   const room = voice.current;
   if (!room || !me) return null;
   const canInvite = room.visibility === "public" || room.hostId === me.id;
+  const giftMessages: ChatMessage[] = voice.giftEvents.map(gift => ({
+    id: `gift:${gift.id}`, body: `${gift.senderName} a offert ${gift.gift.name} à ${gift.recipientName}.`,
+    createdAt: gift.createdAt, userId: gift.senderId, username: gift.senderName,
+    avatarUrl: null, giftBatchId: gift.id,
+  }));
+  const roomMessages = [...voice.messages, ...giftMessages].sort((a,b) => a.createdAt.localeCompare(b.createdAt));
   const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border-soft bg-surface-raised px-3 text-xs font-semibold disabled:opacity-40";
   const speakers = voice.members.filter(member => member.speaking);
   return <div className="rg-chat-page-stage rg-voice-room-stage p-2 sm:p-4 lg:p-6" style={{ bottom: keyboardInset ? `${keyboardInset}px` : "var(--rg-bottom-nav-h)" }}>
@@ -63,6 +72,7 @@ export function ActiveVoiceRoom({ rooms, invite, inviting, sent, inviteError }: 
             <p className="rg-voice-room-meta mt-0.5 text-[10px] text-text-faint">{room.visibility === "public" ? "Salle publique" : "Amis uniquement"} · {voice.members.length}/{VOICE_CAPACITY}</p>
           </div>
           <div className="rg-voice-room-secondary flex shrink-0 items-center gap-1">
+            <GiftLauncher meId={me.id} recipients={voice.members.filter(member => member.id !== me.id).map(member => ({ id: member.id, name: member.name }))} context="voice" roomId={room.id} />
             <button type="button" onClick={() => setPanel("participants")} className={button + " min-w-11 gap-1 px-2"} aria-label={`Participants · ${voice.members.length}`} title={`Participants · ${voice.members.length}`} aria-haspopup="dialog"><Users className="h-4 w-4 text-cyan" /><span className="hidden sm:inline">Participants · </span>{voice.members.length}</button>
             {canInvite && <button type="button" className={button + " h-11 w-11 shrink-0 px-0 text-cyan"} aria-label="Inviter des amis" title="Inviter des amis" onClick={() => setPanel("invite")} aria-haspopup="dialog"><UserPlus className="h-4 w-4" /></button>}
           </div>
@@ -78,7 +88,8 @@ export function ActiveVoiceRoom({ rooms, invite, inviting, sent, inviteError }: 
           <h2 className="shrink-0 font-semibold text-text-dim">Chat de la salle</h2>
           <p className="truncate text-text-faint" role="status">{voice.reconnecting ? "Reconnexion…" : speakers.length ? `${speakers.map(member => member.name).join(", ")} parle${speakers.length > 1 ? "nt" : ""}` : "Discussion éphémère"}</p>
         </div>
-        <ChatMessageList messages={voice.messages} me={me} loading={false} compact />
+        <ChatMessageList messages={roomMessages} me={me} loading={false} compact
+          renderAttachment={message => message.giftBatchId ? <GiftMessageAttachment id={message.giftBatchId} /> : null} />
         <ChatComposer me={me} sending={voice.sending} error={voice.chatError} onSend={voice.sendMessage} compact />
       </section>
       <footer className="flex shrink-0 items-center gap-2 border-t border-border-soft p-2">

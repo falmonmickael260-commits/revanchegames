@@ -2,6 +2,7 @@ export const VOICE_PREFIX = "rg-social-";
 export const VOICE_CAPACITY = 8;
 export type VoiceRoom = { id: string; title: string; hostId: string; hostName: string; count: number; visibility: "public" | "friends"; hostAvatar: string | null; locked: boolean; instanceId?: string };
 export const VOICE_CHAT_TOPIC = "rg-social-chat-v1";
+export const VOICE_GIFT_TOPIC = "rg-social-gift-v1";
 
 export function voiceMetadata(name: string, metadata: string): Omit<VoiceRoom, "count"> | null {
   if (!/^rg-social-[0-9a-f-]{36}$/.test(name)) return null;

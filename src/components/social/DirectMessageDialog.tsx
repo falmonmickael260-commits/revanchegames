@@ -13,6 +13,9 @@ import type { ChatIdentity } from "@/lib/chat-shared";
 import type { FriendEntry } from "@/lib/social/types";
 import { PrivateGameInvitation } from './PrivateGameInvitation';
 import { VoiceInvitation } from '@/components/voice/VoiceInvitation';
+import { GiftLauncher } from '@/components/gifts/GiftLauncher';
+import { GiftMessageAttachment } from '@/components/gifts/GiftMessageAttachment';
+import { requestPushDelivery } from '@/lib/push-client';
 
 /**
  * La conversation privée avec un ami, ouverte depuis le bouton « Chat » de la
@@ -93,9 +96,12 @@ export function DirectMessageDialog({
         </header>
 
         <ChatMessageList messages={messages} me={me} loading={loading}
-          renderAttachment={(message, own) => message.invitationId ? <PrivateGameInvitation id={message.invitationId} own={own} onJoined={onClose} /> :
+          renderAttachment={(message, own) => message.giftBatchId ? <GiftMessageAttachment id={message.giftBatchId} /> :
+            message.invitationId ? <PrivateGameInvitation id={message.invitationId} own={own} onJoined={onClose} /> :
             message.voiceInvitation ? <VoiceInvitation id={message.id} roomId={message.voiceInvitation.roomId} expiresAt={message.voiceInvitation.expiresAt} own={own} onJoined={onClose} /> : null} />
-        <ChatComposer me={me} sending={sending} error={error} onSend={send} />
+        <ChatComposer me={me} sending={sending} error={error} onSend={send}
+          leadingAction={<GiftLauncher meId={me.id} recipients={[{ id: friend.id, name: friend.username }]} context="dm"
+            onSent={(_id, messageId) => { if (messageId) void requestPushDelivery({ type: "direct_message", messageId }); }} />} />
       </section>
     </div>
   );

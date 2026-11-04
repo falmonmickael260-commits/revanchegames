@@ -15,6 +15,8 @@ import { toMatches } from "@/lib/social/stats";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileShortcuts } from "@/components/profile/ProfileShortcuts";
 import { PurchaseHistory } from "@/components/shop/PurchaseHistory";
+import { RevProgress, type RevProgressRow } from "@/components/gifts/RevProgress";
+import { GiftWall } from "@/components/gifts/GiftWall";
 import { GAMES } from "@/data/games";
 import { GameArt } from "@/components/library/GameArt";
 
@@ -130,6 +132,7 @@ async function ProfileContent() {
   // Requête séparée pour que le profil reste accessible avant l'application
   // de la migration qui ajoute la colonne de couverture.
   const { data: bannerProfile } = await supabase.from("profiles").select("banner_url").eq("id", user.id).maybeSingle();
+  const { data: revRows } = await supabase.rpc("get_rev_progress", { p_user_id: user.id });
 
   return (
     <div className="rg-page rg-profile-page flex flex-col gap-6">
@@ -158,6 +161,7 @@ async function ProfileContent() {
           <SignOutButton />
         </div>
         {progress && <div className="rg-profile-hero-level"><LevelBadge progress={progress} /></div>}
+        <div className="rg-profile-hero-rev"><RevProgress userId={user.id} initial={(revRows?.[0] ?? null) as RevProgressRow | null} /></div>
         <div className="rg-profile-record" aria-label="Bilan du joueur">
           <div><Trophy aria-hidden="true" /><strong>{totals?.wins ?? 0}</strong><span>Victoires</span></div>
           <div><Gamepad2 aria-hidden="true" /><strong>{totals?.games_played ?? 0}</strong><span>Parties</span></div>
@@ -167,6 +171,7 @@ async function ProfileContent() {
 
       <nav className="rg-profile-section-nav" aria-label="Sections du profil">
         <a href="#profil-apercu"><LayoutGrid size={16} /> Aperçu</a>
+        <a href="#mes-cadeaux"><Trophy size={16} /> Cadeaux</a>
         <a href="#profil-jeux"><BarChart3 size={16} /> Jeux</a>
         <a href="#profil-historique"><History size={16} /> Historique</a>
       </nav>
@@ -177,6 +182,8 @@ async function ProfileContent() {
         <div className="rg-profile-favorites"><FavoritesTile /></div>
         <details className="rg-profile-privacy"><summary>Ma présence et ma confidentialité</summary><div className="mt-3"><GhostModeCard /></div></details>
       </section>
+
+      <GiftWall userId={user.id} />
 
       <section id="profil-jeux" className="rg-profile-games-section">
         <div className="rg-profile-section-heading"><div><span>TON PARCOURS</span><h2>Mes jeux</h2></div><Link href="/library">Voir les jeux</Link></div>

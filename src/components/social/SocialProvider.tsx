@@ -102,7 +102,7 @@ export function SocialProvider({ children }: { children: React.ReactNode }) {
     const { data } = await supabase
       .from("notifications")
       .select(
-        "id, kind, actor_id, game_slug, invitation_id, read_at, created_at," +
+        "id, kind, actor_id, game_slug, invitation_id, gift_batch_id, read_at, created_at," +
           " actor:profiles!notifications_actor_id_fkey(username, avatar_url)",
       )
       .order("created_at", { ascending: false })

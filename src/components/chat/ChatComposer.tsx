@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { Send } from "lucide-react";
 import { CHAT_MAX_LENGTH, type ChatIdentity } from "@/lib/chat-shared";
@@ -16,12 +16,14 @@ export function ChatComposer({
   error,
   onSend,
   compact = false,
+  leadingAction,
 }: {
   me: ChatIdentity | null;
   sending: boolean;
   error: string;
   onSend: (body: string) => Promise<boolean>;
   compact?: boolean;
+  leadingAction?: ReactNode;
 }) {
   const [draft, setDraft] = useState("");
 
@@ -62,6 +64,7 @@ export function ChatComposer({
         compact ? "p-2" : "p-2.5 sm:p-3"
       }`}
     >
+      {leadingAction}
       <div className="min-w-0 flex-1">
         <input
           value={draft}
