@@ -381,7 +381,7 @@
 
 /* Prestige pieces are drawn as separate SVG parts; the object itself is never a moving bitmap. */
 .rg-gift-scene-stage--prestige .rg-prestige-art-wrap { display:grid; place-items:center; width:100%; height:100%; }
-.rg-gift-scene-stage--prestige .rg-prestige-art { display:block; width:min(100%,54dvh); height:min(100%,54dvh); max-width:440px; max-height:560px; overflow:visible; }
+.rg-gift-scene-stage--prestige .rg-prestige-art { display:block; width:min(100%,54dvh); height:auto; max-width:440px; max-height:100%; aspect-ratio:1; overflow:visible; }
 .rg-prestige-art--crown .pc-petals ellipse { stroke:#fff4c1; stroke-width:1.8; }
 .rg-prestige-art--crown .f1 .pc-petals ellipse { fill:#ff85ac; }
 .rg-prestige-art--crown .f2 .pc-petals ellipse { fill:#ffc6fa; }
@@ -418,13 +418,8 @@
 .rg-prestige-art--shooting-star .ss-ember { animation:ss-ember-drift 1.8s ease-out .5s both; }
 .rg-prestige-art--shooting-star .e2 { animation-delay:.85s; }
 .rg-prestige-art--shooting-star .e3 { animation-delay:1.2s; }
-.rg-prestige-art--swan .sw-neck { transform-box:fill-box; transform-origin:25% 88%; animation:sw-neck-bow 5.8s cubic-bezier(.3,.1,.25,1) both; }
-.rg-prestige-art--swan .sw-head { transform-box:fill-box; transform-origin:15% 72%; animation:sw-head-nod 2.8s ease-in-out 1s both; }
-.rg-prestige-art--swan .sw-wing { transform-box:fill-box; transform-origin:10% 90%; animation:sw-wing-open 4.8s cubic-bezier(.2,.6,.3,1) both; }
-.rg-prestige-art--swan .swan-feather { transform-box:fill-box; transform-origin:15% 100%; animation:sw-feather-fan 2.4s ease-out .7s both; }
-.rg-prestige-art--swan .sf2 { animation-delay:.84s; }
-.rg-prestige-art--swan .sf3 { animation-delay:.98s; }
-.rg-prestige-art--swan .sf4 { animation-delay:1.12s; }
+.rg-prestige-art--swan .sw-neck-piece { transform-box:view-box; transform-origin:102px 92px; animation:sw-neck-bow 5.8s cubic-bezier(.3,.1,.25,1) both; }
+.rg-prestige-art--swan .sw-wing-piece { transform-box:view-box; transform-origin:122px 130px; animation:sw-wing-open 4.8s cubic-bezier(.2,.6,.3,1) both; }
 .rg-prestige-art--swan .sw-water-ripples ellipse { fill:none; stroke:#bdedff; stroke-width:3; transform-box:fill-box; transform-origin:center; animation:sw-ripple 2.8s ease-out .8s both; }
 .rg-prestige-art--swan .sw-water-ripples ellipse:nth-child(2) { animation-delay:1.1s; }
 .rg-prestige-art--swan .sw-water-ripples ellipse:nth-child(3) { animation-delay:1.4s; }
@@ -449,10 +444,8 @@
 @keyframes ss-star-cross { 0%{transform:translate(-174px,144px) rotate(-40deg) scale(.18);opacity:0} 15%{opacity:1} 40%{transform:translate(-74px,60px) rotate(20deg) scale(.82)} 68%{transform:translate(8px,-8px) rotate(175deg) scale(1.15)} 88%{transform:translate(46px,-45px) rotate(260deg) scale(.9);opacity:1} 100%{transform:translate(82px,-80px) rotate(330deg) scale(.3);opacity:0} }
 @keyframes ss-facet-turn { 0%,100%{opacity:.2;transform:translate(0,0) rotate(0)} 48%{opacity:.82;transform:translate(4px,-4px) rotate(18deg)} }
 @keyframes ss-ember-drift { 0%{opacity:0;transform:translate(8px,18px) scale(.2)} 22%{opacity:1} 100%{opacity:0;transform:translate(-54px,58px) scale(.05)} }
-@keyframes sw-neck-bow { 0%{transform:rotate(-10deg)} 28%{transform:rotate(7deg)} 47%{transform:rotate(-4deg)} 65%{transform:rotate(3deg)} 82%{transform:rotate(0)} 100%{transform:rotate(0)} }
-@keyframes sw-head-nod { 0%,100%{transform:rotate(0)} 34%{transform:rotate(-13deg)} 60%{transform:rotate(8deg)} 82%{transform:rotate(0)} }
-@keyframes sw-wing-open { 0%{transform:rotate(-14deg) scaleY(.74)} 34%{transform:rotate(9deg) scaleY(1.13)} 55%{transform:rotate(-5deg) scaleY(.93)} 75%{transform:rotate(3deg) scaleY(1.03)} 100%{transform:rotate(0) scaleY(1)} }
-@keyframes sw-feather-fan { 0%{transform:rotate(-16deg) translateY(9px)} 58%{transform:rotate(12deg) translateY(-4px)} 100%{transform:rotate(0) translateY(0)} }
+@keyframes sw-neck-bow { 0%{transform:rotate(-3deg)} 28%{transform:rotate(6deg)} 47%{transform:rotate(-4deg)} 65%{transform:rotate(2deg)} 82%,100%{transform:rotate(0)} }
+@keyframes sw-wing-open { 0%{transform:rotate(-1deg) scaleY(.98)} 34%{transform:rotate(7deg) scaleY(1.04)} 55%{transform:rotate(-4deg) scaleY(.98)} 75%{transform:rotate(3deg) scaleY(1.02)} 100%{transform:rotate(0) scaleY(1)} }
 @keyframes sw-ripple { 0%{opacity:0;transform:scale(.25,.4)} 25%{opacity:.85} 100%{opacity:0;transform:scale(1.48,1.6)} }
 @media(prefers-reduced-motion:reduce) { .rg-gift-scene-stage *, .rg-gift-scene-glow { animation-duration:.01ms!important; animation-iteration-count:1!important; } }
 .rg-gift-admin-preview { display:flex; align-items:center; justify-content:space-between; gap:16px; border:1px solid #e7b9676b!important; background:linear-gradient(125deg,#362b39,#1c273a)!important; }

@@ -43,6 +43,39 @@ export function GiftFireworkAnimation({ event }: { event: GiftEvent }) {
           drag: 0.982 + Math.random() * 0.012 });
       }
     };
+    const drawRocket = (x: number, y: number, now: number) => {
+      context.save();
+      context.translate(x, y);
+      const drift = Math.cos(now / 900) * 0.045;
+      context.rotate(drift);
+      const aura = context.createRadialGradient(0, 0, 2, 0, 0, 38);
+      aura.addColorStop(0, "#fff8d8d9"); aura.addColorStop(0.34, "#ffb95788"); aura.addColorStop(1, "#ff765500");
+      context.fillStyle = aura;
+      context.beginPath(); context.arc(0, 0, 38, 0, Math.PI * 2); context.fill();
+
+      const flameLength = 24 + Math.sin(now / 24) * 5;
+      const flame = context.createLinearGradient(0, 8, 0, flameLength + 15);
+      flame.addColorStop(0, "#fffce3"); flame.addColorStop(0.25, "#ffdb74"); flame.addColorStop(0.7, "#ff7b52"); flame.addColorStop(1, "#ed4e8900");
+      context.fillStyle = flame;
+      context.beginPath(); context.moveTo(-5, 8); context.quadraticCurveTo(-3, flameLength, Math.sin(now / 18) * 3, flameLength + 12);
+      context.quadraticCurveTo(5, flameLength, 5, 8); context.closePath(); context.fill();
+
+      context.shadowBlur = 18; context.shadowColor = "#ffe8ac";
+      const shell = context.createLinearGradient(-9, 0, 9, 0);
+      shell.addColorStop(0, "#dbeaff"); shell.addColorStop(0.35, "#fffefa"); shell.addColorStop(0.72, "#f7d9a0"); shell.addColorStop(1, "#b86a52");
+      context.fillStyle = shell;
+      context.beginPath(); context.moveTo(0, -25); context.bezierCurveTo(5, -18, 8, -11, 8, -4); context.lineTo(7, 10);
+      context.quadraticCurveTo(0, 15, -7, 10); context.lineTo(-8, -4); context.bezierCurveTo(-8, -11, -5, -18, 0, -25); context.closePath(); context.fill();
+      context.shadowBlur = 0;
+
+      context.fillStyle = "#df5967";
+      context.beginPath(); context.moveTo(-7, 3); context.lineTo(-14, 14); context.lineTo(-5, 11); context.closePath(); context.fill();
+      context.beginPath(); context.moveTo(7, 3); context.lineTo(14, 14); context.lineTo(5, 11); context.closePath(); context.fill();
+      context.fillStyle = "#dca751"; context.fillRect(-7, 5, 14, 2.5);
+      context.fillStyle = "#7cd9ff"; context.strokeStyle = "#fff"; context.lineWidth = 1.5;
+      context.beginPath(); context.arc(0, -6, 3.1, 0, Math.PI * 2); context.fill(); context.stroke();
+      context.restore();
+    };
     resize();
     window.addEventListener("resize", resize);
     const start = performance.now();
@@ -58,15 +91,10 @@ export function GiftFireworkAnimation({ event }: { event: GiftEvent }) {
         const x = w * (0.49 + Math.sin(p * 1.6) * 0.025);
         const y = h * (0.88 - p * 0.63);
         context.save();
-        context.shadowBlur = 24;
-        context.shadowColor = "#ffe8b1";
-        const glow = context.createRadialGradient(x, y, 0, x, y, 22);
-        glow.addColorStop(0, "#fffdf6"); glow.addColorStop(0.2, "#ffe8ac"); glow.addColorStop(1, "#ff6f55");
-        context.fillStyle = glow;
-        context.beginPath(); context.arc(x, y, 12, 0, Math.PI * 2); context.fill();
         context.strokeStyle = "#ffc86a"; context.lineWidth = 3; context.beginPath();
         context.moveTo(x, y + 13); context.quadraticCurveTo(x + 16, y + 34, x + Math.sin(now / 23) * 9, y + 62); context.stroke();
         context.restore();
+        drawRocket(x, y, now);
         if (Math.random() > 0.28) particles.push({ x: x + (Math.random() - 0.5) * 10, y: y + 22,
           vx: (Math.random() - 0.5) * 2, vy: 1 + Math.random() * 2, life: 220 + Math.random() * 300,
           age: 0, size: 1 + Math.random() * 2.1, color: COLORS[(Math.random() * COLORS.length) | 0], drag: 0.97 });

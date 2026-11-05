@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type Props = { animation: string };
+type Props = { animation: string; imageUrl: string };
 
 function Diamond() {
   return <svg viewBox="0 0 400 400" className="rg-prestige-art rg-prestige-art--diamond">
@@ -107,46 +107,36 @@ function ShootingStar() {
   </svg>;
 }
 
-function Swan() {
-  const Feather = ({ d, klass }: { d: string; klass: string }) => <path d={d} className={`swan-feather ${klass}`} fill="url(#sw-feather)" stroke="#fff" strokeWidth="3" strokeLinejoin="round"/>;
-  return <svg viewBox="0 0 400 400" className="rg-prestige-art rg-prestige-art--swan">
+function Swan({ imageUrl }: { imageUrl: string }) {
+  const wing = "M117 94 Q135 76 157 73 Q180 75 198 99 Q210 118 201 141 Q184 160 158 164 Q134 157 121 139 Q111 119 117 94Z";
+  const neck = "M77 64 Q68 51 81 37 Q91 26 107 32 L117 42 Q105 48 102 61 Q98 76 111 87 Q123 96 121 109 Q115 124 129 141 L116 156 Q97 140 94 119 Q89 98 77 81Z";
+  return <svg viewBox="0 0 256 256" className="rg-prestige-art rg-prestige-art--swan">
     <defs>
-      <linearGradient id="sw-feather" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff"/><stop offset=".58" stopColor="#e7f1ff"/><stop offset="1" stopColor="#abbddd"/></linearGradient>
-      <linearGradient id="sw-water" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#b2edff" stopOpacity=".8"/><stop offset="1" stopColor="#796cf0" stopOpacity=".04"/></linearGradient>
       <radialGradient id="sw-aura"><stop stopColor="#d8cbff" stopOpacity=".45"/><stop offset="1" stopColor="#8aaeff" stopOpacity="0"/></radialGradient>
-      <filter id="sw-shadow"><feGaussianBlur stdDeviation="9"/></filter>
+      <mask id="sw-base-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="256" height="256">
+        <rect width="256" height="256" fill="#fff"/><path d={neck} fill="#000"/><path d={wing} fill="#000"/>
+      </mask>
+      <clipPath id="sw-neck-clip"><path d={neck}/></clipPath>
+      <clipPath id="sw-wing-clip"><path d={wing}/></clipPath>
+      <filter id="sw-shadow" x="-.5" y="-.5" width="2" height="2"><feGaussianBlur stdDeviation="9"/></filter>
     </defs>
-    <circle cx="198" cy="187" r="176" fill="url(#sw-aura)" className="sw-aura"/>
-    <ellipse cx="203" cy="332" rx="128" ry="18" fill="#91c8ff" opacity=".28" filter="url(#sw-shadow)"/>
-    <g className="sw-water-ripples"><ellipse cx="202" cy="318" rx="119" ry="18"/><ellipse cx="202" cy="318" rx="86" ry="12"/><ellipse cx="202" cy="318" rx="54" ry="7"/></g>
-    <path d="M79 322q124-42 247 0" fill="none" stroke="url(#sw-water)" strokeWidth="13" strokeLinecap="round"/>
-    <g className="sw-body">
-      <path d="M110 285q13-85 99-87 84-2 111 76-35 49-115 47-63-1-95-36Z" fill="url(#sw-feather)" stroke="#fff" strokeWidth="5"/>
-      <g className="sw-wing">
-        <path d="M133 276q4-51 67-66 45 13 83 64-54 31-135 18Z" fill="#f8fbff" stroke="#fff" strokeWidth="4"/>
-        <Feather d="M151 276q-5-31 24-50 21 3 34 37Z" klass="sf1"/>
-        <Feather d="M179 282q-2-39 31-57 23 8 30 48Z" klass="sf2"/>
-        <Feather d="M207 286q8-35 41-42 22 13 17 39Z" klass="sf3"/>
-        <Feather d="M235 284q18-27 47-21 14 16 6 34Z" klass="sf4"/>
-      </g>
-      <path d="M132 284q63 20 139 0" fill="none" stroke="#c0cee7" strokeWidth="4" opacity=".8"/>
-    </g>
-    <g className="sw-neck">
-      <path d="M128 275q-31-23-24-66 6-41 45-59 29-14 18-48-5-15-19-29 48 11 53 51 6 44-33 63-30 15-26 45 3 23 24 43Z" fill="url(#sw-feather)" stroke="#fff" strokeWidth="5" strokeLinejoin="round"/>
-      <g className="sw-head"><circle cx="148" cy="89" r="28" fill="url(#sw-feather)" stroke="#fff" strokeWidth="4"/><path d="m123 94-40 10 38 11q12-4 13-11Z" fill="#ed9a49" stroke="#ffd18a" strokeWidth="3"/><circle cx="155" cy="82" r="4" fill="#302d54"/><path d="m134 61 5-13 7 11m9 0 10-11 3 16" fill="none" stroke="#e4b84f" strokeWidth="5" strokeLinecap="round"/><path d="m134 62 5-13 7 11m9 0 10-11 3 16" fill="none" stroke="#fff3b1" strokeWidth="2" strokeLinecap="round"/></g>
-    </g>
-    <path d="M300 286q23-16 44-5" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" className="sw-water-glint"/>
+    <circle cx="128" cy="128" r="119" fill="url(#sw-aura)" className="sw-aura"/>
+    <ellipse cx="128" cy="210" rx="92" ry="15" fill="#91c8ff" opacity=".26" filter="url(#sw-shadow)"/>
+    <image href={imageUrl} x="0" y="0" width="256" height="256" preserveAspectRatio="none" mask="url(#sw-base-mask)"/>
+    <g className="sw-neck-piece"><image href={imageUrl} x="0" y="0" width="256" height="256" preserveAspectRatio="none" clipPath="url(#sw-neck-clip)"/></g>
+    <g className="sw-wing-piece"><image href={imageUrl} x="0" y="0" width="256" height="256" preserveAspectRatio="none" clipPath="url(#sw-wing-clip)"/></g>
+    <g className="sw-water-ripples"><ellipse cx="128" cy="215" rx="104" ry="13"/><ellipse cx="128" cy="215" rx="75" ry="9"/><ellipse cx="128" cy="215" rx="46" ry="5"/></g>
   </svg>;
 }
 
-export function PrestigeGiftAnimation({ animation }: Props) {
+export function PrestigeGiftAnimation({ animation, imageUrl }: Props) {
   let art: ReactNode;
   switch (animation) {
     case "diamond-turn": art = <Diamond />; break;
     case "crown-bloom": art = <Crown />; break;
     case "cat-wave": art = <Cat />; break;
     case "shooting-star": art = <ShootingStar />; break;
-    case "swan-glide": art = <Swan />; break;
+    case "swan-glide": art = <Swan imageUrl={imageUrl} />; break;
     default: return null;
   }
   return <span className="rg-prestige-art-wrap" data-prestige-art={animation}>{art}</span>;

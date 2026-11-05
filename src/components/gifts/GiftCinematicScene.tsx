@@ -46,12 +46,12 @@ export function GiftCinematicScene({ event, duration, level }: { event: GiftEven
     <span className="rg-gift-scene-vignette" />
     <span className="rg-gift-scene-glow rg-gift-scene-glow--outer" />
     <span className="rg-gift-scene-glow rg-gift-scene-glow--inner" />
-    <svg className="rg-gift-scene-art" viewBox="0 0 360 780" role="presentation" focusable="false">
+    {level !== "prestige" && <svg className="rg-gift-scene-art" viewBox="0 0 360 780" role="presentation" focusable="false">
       <g transform="translate(-72 236) scale(1.4)"><SceneArtwork type={event.gift.animation_type} /></g>
-    </svg>
+    </svg>}
     <span className="rg-gift-scene-hero" data-animation={event.gift.animation_type}>
       {level === "prestige" && PRESTIGE_RIGS.has(event.gift.animation_type)
-        ? <PrestigeGiftAnimation animation={event.gift.animation_type} />
+        ? <PrestigeGiftAnimation animation={event.gift.animation_type} imageUrl={event.gift.image_url} />
         : <GiftArt src={event.gift.image_url} name={event.gift.name} animation={event.gift.animation_type}
           animated animationDuration={duration - 350} size={360} />}
     </span>
