@@ -8,13 +8,8 @@ import { GiftArt } from "./GiftArt";
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; age: number; size: number; color: string; drag: number };
 const COLORS = ["#ffd98d", "#ff526d", "#ca79ff", "#6cdcff", "#fff2d1", "#ff9b54"];
 
-function avatarStyle(url: string | null | undefined): CSSProperties {
-  return url ? { backgroundImage: `url("${url.replaceAll('"', "")}")` } : {};
-}
-
-export function GiftFireworkAnimation({ event, onClose }: { event: GiftEvent; onClose: () => void }) {
+export function GiftFireworkAnimation({ event }: { event: GiftEvent }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [bannerVisible, setBannerVisible] = useState(false);
   const [finalFlash, setFinalFlash] = useState(false);
 
   useEffect(() => {
@@ -96,29 +91,20 @@ export function GiftFireworkAnimation({ event, onClose }: { event: GiftEvent; on
       if (elapsed < 6600) frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);
-    const banner = setTimeout(() => setBannerVisible(true), reduced ? 0 : 1450);
-    const flashOn = setTimeout(() => setFinalFlash(true), reduced ? 0 : 4800);
-    const flash = setTimeout(() => setFinalFlash(false), 5100);
+    const flashOn = reduced ? undefined : setTimeout(() => setFinalFlash(true), 4800);
+    const flash = reduced ? undefined : setTimeout(() => setFinalFlash(false), 5100);
     return () => {
-      alive = false; cancelAnimationFrame(frame); clearTimeout(banner); clearTimeout(flashOn); clearTimeout(flash);
+      alive = false; cancelAnimationFrame(frame);
+      if (flashOn) clearTimeout(flashOn);
+      if (flash) clearTimeout(flash);
       window.removeEventListener("resize", resize);
     };
   }, []);
 
-  return <div className={`rg-firework-stage ${finalFlash ? "is-final-flash" : ""}`} role="alertdialog" aria-label={`${event.senderName} offre ${event.gift.name} à ${event.recipientName}`}>
+  return <div className={`rg-firework-stage ${finalFlash ? "is-final-flash" : ""}`} role="status" aria-label={`Animation ${event.gift.name}`}>
     <canvas ref={canvasRef} className="rg-firework-canvas" aria-hidden="true" />
     <div className="rg-firework-vignette" aria-hidden="true" />
-    <button type="button" className="rg-firework-close" onClick={onClose} aria-label="Fermer l’animation">×</button>
-    <div className={`rg-firework-banner ${bannerVisible ? "is-visible" : ""}`} aria-live="polite">
-      {!event.preview && <div className="rg-firework-avatars">
-        <span className="rg-firework-avatar" style={avatarStyle(event.senderAvatarUrl)} aria-label={event.senderName} />
-        <i aria-hidden="true">✦</i>
-        <span className="rg-firework-avatar" style={avatarStyle(event.recipientAvatarUrl)} aria-label={event.recipientName} />
-      </div>}
-      <p>{event.preview ? <><strong>{event.gift.name}</strong> · ta collection ×{event.quantity}</>
-        : <><strong>{event.senderName}</strong> offre un <b>{event.gift.name}</b> à <strong>{event.recipientName}</strong></>}</p>
-      <blockquote>« {event.celebrationMessage || "Certaines personnes méritent bien plus que des étoiles… Elles méritent un ciel entier illuminé pour elles."} »</blockquote>
-      <GiftArt src={event.gift.image_url} name={event.gift.name} animation={event.gift.animation_type} size={76} />
-    </div>
+    <span className="rg-firework-hero" aria-hidden="true"><GiftArt src={event.gift.image_url} name={event.gift.name}
+      animation={event.gift.animation_type} animated animationDuration={6200} size={360} /></span>
   </div>;
 }

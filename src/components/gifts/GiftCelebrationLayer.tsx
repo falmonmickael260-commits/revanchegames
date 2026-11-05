@@ -1,22 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GiftArt } from "./GiftArt";
 import { GiftFireworkAnimation } from "./GiftFireworkAnimation";
 import { GiftCinematicScene } from "./GiftCinematicScene";
+import { giftAnimationPlan } from "@/lib/gifts/animation-plan";
 import type { GiftEvent } from "@/lib/gifts/types";
-
-function Avatar({ url, name }: { url?: string | null; name: string }) {
-  return <span className="rg-gift-celebration-avatar" aria-label={name} style={url ? { backgroundImage: `url("${url.replaceAll('"', "")}")` } : undefined}>
-    {!url && name.slice(0, 1).toLocaleUpperCase("fr-FR")}
-  </span>;
-}
 
 export function GiftCelebrationLayer() {
   const [queue, setQueue] = useState<GiftEvent[]>([]);
   const active = queue[0];
-  const tier = active?.animationTier ?? "small";
-  const duration = active?.gift.animation_type === "firework" ? 6800 : tier === "prestige" ? 4700 : tier === "medium" ? 3500 : 2100;
+  const plan = active
+    ? giftAnimationPlan(active.gift.price_coins ?? (active.gift.animation_type === "firework" ? 520 : undefined), active.animationTier ?? "small")
+    : null;
+  const activeId = active?.id;
+  const duration = plan?.duration;
 
   useEffect(() => {
     const receive = (event: Event) => {
@@ -28,28 +25,14 @@ export function GiftCelebrationLayer() {
   }, []);
 
   useEffect(() => {
-    if (!active) return;
-    const id = active.id;
-    const timer = setTimeout(() => setQueue(items => items[0]?.id === id ? items.slice(1) : items), duration);
+    if (!activeId || !duration) return;
+    const actualDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1100 : duration;
+    const timer = setTimeout(() => setQueue(items => items[0]?.id === activeId ? items.slice(1) : items), actualDuration);
     return () => clearTimeout(timer);
-  }, [active, duration]);
+  }, [activeId, duration]);
 
-  if (!active) return null;
-  const close = () => setQueue(items => items[0]?.id === active.id ? items.slice(1) : items);
-  if (active.gift.animation_type === "firework") return <GiftFireworkAnimation key={active.id} event={active} onClose={close} />;
+  if (!active || !plan) return null;
+  if (active.gift.animation_type === "firework") return <GiftFireworkAnimation key={active.id} event={active} />;
 
-  return <>
-    <GiftCinematicScene event={active} duration={duration - 200} />
-    {tier === "prestige" && <div className="rg-gift-cinematic-backdrop" aria-hidden="true" />}
-    <div className={`rg-gift-celebration rg-gift-celebration--${tier}`} data-animation={active.gift.animation_type} aria-live="polite" role="status">
-      {active.demo && <span className="rg-gift-demo-badge">APERÇU ADMIN · AUCUNE TRANSACTION</span>}
-      {!active.preview && <div className="rg-gift-celebration-people"><Avatar url={active.senderAvatarUrl} name={active.senderName} />
-        <span aria-hidden="true">offre</span><Avatar url={active.recipientAvatarUrl} name={active.recipientName} /></div>}
-      <GiftArt src={active.gift.image_url} name={active.gift.name} animation={active.gift.animation_type} animated
-        animationDuration={duration - 250} size={tier === "small" ? 100 : 140} />
-      <p>{active.preview ? <><strong>{active.gift.name}</strong> · ta collection ×{active.quantity}</>
-        : <><strong>{active.senderName}</strong> offre <b>{active.gift.name}{active.quantity > 1 ? ` ×${active.quantity}` : ""}</b> à <strong>{active.recipientName}</strong></>}</p>
-      <blockquote>{active.celebrationMessage ? `« ${active.celebrationMessage} »` : null}</blockquote>
-    </div>
-  </>;
+  return <GiftCinematicScene key={active.id} event={active} duration={plan.duration} level={plan.level} />;
 }

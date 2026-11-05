@@ -29,14 +29,14 @@ export async function GET(request: Request) {
     if (!participant && (batch.context !== "voice" || !batch.room_id || !batch.room_sid
       || !(await roomAccess(batch.room_id, batch.room_sid, user.id)))) throw new RequestError("Cadeau inaccessible.", 403);
     const [{ data: gift }, { data: profiles }] = await Promise.all([
-      service.from("gift_catalog").select("id,name,image_url,animation_type,rarity,animation_tier,celebration_message").eq("id", batch.gift_id).single(),
+      service.from("gift_catalog").select("id,name,image_url,price_coins,animation_type,rarity,animation_tier,celebration_message").eq("id", batch.gift_id).single(),
       service.from("profiles").select("id,username,avatar_url").in("id", [batch.sender_id, batch.recipient_id]),
     ]);
     if (!gift) throw new RequestError("Cadeau introuvable.", 404);
     const profile = (id: string) => profiles?.find(item => item.id === id);
     const sender = profile(batch.sender_id), recipient = profile(batch.recipient_id);
     const presentation = giftPresentation({ ...gift, price_coins: batch.unit_price });
-    return Response.json({ id: batch.id, gift, quantity: batch.quantity, senderId: batch.sender_id,
+    return Response.json({ id: batch.id, gift: { ...gift, price_coins: batch.unit_price }, quantity: batch.quantity, senderId: batch.sender_id,
       senderName: sender?.username ?? "Joueur", senderAvatarUrl: sender?.avatar_url ?? null,
       recipientId: batch.recipient_id, recipientName: recipient?.username ?? "Joueur",
       recipientAvatarUrl: recipient?.avatar_url ?? null,
