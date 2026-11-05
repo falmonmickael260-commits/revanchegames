@@ -16,11 +16,12 @@ export function GiftMessageAttachment({ id }: { id: string }) {
     return () => { cancelled = true; };
   }, [id]);
   if (!gift) return null;
-  return <div className="rg-gift-message">
-    <GiftArt src={gift.gift.image_url} name={gift.gift.name} animation={gift.gift.animation_type} size={66} />
-    <div><strong>{gift.gift.name}{gift.quantity > 1 ? ` ×${gift.quantity}` : ""}</strong>
-      <span>Offert par {gift.senderName} à {gift.recipientName}</span>
-      {gift.totalRev !== null && <small>+{gift.totalRev} REV{gift.totalReward !== null && gift.totalReward > 0 ? ` · +${gift.totalReward} pièces` : ""}</small>}
+  return <div className="rg-gift-message" data-tier={gift.animationTier ?? "small"}>
+    <GiftArt src={gift.gift.image_url} name={gift.gift.name} animation={gift.gift.animation_type} size={86} />
+    <div><span className="rg-gift-message-eyebrow">CADEAU ENVOYÉ</span>
+      <strong>{gift.gift.name}{gift.quantity > 1 ? ` ×${gift.quantity}` : ""}</strong>
+      <span><b>{gift.senderName}</b> → <b>{gift.recipientName}</b></span>
+      {gift.totalRev !== null && <small>+{gift.totalRev} REV{gift.totalReward !== null && gift.totalReward > 0 ? ` · +${gift.totalReward} pièces créditées` : ""}</small>}
     </div>
   </div>;
 }

@@ -93,6 +93,15 @@ export async function PATCH(request: Request) {
         || !Number.isSafeInteger(required) || Number(required) < 1
         || typeof label !== "string" || label.trim().length < 2 || label.trim().length > 40) throw new RequestError("Niveau invalide.");
       value = { level, required_total: required, label: label.trim() };
+    } else if (body.action === "visual") {
+      const id = body.id, tier = body.animationTier, message = body.celebrationMessage;
+      if (typeof id !== "string" || !slug.test(id)
+        || !["small","medium","prestige"].includes(String(tier))
+        || typeof message !== "string" || message.length > 240) throw new RequestError("Présentation invalide.");
+      const saved = await service.rpc("gift_admin_update_visual", { p_actor: user.id, p_gift_id: id,
+        p_tier: tier, p_message: message });
+      if (saved.error) throw new RequestError("Modification visuelle impossible.", 409);
+      return response({ ok: true, value: saved.data });
     } else throw new RequestError("Action inconnue.");
     const saved = await service.rpc("gift_admin_apply", { p_actor: user.id, p_action: body.action, p_value: value });
     if (saved.error) throw new RequestError("Enregistrement impossible. Vérifie les valeurs et les seuils.", 409);

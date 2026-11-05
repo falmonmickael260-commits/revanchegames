@@ -2,6 +2,7 @@ import { RoomServiceClient } from "livekit-server-sdk";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { apiError, RequestError, UUID_PATTERN } from "@/lib/request-security";
 import { voiceMetadata } from "@/lib/voice-shared";
+import { giftPresentation } from "@/lib/gifts/presentation";
 
 async function roomAccess(roomId: string, roomSid: string, userId: string) {
   const url = process.env.LIVEKIT_URL, key = process.env.LIVEKIT_API_KEY, secret = process.env.LIVEKIT_API_SECRET;
@@ -28,13 +29,19 @@ export async function GET(request: Request) {
     if (!participant && (batch.context !== "voice" || !batch.room_id || !batch.room_sid
       || !(await roomAccess(batch.room_id, batch.room_sid, user.id)))) throw new RequestError("Cadeau inaccessible.", 403);
     const [{ data: gift }, { data: profiles }] = await Promise.all([
-      service.from("gift_catalog").select("id,name,image_url,animation_type,rarity").eq("id", batch.gift_id).single(),
-      service.from("profiles").select("id,username").in("id", [batch.sender_id, batch.recipient_id]),
+      service.from("gift_catalog").select("id,name,image_url,animation_type,rarity,animation_tier,celebration_message").eq("id", batch.gift_id).single(),
+      service.from("profiles").select("id,username,avatar_url").in("id", [batch.sender_id, batch.recipient_id]),
     ]);
     if (!gift) throw new RequestError("Cadeau introuvable.", 404);
-    const name = (id: string) => profiles?.find(profile => profile.id === id)?.username ?? "Joueur";
+    const profile = (id: string) => profiles?.find(item => item.id === id);
+    const sender = profile(batch.sender_id), recipient = profile(batch.recipient_id);
+    const presentation = giftPresentation({ ...gift, price_coins: batch.unit_price });
     return Response.json({ id: batch.id, gift, quantity: batch.quantity, senderId: batch.sender_id,
-      senderName: name(batch.sender_id), recipientId: batch.recipient_id, recipientName: name(batch.recipient_id),
+      senderName: sender?.username ?? "Joueur", senderAvatarUrl: sender?.avatar_url ?? null,
+      recipientId: batch.recipient_id, recipientName: recipient?.username ?? "Joueur",
+      recipientAvatarUrl: recipient?.avatar_url ?? null,
+      animationTier: gift.animation_tier ?? presentation.tier,
+      celebrationMessage: gift.celebration_message || presentation.message,
       totalRev: user.id === batch.recipient_id ? batch.total_rev : null,
       totalReward: user.id === batch.recipient_id ? batch.total_reward : null,
       createdAt: batch.created_at, context: batch.context }, { headers: { "Cache-Control": "no-store" } });

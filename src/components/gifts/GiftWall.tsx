@@ -17,8 +17,8 @@ export function GiftWall({ userId }: { userId: string }) {
   const load = useCallback(async () => {
     const db = createClient();
     const [{ data: collection }, { data: events }] = await Promise.all([
-      db.from("gift_collection").select("gift_id,quantity,last_received_at,gift:gift_catalog(id,name,image_url,animation_type,rarity,price_coins,rev_points,active,starts_at,ends_at,limited)").eq("recipient_id", userId).order("last_received_at", { ascending: false }),
-      db.from("gift_received_events").select("id,gift_id,quantity,created_at,gift:gift_catalog(id,name,image_url,animation_type,rarity,price_coins,rev_points,active,starts_at,ends_at,limited)").eq("recipient_id", userId).order("created_at", { ascending: false }).limit(50),
+      db.from("gift_collection").select("gift_id,quantity,last_received_at,gift:gift_catalog(id,name,image_url,animation_type,rarity,price_coins,active,starts_at,ends_at,limited,animation_tier,celebration_message)").eq("recipient_id", userId).order("last_received_at", { ascending: false }),
+      db.from("gift_received_events").select("id,gift_id,quantity,created_at,gift:gift_catalog(id,name,image_url,animation_type,rarity,price_coins,active,starts_at,ends_at,limited,animation_tier,celebration_message)").eq("recipient_id", userId).order("created_at", { ascending: false }).limit(50),
     ]);
     setEntries((collection ?? []) as unknown as Entry[]);
     setRecent((events ?? []) as unknown as Recent[]);

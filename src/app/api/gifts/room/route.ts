@@ -2,6 +2,7 @@ import { RoomServiceClient } from "livekit-server-sdk";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { apiError, RequestError } from "@/lib/request-security";
 import { voiceMetadata } from "@/lib/voice-shared";
+import { giftPresentation } from "@/lib/gifts/presentation";
 
 const ROOM_ID = /^rg-social-[0-9a-f-]{36}$/;
 
@@ -22,21 +23,31 @@ export async function GET(request: Request) {
     }
     const service = createServiceClient();
     const { data: batches, error } = await service.from("gift_send_batches")
-      .select("id,sender_id,recipient_id,quantity,total_rev,total_reward,context,created_at,gift:gift_catalog(id,name,image_url,animation_type,rarity)")
+      .select("id,sender_id,recipient_id,quantity,unit_price,total_rev,total_reward,context,created_at,gift:gift_catalog(id,name,image_url,animation_type,rarity,animation_tier,celebration_message,price_coins)")
       .eq("context", "voice").eq("room_id", roomId).eq("room_sid", room.sid)
       .order("created_at", { ascending: false }).limit(20);
     if (error) throw new RequestError("Historique des cadeaux indisponible.", 503);
     const ids = [...new Set((batches ?? []).flatMap(batch => [batch.sender_id, batch.recipient_id]))];
     const { data: profiles } = ids.length
-      ? await service.from("profiles").select("id,username").in("id", ids)
-      : { data: [] as { id: string; username: string }[] };
-    const name = (id: string) => profiles?.find(profile => profile.id === id)?.username ?? "Joueur";
-    return Response.json({ events: (batches ?? []).filter(batch => batch.gift).reverse().map(batch => ({
-      id: batch.id, gift: batch.gift, quantity: batch.quantity, senderId: batch.sender_id,
-      senderName: name(batch.sender_id), recipientId: batch.recipient_id, recipientName: name(batch.recipient_id),
+      ? await service.from("profiles").select("id,username,avatar_url").in("id", ids)
+      : { data: [] as { id: string; username: string; avatar_url: string | null }[] };
+    const profile = (id: string) => profiles?.find(item => item.id === id);
+    return Response.json({ events: (batches ?? []).filter(batch => batch.gift?.length).reverse().map(batch => {
+      const sender = profile(batch.sender_id), recipient = profile(batch.recipient_id);
+      const catalogGift = batch.gift![0];
+      const presentation = giftPresentation({ ...catalogGift, price_coins: batch.unit_price });
+      const { price_coins: _price, ...gift } = catalogGift;
+      void _price;
+      return {
+      id: batch.id, gift, quantity: batch.quantity, senderId: batch.sender_id,
+      senderName: sender?.username ?? "Joueur", senderAvatarUrl: sender?.avatar_url ?? null,
+      recipientId: batch.recipient_id, recipientName: recipient?.username ?? "Joueur",
+      recipientAvatarUrl: recipient?.avatar_url ?? null,
+      animationTier: catalogGift.animation_tier ?? presentation.tier,
+      celebrationMessage: catalogGift.celebration_message || presentation.message,
       totalRev: user.id === batch.recipient_id ? batch.total_rev : null,
       totalReward: user.id === batch.recipient_id ? batch.total_reward : null,
       createdAt: batch.created_at, context: batch.context,
-    })) }, { headers: { "Cache-Control": "no-store" } });
+    };}) }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiError(error); }
 }

@@ -5,9 +5,10 @@ import { Gift, X } from "lucide-react";
 import { useWallet } from "@/lib/use-wallet";
 import { celebrateGift, type Gift as GiftItem, type GiftEvent } from "@/lib/gifts/types";
 import { GiftArt } from "./GiftArt";
+import { giftPresentation } from "@/lib/gifts/presentation";
 
 type Recipient = { id: string; name: string };
-type Catalog = { gifts: GiftItem[]; settings: { enabled: boolean; renta_enabled: boolean; max_quantity: number } };
+type Catalog = { gifts: GiftItem[]; settings: { enabled: boolean; max_quantity: number } };
 
 export function GiftLauncher({ meId, recipients, context, roomId, onSent }: {
   meId: string;
@@ -86,11 +87,11 @@ export function GiftLauncher({ meId, recipients, context, roomId, onSent }: {
         <div className="rg-gift-sheet-content">
           <div className="rg-gift-sheet-summary"><span>Destinataire <strong>{context === "voice" ? <select aria-label="Destinataire du cadeau" value={receiver?.id ?? ""} onChange={event => { setRecipientId(event.target.value); attempt.current = null; }}>{recipients.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select> : receiver?.name ?? "—"}</strong></span><span>Mon solde <strong>{ready && balance !== null ? balance.toLocaleString("fr-FR") : "—"} pièces</strong></span></div>
           {loading && <p className="rg-gift-sheet-message">Chargement des cadeaux…</p>}
-          {!loading && !catalog?.settings.enabled && <p className="rg-gift-sheet-message">Les cadeaux sont en préparation. Leur envoi sera ouvert après validation des règles et des probabilités.</p>}
+          {!loading && !catalog?.settings.enabled && <p className="rg-gift-sheet-message">Les cadeaux ne sont pas disponibles pour le moment.</p>}
           <div className="rg-gift-grid">{available.map(gift => <button type="button" key={gift.id} className={gift.id === giftId ? "is-selected" : ""} onClick={() => { setGiftId(gift.id); attempt.current = null; }} aria-pressed={gift.id === giftId}>
             <GiftArt src={gift.image_url} name={gift.name} animation={gift.animation_type} size={70} /><strong>{gift.name}</strong><span>{gift.price_coins} pièces</span>
           </button>)}</div>
-          {selected && <div className="rg-gift-selection"><GiftArt src={selected.image_url} name={selected.name} animation={selected.animation_type} size={82} /><div><strong>{selected.name}</strong><span>{selected.rev_points} REV par cadeau pour {receiver?.name ?? "le destinataire"}</span><small>{selected.price_coins === 10 ? "Sans renta" : selected.price_coins === 30 ? "Renta de 1 à 30 pièces" : "Renta de 30 à 150 % par exemplaire"}</small></div></div>}
+          {selected && <div className="rg-gift-selection"><GiftArt src={selected.image_url} name={selected.name} animation={selected.animation_type} size={82} /><div><strong>{selected.name}</strong><span>Une attention pour {receiver?.name ?? "ton ami"}</span><small>{selected.celebration_message || giftPresentation(selected).message}</small></div></div>}
           <div className="rg-gift-quantity"><span>Quantité</span><div>{[1,5,10,20].filter(value => value <= (catalog?.settings.max_quantity ?? 20)).map(value => <button key={value} type="button" aria-pressed={quantity === value} onClick={() => { setQuantity(value); attempt.current = null; }}>×{value}</button>)}<input type="number" aria-label="Quantité personnalisée" min="1" max={catalog?.settings.max_quantity ?? 20} value={quantity} onChange={event => { setQuantity(Math.max(1,Math.min(catalog?.settings.max_quantity ?? 20,Number(event.target.value)||1))); attempt.current = null; }} /></div></div>
           {error && <p role="alert" className="rg-gift-error">{error}</p>}
         </div>

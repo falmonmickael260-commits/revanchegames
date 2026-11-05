@@ -9,13 +9,13 @@ const noStore = { "Cache-Control": "no-store" };
 
 export async function GET() {
   try {
-    const db = await createClient();
+    const service = createServiceClient();
     const [{ data: gifts, error: catalogError }, { data: settings, error: settingsError }] = await Promise.all([
-      db.from("gift_catalog").select("id,name,price_coins,rev_points,image_url,animation_type,rarity,active,starts_at,ends_at,limited").order("price_coins").order("name"),
-      db.from("gift_settings").select("gifts_enabled,renta_enabled,max_quantity").eq("singleton", true).single(),
+      service.from("gift_catalog").select("id,name,price_coins,image_url,animation_type,rarity,active,starts_at,ends_at,limited,animation_tier,celebration_message").order("price_coins").order("name"),
+      service.from("gift_settings").select("gifts_enabled,max_quantity").eq("singleton", true).single(),
     ]);
     if (catalogError || settingsError) throw new RequestError("Catalogue indisponible.", 503);
-    return Response.json({ gifts, settings: { ...settings, enabled: process.env.GIFT_FINANCIAL_APPROVED === "1" && settings.gifts_enabled } }, { headers: noStore });
+    return Response.json({ gifts, settings: { enabled: process.env.GIFT_FINANCIAL_APPROVED === "1" && settings.gifts_enabled, max_quantity: settings.max_quantity } }, { headers: noStore });
   } catch (error) { return apiError(error); }
 }
 
@@ -66,8 +66,11 @@ export async function POST(request: Request) {
     if (error) {
       await service.from("gift_attempts").insert({ sender_id: user.id, recipient_id: recipientId,
         gift_id: giftId, idempotency_key: idempotencyKey, error_code: error.code || "unknown" });
-      const known = ["P0001", "22023", "42501", "23505"].includes(error.code ?? "");
-      throw new RequestError(known ? error.message : "Envoi du cadeau impossible.", known ? 409 : 503);
+      const status = ["42501"].includes(error.code ?? "") ? 403
+        : ["P0001", "22023", "23505"].includes(error.code ?? "") ? 409 : 503;
+      throw new RequestError(status === 403 ? "Cet envoi n’est pas disponible." : status === 409
+        ? "Impossible d’envoyer ce cadeau. Vérifie le destinataire, la quantité et ton solde."
+        : "Envoi du cadeau temporairement indisponible.", status);
     }
     const { data: message } = context === "dm"
       ? await service.from("direct_messages").select("id").eq("gift_batch_id", batch.id).maybeSingle()

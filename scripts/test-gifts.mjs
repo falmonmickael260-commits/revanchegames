@@ -36,6 +36,8 @@ try {
   await file('20261105000000_virtual_gifts_schema.sql');
   await file('20261105010000_virtual_gifts_transactions.sql');
   await file('20261105020000_virtual_gifts_admin.sql');
+  await query('create table public.support_admins(user_id uuid primary key references public.profiles(id))');
+  await file('20261105030000_virtual_gifts_presentation_privacy.sql');
 
   const catalog = (await query('select id,price_coins,rev_points from public.gift_catalog order by price_coins,id')).rows;
   assert.equal(catalog.length, 24);
@@ -49,6 +51,7 @@ try {
     await query("update public.profiles set created_at=now()-interval '30 days' where id=$1", [id]);
   }
   await query("insert into public.friendships(requester_id,addressee_id,status) values($1,$2,'accepted')", [sender,recipient]);
+  await query('insert into public.support_admins(user_id) values($1)', [sender]);
   await query("insert into public.wallet_ledger(user_id,delta_coins,reason,reference) values($1,2000,'adjustment','test:seed')", [sender]);
   await assert.rejects(send('rose-rouge'), /pas encore activés/);
   assert.equal(await balance(sender), 2000);
@@ -126,6 +129,10 @@ try {
     await assert.rejects(send('bonbon-sucre'), /permission denied/);
     await assert.rejects(query('update public.gift_settings set gifts_enabled=true'), /permission denied/);
     await assert.rejects(query("insert into public.gift_collection(recipient_id,gift_id,quantity) values($1,'bonbon-sucre',1)", [sender]), /permission denied/);
+    await assert.rejects(query('select rev_points from public.gift_catalog limit 1'), /permission denied/);
+    await assert.rejects(query('select * from public.gift_reward_bands'), /permission denied/);
+    await assert.rejects(query('select * from public.gift_send_batches'), /permission denied/);
+    await assert.rejects(query('select * from public.gift_reward_rolls'), /permission denied/);
     assert.equal((await query('select * from public.rev_accounts where user_id=$1', [recipient])).rows.length, 0);
     assert.equal((await query('select count(*)::integer as n from public.gift_collection where recipient_id=$1', [recipient])).rows[0].n > 0, true);
     console.log('✓ client authentifié : aucun RPC financier ni écriture directe ; collection en lecture seule');
@@ -144,6 +151,13 @@ try {
   await assert.rejects(query("select public.gift_admin_apply($1,'band',$2)", [stranger, {rule:'thirty',band:1,weight:-1}]), /violates check constraint/);
   assert.equal((await query("select count(*)::integer as n from public.gift_admin_audit")).rows[0].n, 1);
   console.log('✓ administration : accès serveur seul, configuration et audit atomiques');
+
+  await query("select public.gift_admin_update_visual($1,'feu-artifice','prestige','Un message personnalisé pour le test.')", [sender]);
+  const visual = (await query("select animation_tier,celebration_message from public.gift_catalog where id='feu-artifice'")).rows[0];
+  assert.equal(visual.animation_tier, 'prestige');
+  assert.equal(visual.celebration_message, 'Un message personnalisé pour le test.');
+  assert.equal((await query("select count(*)::integer as n from public.gift_admin_audit where target='gift:feu-artifice' and action='visual'")).rows[0].n, 1);
+  console.log('✓ visuels configurables par admin et journalisés ; règles de récompense inchangées');
 } finally {
   await db.close();
 }

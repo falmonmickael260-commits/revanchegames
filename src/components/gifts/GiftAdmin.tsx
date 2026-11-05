@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { GiftArt } from "./GiftArt";
 import type { Gift } from "@/lib/gifts/types";
 import { theoreticalGiftReward } from "@/lib/gifts/economy";
+import { celebrateGift } from "@/lib/gifts/types";
 
 type Settings = { gifts_enabled:boolean; renta_enabled:boolean; max_quantity:number; max_daily_spend:number;
   max_daily_to_recipient:number; cooldown_seconds:number; min_account_age_hours:number };
@@ -75,10 +76,27 @@ export function GiftAdmin() {
       animationType:selected.animation_type,rarity:selected.rarity,active:selected.active,limited:selected.limited,
       startsAt:selected.starts_at,endsAt:selected.ends_at });
   }
+  function saveVisual() {
+    if (!selected) return;
+    void patch({ action:"visual",id:selected.id,animationTier:selected.animation_tier ?? "small",
+      celebrationMessage:selected.celebration_message ?? "" });
+  }
   if (!data) return <div className="rg-page"><PageHeader eyebrow="Administration" title="Cadeaux" /><p className="mt-5 text-sm text-text-dim">{error || "Chargement…"}</p><Link href="/settings/support/admin" className="mt-4 inline-block text-sm text-cyan">Retour à l’administration</Link></div>;
+  function previewFirework() {
+    const gift = data?.gifts.find(item => item.id === "feu-artifice");
+    if (!gift) { setError("Le cadeau Feu d’artifice est introuvable dans le catalogue."); return; }
+    celebrateGift({ id: `admin-preview-${Date.now()}`, gift: { id: gift.id, name: gift.name,
+      image_url: gift.image_url, animation_type: gift.animation_type, rarity: gift.rarity }, quantity: 1,
+      senderId: "admin-preview-sender", senderName: "Aperçu expéditeur", senderAvatarUrl: null,
+      recipientId: "admin-preview-recipient", recipientName: "Aperçu destinataire", recipientAvatarUrl: null,
+      totalRev: null, totalReward: null, createdAt: new Date().toISOString(), context: "dm",
+      animationTier: "prestige", celebrationMessage: gift.celebration_message
+        || "Certaines personnes méritent bien plus que des étoiles… Elles méritent un ciel entier illuminé pour elles.", demo: true });
+  }
   return <div className="rg-page rg-gift-admin">
     <PageHeader eyebrow="Administration" title="Cadeaux" subtitle="Catalogue, probabilités, progression REV et suivi des transactions." />
     <Link href="/settings/support/admin" className="text-sm text-cyan">← Administration de l’assistance</Link>
+    <section className="rg-gift-admin-preview"><div><span>DÉMONSTRATION VISUELLE</span><h2>Feu d’artifice</h2><p>Prévisualisation sans débit, récompense, notification ni écriture en base.</p></div><button type="button" onClick={previewFirework}>Tester l’animation Feu d’artifice</button></section>
     {!data.activationAllowed && <p className="rg-gift-admin-lock">Les récompenses aléatoires et les envois restent désactivés. Une validation juridique et économique, puis la variable serveur GIFT_FINANCIAL_APPROVED=1, sont nécessaires avant activation.</p>}
     {error && <p role="alert" className="rg-gift-error">{error}</p>}{notice && <p role="status" className="text-sm text-amber">{notice}</p>}
     <section><h2>Bilan</h2><div className="rg-gift-admin-metrics">{[["Envois",data.metrics?.sent_count],["Cadeaux",data.metrics?.items_sent],["Pièces dépensées",data.metrics?.coins_spent],["REV attribués",data.metrics?.rev_distributed],["Pièces de renta",data.metrics?.coins_rewarded],["Échecs",data.metrics?.failed_attempts]].map(([label,value])=><div key={String(label)}><strong>{Number(value??0).toLocaleString("fr-FR")}</strong><span>{label}</span></div>)}</div></section>
@@ -91,6 +109,8 @@ export function GiftAdmin() {
       <label>Prix en pièces<input className={field} type="number" min="10" max="100000" step="2" value={selected.price_coins} onChange={event=>setSelected({ ...selected,price_coins:Number(event.target.value) })} required /></label>
       <label>REV reçus<input className={field} value={Number(selected.price_coins)/2} readOnly title="50 % du prix, calculé automatiquement" /></label>
       <label>Animation<select className={field} value={selected.animation_type} onChange={event=>setSelected({ ...selected,animation_type:event.target.value })}>{animations.map(value=><option key={value}>{value}</option>)}</select></label>
+      <label>Catégorie d’animation<select className={field} value={selected.animation_tier ?? "small"} onChange={event=>setSelected({ ...selected,animation_tier:event.target.value as NonNullable<Gift["animation_tier"]> })}><option value="small">Petit cadeau</option><option value="medium">Intermédiaire</option><option value="prestige">Prestige</option></select></label>
+      <label className="rg-gift-admin-message">Message personnalisé<textarea className={field} maxLength={240} rows={3} value={selected.celebration_message ?? ""} onChange={event=>setSelected({ ...selected,celebration_message:event.target.value })} /></label>
       <label>Rareté<select className={field} value={selected.rarity} onChange={event=>setSelected({ ...selected,rarity:event.target.value as Gift["rarity"] })}>{["common","uncommon","rare","epic","legendary"].map(value=><option key={value}>{value}</option>)}</select></label>
       <label>Début (ISO)<input className={field} type="datetime-local" value={selected.starts_at?.slice(0,16)??""} onChange={event=>setSelected({ ...selected,starts_at:event.target.value ? new Date(event.target.value).toISOString() : null })} /></label>
       <label>Fin (ISO)<input className={field} type="datetime-local" value={selected.ends_at?.slice(0,16)??""} onChange={event=>setSelected({ ...selected,ends_at:event.target.value ? new Date(event.target.value).toISOString() : null })} /></label>
@@ -98,6 +118,7 @@ export function GiftAdmin() {
       <label className="rg-gift-admin-check"><input type="checkbox" checked={selected.limited} onChange={event=>setSelected({ ...selected,limited:event.target.checked })} /> Édition limitée</label>
       <label className="rg-gift-admin-art">Illustration<input type="file" accept="image/png,image/jpeg,image/webp,image/avif" onChange={event=>{ const file=event.target.files?.[0]; if(file) void upload(file); event.target.value=""; }} /><small>{selected.image_url || "Aucune image choisie"}</small></label>
       <button type="submit" disabled={busy || !selected.image_url}>Enregistrer le cadeau</button>
+      <button type="button" disabled={busy || !selected.id} onClick={saveVisual}>Enregistrer animation et message</button>
     </form></section>}
     {settings && <section><h2>Limites et activation</h2><form className="rg-gift-admin-settings" onSubmit={event=>{event.preventDefault();void patch({ action:"settings",...settings });}}>
       {(["max_quantity","max_daily_spend","max_daily_to_recipient","cooldown_seconds","min_account_age_hours"] as const).map(key=><label key={key}>{({max_quantity:"Quantité maximale",max_daily_spend:"Dépense par 24 h",max_daily_to_recipient:"Vers un joueur par 24 h",cooldown_seconds:"Pause entre envois (s)",min_account_age_hours:"Âge minimal du compte (h)"})[key]}<input className={field} type="number" min="0" value={settings[key]} onChange={event=>setSettings({ ...settings,[key]:Number(event.target.value) })} /></label>)}
