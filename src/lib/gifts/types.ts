@@ -34,6 +34,7 @@ export type GiftEvent = {
   animationTier?: "small" | "medium" | "prestige";
   celebrationMessage?: string;
   demo?: boolean;
+  preview?: boolean;
 };
 
 const recentlyCelebrated = new Set<string>();

@@ -110,12 +110,13 @@ export function GiftFireworkAnimation({ event, onClose }: { event: GiftEvent; on
     <div className="rg-firework-vignette" aria-hidden="true" />
     <button type="button" className="rg-firework-close" onClick={onClose} aria-label="Fermer l’animation">×</button>
     <div className={`rg-firework-banner ${bannerVisible ? "is-visible" : ""}`} aria-live="polite">
-      <div className="rg-firework-avatars">
+      {!event.preview && <div className="rg-firework-avatars">
         <span className="rg-firework-avatar" style={avatarStyle(event.senderAvatarUrl)} aria-label={event.senderName} />
         <i aria-hidden="true">✦</i>
         <span className="rg-firework-avatar" style={avatarStyle(event.recipientAvatarUrl)} aria-label={event.recipientName} />
-      </div>
-      <p><strong>{event.senderName}</strong> offre un <b>{event.gift.name}</b> à <strong>{event.recipientName}</strong></p>
+      </div>}
+      <p>{event.preview ? <><strong>{event.gift.name}</strong> · ta collection ×{event.quantity}</>
+        : <><strong>{event.senderName}</strong> offre un <b>{event.gift.name}</b> à <strong>{event.recipientName}</strong></>}</p>
       <blockquote>« {event.celebrationMessage || "Certaines personnes méritent bien plus que des étoiles… Elles méritent un ciel entier illuminé pour elles."} »</blockquote>
       <GiftArt src={event.gift.image_url} name={event.gift.name} animation={event.gift.animation_type} size={76} />
     </div>
