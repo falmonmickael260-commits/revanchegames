@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import type { GiftEvent } from "@/lib/gifts/types";
-import { GiftArt } from "./GiftArt";
 
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; age: number; size: number; color: string; drag: number };
 const COLORS = ["#ffd98d", "#ff526d", "#ca79ff", "#6cdcff", "#fff2d1", "#ff9b54"];
@@ -104,7 +102,5 @@ export function GiftFireworkAnimation({ event }: { event: GiftEvent }) {
   return <div className={`rg-firework-stage ${finalFlash ? "is-final-flash" : ""}`} role="status" aria-label={`Animation ${event.gift.name}`}>
     <canvas ref={canvasRef} className="rg-firework-canvas" aria-hidden="true" />
     <div className="rg-firework-vignette" aria-hidden="true" />
-    <span className="rg-firework-hero" aria-hidden="true"><GiftArt src={event.gift.image_url} name={event.gift.name}
-      animation={event.gift.animation_type} animated animationDuration={6200} size={360} /></span>
   </div>;
 }

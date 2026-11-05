@@ -3,11 +3,13 @@
 import type { CSSProperties, ReactNode } from "react";
 import { GiftArt } from "./GiftArt";
 import { GiftSceneParticles } from "./GiftSceneParticles";
+import { PrestigeGiftAnimation } from "./PrestigeGiftAnimation";
 import type { GiftEvent } from "@/lib/gifts/types";
 import type { GiftAnimationLevel } from "@/lib/gifts/animation-plan";
 
 const HEART = "M0 -15 C-7 -25 -22 -18 -19 -7 C-17 1 -8 8 0 15 C8 8 17 1 19 -7 C22 -18 7 -25 0 -15Z";
 const STAR = "M0 -12 L3 -3 L12 0 L3 3 L0 12 L-3 3 L-12 0 L-3 -3Z";
+const PRESTIGE_RIGS = new Set(["diamond-turn", "crown-bloom", "cat-wave", "shooting-star", "swan-glide"]);
 
 function SceneArtwork({ type }: { type: string }): ReactNode {
   switch (type) {
@@ -48,8 +50,10 @@ export function GiftCinematicScene({ event, duration, level }: { event: GiftEven
       <g transform="translate(-72 236) scale(1.4)"><SceneArtwork type={event.gift.animation_type} /></g>
     </svg>
     <span className="rg-gift-scene-hero" data-animation={event.gift.animation_type}>
-      <GiftArt src={event.gift.image_url} name={event.gift.name} animation={event.gift.animation_type}
-        animated animationDuration={duration - 350} size={360} />
+      {level === "prestige" && PRESTIGE_RIGS.has(event.gift.animation_type)
+        ? <PrestigeGiftAnimation animation={event.gift.animation_type} />
+        : <GiftArt src={event.gift.image_url} name={event.gift.name} animation={event.gift.animation_type}
+          animated animationDuration={duration - 350} size={360} />}
     </span>
     <GiftSceneParticles scene={event.gift.animation_type} seed={event.id} level={level} />
   </div>;
