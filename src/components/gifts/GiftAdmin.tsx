@@ -8,8 +8,8 @@ import type { Gift } from "@/lib/gifts/types";
 import { theoreticalGiftReward } from "@/lib/gifts/economy";
 import { celebrateGift } from "@/lib/gifts/types";
 
-type Settings = { gifts_enabled:boolean; renta_enabled:boolean; max_quantity:number; max_daily_spend:number;
-  max_daily_to_recipient:number; cooldown_seconds:number; min_account_age_hours:number };
+type Settings = { gifts_enabled:boolean; renta_enabled:boolean; max_quantity:number;
+  cooldown_seconds:number; min_account_age_hours:number };
 type Band = { rule:string; band:number; min_amount:number|null; max_amount:number|null;
   min_percent:number|null; max_percent:number|null; weight:number };
 type Level = { level:number; required_total:number; label:string };
@@ -120,11 +120,11 @@ export function GiftAdmin() {
       <button type="submit" disabled={busy || !selected.image_url}>Enregistrer le cadeau</button>
       <button type="button" disabled={busy || !selected.id} onClick={saveVisual}>Enregistrer animation et message</button>
     </form></section>}
-    {settings && <section><h2>Limites et activation</h2><form className="rg-gift-admin-settings" onSubmit={event=>{event.preventDefault();void patch({ action:"settings",...settings });}}>
-      {(["max_quantity","max_daily_spend","max_daily_to_recipient","cooldown_seconds","min_account_age_hours"] as const).map(key=><label key={key}>{({max_quantity:"Quantité maximale",max_daily_spend:"Dépense par 24 h",max_daily_to_recipient:"Vers un joueur par 24 h",cooldown_seconds:"Pause entre envois (s)",min_account_age_hours:"Âge minimal du compte (h)"})[key]}<input className={field} type="number" min="0" value={settings[key]} onChange={event=>setSettings({ ...settings,[key]:Number(event.target.value) })} /></label>)}
+    {settings && <section><h2>Envois et activation</h2><p>Les plafonds de pièces par jour et par destinataire ont été supprimés.</p><form className="rg-gift-admin-settings" onSubmit={event=>{event.preventDefault();void patch({ action:"settings",...settings });}}>
+      {(["max_quantity","cooldown_seconds","min_account_age_hours"] as const).map(key=><label key={key}>{({max_quantity:"Quantité maximale par envoi",cooldown_seconds:"Pause entre envois (s)",min_account_age_hours:"Âge minimal du compte (h)"})[key]}<input className={field} type="number" min="0" value={settings[key]} onChange={event=>setSettings({ ...settings,[key]:Number(event.target.value) })} /></label>)}
       <label className="rg-gift-admin-check"><input type="checkbox" checked={settings.gifts_enabled} disabled={!data.activationAllowed} onChange={event=>setSettings({ ...settings,gifts_enabled:event.target.checked })} /> Envois activés</label>
       <label className="rg-gift-admin-check"><input type="checkbox" checked={settings.renta_enabled} disabled={!data.activationAllowed} onChange={event=>setSettings({ ...settings,renta_enabled:event.target.checked })} /> Renta activée</label>
-      <button type="submit" disabled={busy}>Enregistrer les limites</button>
+      <button type="submit" disabled={busy}>Enregistrer les paramètres</button>
     </form></section>}
     <section><h2>Probabilités par bande</h2><p>Poids relatifs. Un montant entier est tiré dans la bande choisie ; les mêmes poids s’appliquent à tous les joueurs.</p><div className="rg-gift-admin-bands">{bands.map((band,index)=><div key={`${band.rule}:${band.band}`}><strong>{band.rule === "thirty" ? "Cadeaux à 30" : "50 pièces et plus"} · bande {band.band}</strong><span>{band.rule === "thirty" ? `${band.min_amount}–${band.max_amount} pièces` : `${Math.round(Number(band.min_percent)*100)}–${Math.round(Number(band.max_percent)*100)} %`}</span><label>Poids<input className={field} type="number" min="0" max="10000" value={band.weight} onChange={event=>setBands(bands.map((item,i)=>i===index?{...item,weight:Number(event.target.value)}:item))} /></label><button type="button" disabled={busy} onClick={()=>void patch({action:"band",rule:band.rule,band:band.band,weight:band.weight})}>Enregistrer</button></div>)}</div>
       <div className="rg-gift-admin-yield"><strong>Rendement théorique par cadeau</strong>{[10,30,50,100,250,500,520].map(price=>{const value=theoreticalGiftReward(price,bands);return <span key={price}>{price} pièces → {value ? `${value.expected.toFixed(2)} pièces en moyenne (${value.returnPercent.toFixed(1)} %)` : "configuration invalide"}</span>;})}</div>

@@ -26,7 +26,8 @@ export async function GET() {
       service.from("gift_admin_audit").select("id,actor_id,action,target,created_at").order("created_at", { ascending: false }).limit(30),
     ]);
     if ([gifts,settings,bands,levels,metrics,sends,attempts,audits].some(result => result.error)) throw new RequestError("Données administrateur indisponibles.", 503);
-    return response({ gifts: gifts.data, settings: settings.data, bands: bands.data, levels: levels.data,
+    const { max_daily_spend: _maxDailySpend, max_daily_to_recipient: _maxDailyToRecipient, ...visibleSettings } = settings.data;
+    return response({ gifts: gifts.data, settings: visibleSettings, bands: bands.data, levels: levels.data,
       metrics: metrics.data?.[0], sends: sends.data, attempts: attempts.data, audits: audits.data,
       activationAllowed: process.env.GIFT_FINANCIAL_APPROVED === "1" });
   } catch (error) { return apiError(error); }
@@ -72,15 +73,19 @@ export async function PATCH(request: Request) {
       value = { id, name: name.trim(), price_coins: price, image_url: art, animation_type: body.animationType,
         rarity: body.rarity, active: body.active, limited: body.limited, starts_at: start, ends_at: end, updated_at: new Date().toISOString() };
     } else if (body.action === "settings") {
-      const numbers = ["max_quantity","max_daily_spend","max_daily_to_recipient","cooldown_seconds","min_account_age_hours"] as const;
+      const numbers = ["max_quantity","cooldown_seconds","min_account_age_hours"] as const;
       if (numbers.some(field => !Number.isInteger(body[field]) || Number(body[field]) < 0)
         || Number(body.max_quantity) < 1 || Number(body.max_quantity) > 100
-        || Number(body.max_daily_spend) < 1 || Number(body.max_daily_to_recipient) < 1
         || Number(body.cooldown_seconds) > 3600 || Number(body.min_account_age_hours) > 8760
         || typeof body.gifts_enabled !== "boolean" || typeof body.renta_enabled !== "boolean") throw new RequestError("Limites invalides.");
       if ((body.gifts_enabled || body.renta_enabled) && process.env.GIFT_FINANCIAL_APPROVED !== "1")
         throw new RequestError("Validation financière et juridique requise avant activation.", 403);
+      const { data: existingSettings, error: settingsError } = await service.from("gift_settings")
+        .select("max_daily_spend,max_daily_to_recipient").eq("singleton", true).single();
+      if (settingsError || !existingSettings) throw new RequestError("Paramètres des cadeaux indisponibles.", 503);
       value = { ...Object.fromEntries(numbers.map(field => [field, body[field]])),
+        max_daily_spend: existingSettings.max_daily_spend,
+        max_daily_to_recipient: existingSettings.max_daily_to_recipient,
         gifts_enabled: body.gifts_enabled, renta_enabled: body.renta_enabled };
     } else if (body.action === "band") {
       const rule = body.rule, band = body.band, weight = body.weight;
