@@ -46,6 +46,8 @@ export type Game = {
   enabled: boolean;
   /** False for solo games that have no multiplayer rooms. */
   supportsRooms?: boolean;
+  /** False when the game has no Revanche Games room-invitation connector yet. */
+  supportsPlatformInvites?: boolean;
   url?: string;
   theme: GameTheme;
   /** Decorative motif icon for the generated fallback illustration — resolved via GAME_ICON_MAP. */

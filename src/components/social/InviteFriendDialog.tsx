@@ -8,7 +8,7 @@ import { sendGameInvitation } from "@/lib/social/api";
 import { requestPushDelivery } from "@/lib/push-client";
 import type { FriendEntry } from "@/lib/social/types";
 
-const PLAYABLE = GAMES.filter((game) => game.enabled);
+const PLAYABLE = GAMES.filter((game) => game.enabled && game.supportsPlatformInvites !== false);
 
 /**
  * « Inviter à jouer » : choisir le jeu, puis envoyer.
@@ -26,7 +26,7 @@ export function InviteFriendDialog({
 }) {
   const { active } = useGameSession();
 
-  const [slug, setSlug] = useState(() => active?.slug ?? PLAYABLE[0]?.id ?? "");
+  const [slug, setSlug] = useState(() => PLAYABLE.some((game) => game.id === active?.slug) ? active!.slug : PLAYABLE[0]?.id ?? "");
   // Pré-rempli seulement si l'on invite dans la partie en cours.
   const roomCode = active?.slug === slug ? active.roomCode : null;
   const [pending, setPending] = useState(false);

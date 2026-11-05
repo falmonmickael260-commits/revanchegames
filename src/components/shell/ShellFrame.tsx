@@ -97,7 +97,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
       {/* Inviter un ami sans quitter l'écran de jeu — seulement là, pour ne
           pas dupliquer le sélecteur de jeu de <InviteFriendDialog /> (ouvert
           depuis /friends), où le jeu reste à choisir. */}
-      {active && immersive && GAMES.find(game => game.id === active.slug)?.supportsRooms !== false && <InGameInviteDock gameSlug={active.slug} roomCode={active.roomCode} />}
+      {active && immersive && GAMES.find(game => game.id === active.slug)?.supportsRooms !== false && GAMES.find(game => game.id === active.slug)?.supportsPlatformInvites !== false && <InGameInviteDock gameSlug={active.slug} roomCode={active.roomCode} />}
 
       {/* Invitation reçue : par-dessus tout, y compris l'écran de jeu, où
           l'en-tête et sa cloche sont masqués. Une invitation est périssable. */}

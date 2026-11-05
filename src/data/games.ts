@@ -38,6 +38,22 @@ export const GAMES: Game[] = [
     players: "2 à 6 joueurs",
   },
   {
+    id: "bacrush",
+    name: "BacRush",
+    tagline: "Une lettre, huit catégories, dix joueurs pour la trouver.",
+    description:
+      "Petit Bac multijoueur avec salons à code, manches chronométrées et arbitrage des réponses.",
+    categories: ["ambiance", "quiz"],
+    status: "available",
+    enabled: true,
+    supportsPlatformInvites: false,
+    url: "https://bacrush.onrender.com/",
+    icon: "message-circle",
+    theme: { accent: "#f59e0b", accentSoft: "#fde68a" },
+    addedAt: "2026-11-05",
+    players: "1 à 10 joueurs",
+  },
+  {
     id: "tabou",
     name: "Tabou",
     tagline: "Le mot interdit n'est jamais loin.",
