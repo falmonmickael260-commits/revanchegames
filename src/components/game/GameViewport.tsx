@@ -39,14 +39,42 @@ export function GameViewport() {
     if (!slug || !target || !launch) return;
     let cancelled = false;
     let inFlight = false;
+    let progressSaveChain = Promise.resolve();
     const receive = async (event: MessageEvent) => {
       const data = event.data;
       if (event.source !== iframeRef.current?.contentWindow || event.origin !== target || data?.v !== 1 || data.game !== slug) return;
       if (data.type === 'rg:ready') {
+        if (slug === 'bombshift') {
+          const response = await fetch('/api/bombshift/progress', { cache: 'no-store' }).catch(() => null);
+          const saved = response?.ok ? await response.json().catch(() => null) : null;
+          iframeRef.current?.contentWindow?.postMessage({
+            type: 'rg:bootstrap', v: 1, game: slug, launch, admission,
+            authenticated: saved?.authenticated === true,
+            progress: saved?.progress ?? null,
+            syncUnavailable: response !== null && !response.ok,
+          }, target);
+          return;
+        }
         iframeRef.current?.contentWindow?.postMessage({ type: 'rg:bootstrap', v: 1, game: slug, launch, admission }, target);
         return;
       }
       if (data.launch !== launch) return;
+      if (slug === 'bombshift' && data.type === 'rg:progress-save') {
+        let serialized: string;
+        try {
+          serialized = JSON.stringify({ progress: data.progress });
+          if (serialized.length > 64 * 1024) return;
+        } catch { return; }
+        progressSaveChain = progressSaveChain.then(async () => {
+          const response = await fetch('/api/bombshift/progress', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: serialized,
+          }).catch(() => null);
+          iframeRef.current?.contentWindow?.postMessage({
+            type: response?.ok ? 'rg:progress-saved' : 'rg:progress-save-error', v: 1, game: slug, launch,
+          }, target);
+        }).catch(() => {});
+        return;
+      }
       if (data.type === 'rg:join-error') { setBridgeError('Connexion au salon interrompue. Réessaie depuis ton invitation.'); return; }
       if (data.type !== 'rg:room' || inFlight) return;
       if (!data.session) { reportRoom(slug, null); return; }
