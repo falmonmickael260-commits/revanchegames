@@ -17,6 +17,7 @@ export type Gift = {
 export type GiftEvent = {
   id: string;
   gift: Pick<Gift, "id" | "name" | "image_url" | "animation_type" | "rarity"> & {
+    price_coins?: number;
     animation_tier?: "small" | "medium" | "prestige";
     celebration_message?: string;
   };

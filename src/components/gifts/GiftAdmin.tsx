@@ -86,7 +86,7 @@ export function GiftAdmin() {
     const gift = data?.gifts.find(item => item.id === "feu-artifice");
     if (!gift) { setError("Le cadeau Feu d’artifice est introuvable dans le catalogue."); return; }
     celebrateGift({ id: `admin-preview-${Date.now()}`, gift: { id: gift.id, name: gift.name,
-      image_url: gift.image_url, animation_type: gift.animation_type, rarity: gift.rarity }, quantity: 1,
+      image_url: gift.image_url, price_coins: gift.price_coins, animation_type: gift.animation_type, rarity: gift.rarity }, quantity: 1,
       senderId: "admin-preview-sender", senderName: "Aperçu expéditeur", senderAvatarUrl: null,
       recipientId: "admin-preview-recipient", recipientName: "Aperçu destinataire", recipientAvatarUrl: null,
       totalRev: null, totalReward: null, createdAt: new Date().toISOString(), context: "dm",

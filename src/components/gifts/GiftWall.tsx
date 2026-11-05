@@ -6,7 +6,7 @@ import { GiftArt } from "./GiftArt";
 import { celebrateGift, type GiftEvent } from "@/lib/gifts/types";
 
 type WallGift = {
-  id: string; name: string; image_url: string; animation_type: string; rarity: string;
+  id: string; name: string; image_url: string; price_coins: number; animation_type: string; rarity: string;
   animation_tier: "small" | "medium" | "prestige"; celebration_message: string;
 };
 type Entry = { gift_id: string; quantity: number; last_received_at: string; gift: WallGift | null };
@@ -52,7 +52,7 @@ export function GiftWall({ userId }: { userId: string }) {
     const { gift } = entry;
     const event: GiftEvent = {
       id: `profile-preview-${gift.id}-${crypto.randomUUID()}`,
-      gift: { id: gift.id, name: gift.name, image_url: gift.image_url, animation_type: gift.animation_type,
+      gift: { id: gift.id, name: gift.name, image_url: gift.image_url, price_coins: gift.price_coins, animation_type: gift.animation_type,
         rarity: gift.rarity as GiftEvent["gift"]["rarity"], animation_tier: gift.animation_tier, celebration_message: gift.celebration_message },
       quantity: Number(entry.quantity), senderId: userId, senderName: "", senderAvatarUrl: null,
       recipientId: userId, recipientName: "", recipientAvatarUrl: null, totalRev: null, totalReward: null,

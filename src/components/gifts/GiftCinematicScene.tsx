@@ -1,10 +1,15 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import { GiftArt } from "./GiftArt";
+import { GiftSceneParticles } from "./GiftSceneParticles";
+import { PrestigeGiftAnimation } from "./PrestigeGiftAnimation";
 import type { GiftEvent } from "@/lib/gifts/types";
+import type { GiftAnimationLevel } from "@/lib/gifts/animation-plan";
 
 const HEART = "M0 -15 C-7 -25 -22 -18 -19 -7 C-17 1 -8 8 0 15 C8 8 17 1 19 -7 C22 -18 7 -25 0 -15Z";
 const STAR = "M0 -12 L3 -3 L12 0 L3 3 L0 12 L-3 3 L-12 0 L-3 -3Z";
+const PRESTIGE_RIGS = new Set(["diamond-turn", "crown-bloom", "cat-wave", "shooting-star", "swan-glide"]);
 
 function SceneArtwork({ type }: { type: string }): ReactNode {
   switch (type) {
@@ -14,7 +19,7 @@ function SceneArtwork({ type }: { type: string }): ReactNode {
     case "kiss-hearts": return <g className="scene-kiss"><path className="scene-lips" d="M153 116 Q168 101 180 112 Q192 101 207 116 Q195 124 180 120 Q165 124 153 116Z"/><path className="scene-lips lower" d="M155 120 Q180 147 205 120 Q180 136 155 120Z"/><path className="scene-heart-float" d={HEART} transform="translate(112 94)"/><path className="scene-heart-float h2" d={HEART} transform="translate(240 76) scale(.7)"/><path className="scene-heart-float h3" d={HEART} transform="translate(268 143) scale(.45)"/></g>;
     case "bear-hug": return <g className="scene-hug"><path className="scene-arm left" d="M92 138 C112 90 137 88 160 121"/><path className="scene-arm right" d="M268 138 C248 90 223 88 200 121"/><path className="scene-heart-float h2" d={HEART} transform="translate(180 76) scale(.6)"/><path className="scene-hug-ring" d="M89 154 C118 206 242 206 271 154"/></g>;
     case "bloom": return <g className="scene-tulips"><g className="tulip t1"><path d="M92 160 Q94 119 89 91 M89 92 C67 68 76 48 92 73 C106 47 119 66 90 92"/></g><g className="tulip t2"><path d="M180 163 Q180 112 180 78 M180 79 C155 54 164 34 181 61 C198 34 207 55 181 79"/></g><g className="tulip t3"><path d="M268 160 Q265 120 271 91 M271 92 C249 67 258 48 274 73 C288 47 300 66 271 92"/></g><path className="scene-glow-ring" d="M72 171 Q180 210 288 171"/></g>;
-    case "box-open": return <g className="scene-chocolate"><g className="choco-lid"><path d="M90 77 L270 77 L248 99 L112 99Z"/></g><rect x="110" y="106" width="140" height="64" rx="12"/><path className="choco-square" d="M133 124 h30 v24 h-30z M178 124 h30 v24 h-30z M155 151 h30 v17 h-30z"/><path className="scene-rays" d="M180 55 V28 M125 67 L109 42 M235 67 L251 42"/></g>;
+    case "box-open": return <g className="scene-chocolate"><path className="choco-ribbon" d="M180 54 V172 M90 112 H270"/><path className="choco-bow" d="M180 72 C139 35 128 77 177 88 C224 77 215 35 180 72Z"/><g className="choco-lid"><path d="M90 77 L270 77 L248 99 L112 99Z"/></g><g className="choco-pralines"><path className="praline p1" d="M118 115 Q128 101 138 115 Q138 130 128 134 Q118 130 118 115Z"/><path className="praline p2" d="M166 101 Q177 87 188 101 Q188 117 177 121 Q166 117 166 101Z"/><path className="praline p3" d="M214 116 Q224 102 234 116 Q234 131 224 135 Q214 131 214 116Z"/></g><path className="scene-rays" d="M180 55 V28 M125 67 L109 42 M235 67 L251 42"/></g>;
     case "lightning": return <g className="scene-lightning"><path className="bolt b1" d="M112 47 L77 111 L133 102 L98 171"/><path className="bolt b2" d="M248 42 L216 101 L267 95 L240 151"/><path className="scene-flash" d="M68 117 H136 M224 107 H287"/></g>;
     case "butterfly": return <g className="scene-butterfly"><g className="butterfly-flight"><path className="wing left" d="M180 112 C126 42 85 69 154 119 C108 151 134 179 180 129Z"/><path className="wing right" d="M180 112 C234 42 275 69 206 119 C252 151 226 179 180 129Z"/><path className="butterfly-body" d="M180 100 V139 M180 102 Q165 83 158 92 M180 102 Q195 83 202 92"/></g><path className="scene-flight-path" d="M85 173 C119 204 233 205 276 154"/></g>;
     case "macarons-bounce": return <g className="scene-macarons"><g className="mac m1"><ellipse cx="111" cy="148" rx="27" ry="15"/><path d="M84 148 Q111 134 138 148 M86 153 H136"/></g><g className="mac m2"><ellipse cx="180" cy="126" rx="29" ry="16"/><path d="M151 126 Q180 111 209 126 M153 132 H207"/></g><g className="mac m3"><ellipse cx="249" cy="148" rx="27" ry="15"/><path d="M222 148 Q249 134 276 148 M224 153 H274"/></g><path className="scene-spark" d={STAR} transform="translate(180 65)"/></g>;
@@ -22,12 +27,12 @@ function SceneArtwork({ type }: { type: string }): ReactNode {
     case "crystal-glint": return <g className="scene-crystal"><path className="crystal-frame" d="M180 48 L237 91 L215 166 H145 L123 91Z"/><path d="M123 91 H237 M180 48 V166 M123 91 L215 166 M237 91 L145 166"/><path className="crystal-shine" d="M139 122 L202 58"/><path className="scene-spark" d={STAR} transform="translate(257 78)"/></g>;
     case "bear-bow": return <g className="scene-bear-bow"><path className="bow-loop left" d="M155 88 C116 54 107 105 154 111Z"/><path className="bow-loop right" d="M205 88 C244 54 253 105 206 111Z"/><circle cx="180" cy="99" r="12"/><path className="salute-star" d={STAR} transform="translate(112 145) scale(.6)"/><path className="salute-star s2" d={STAR} transform="translate(254 132) scale(.7)"/></g>;
     case "flower-glow": return <g className="scene-bouquet"><path className="bouquet-stems" d="M136 154 L161 89 M180 160 V75 M224 154 L199 89"/><g className="flower-head f1" transform="translate(161 87)"><circle r="10"/><path d="M0 -10 C-24 -34 -29 -4 0 0 C21 -28 30 -3 0 0 C23 25 -3 31 0 0 C-26 23 -31 -4 0 0Z"/></g><g className="flower-head f2" transform="translate(180 72)"><circle r="9"/><path d="M0 -9 C-21 -30 -26 -3 0 0 C19 -26 27 -3 0 0 C21 22 -3 27 0 0 C-24 20 -26 -4 0 0Z"/></g><g className="flower-head f3" transform="translate(199 87)"><circle r="10"/><path d="M0 -10 C-24 -34 -29 -4 0 0 C21 -28 30 -3 0 0 C23 25 -3 31 0 0 C-26 23 -31 -4 0 0Z"/></g></g>;
-    case "perfume-mist": return <g className="scene-perfume"><path className="mist-ribbon r1" d="M111 155 C72 122 135 101 100 68 C79 49 105 37 121 53"/><path className="mist-ribbon r2" d="M180 155 C148 117 211 93 180 58 C161 37 183 27 199 40"/><path className="mist-ribbon r3" d="M249 155 C214 124 274 99 242 70 C222 51 248 38 265 52"/><circle className="perfume-glow" cx="180" cy="125" r="56"/></g>;
+    case "perfume-mist": return <g className="scene-perfume"><path className="mist-ribbon r1" d="M72 147 C118 132 80 103 117 85 C148 70 136 48 116 42"/><path className="mist-ribbon r2" d="M160 166 C204 143 151 119 191 93 C221 73 207 51 188 39"/><path className="mist-ribbon r3" d="M251 149 C286 123 231 109 269 82 C291 66 279 48 260 42"/><path className="scent-orbit" d="M91 168 Q180 204 269 168"/><circle className="scent-star" cx="125" cy="72" r="4"/><circle className="scent-star s2" cx="231" cy="63" r="3"/><circle className="perfume-glow" cx="180" cy="125" r="56"/></g>;
     case "unicorn-nod": return <g className="scene-unicorn"><path className="constellation" d="M79 145 Q114 69 155 96 Q190 34 225 82 Q253 102 284 59"/><circle className="constellation-dot d1" cx="79" cy="145" r="4"/><circle className="constellation-dot d2" cx="155" cy="96" r="4"/><circle className="constellation-dot d3" cx="225" cy="82" r="4"/><circle className="constellation-dot d4" cx="284" cy="59" r="4"/><path className="magic-arc" d="M99 165 Q180 43 261 165"/><path className="scene-spark" d={STAR} transform="translate(180 48) scale(1.2)"/></g>;
     case "ruby-pulse": return <g className="scene-ruby"><path className="ruby-shape" d="M180 64 L224 88 L213 142 L180 169 L147 142 L136 88Z"/><path className="ruby-facet" d="M136 88 H224 M180 64 V169 M147 142 L224 88 M213 142 L136 88"/><circle className="ruby-ring ring1" cx="180" cy="116" r="65"/><circle className="ruby-ring ring2" cx="180" cy="116" r="92"/></g>;
-    case "chest-open": return <g className="scene-chest"><path className="chest-rays" d="M180 91 L101 27 M180 91 V13 M180 91 L259 27 M180 91 L75 74 M180 91 L285 74"/><path className="chest-lid" d="M119 98 Q180 48 241 98 L227 119 H133Z"/><path d="M122 119 H238 V165 H122Z"/><path className="chest-light" d="M151 118 L180 76 L209 118Z"/></g>;
-    case "diamond-turn": return <g className="scene-diamond"><path className="diamond-outline" d="M180 44 L243 89 L218 169 H142 L117 89Z"/><path className="diamond-facets" d="M117 89 H243 M180 44 V169 M117 89 L218 169 M243 89 L142 169"/><path className="diamond-sweep" d="M132 143 L214 61"/><path className="scene-spark" d={STAR} transform="translate(246 78)"/></g>;
-    case "crown-bloom": return <g className="scene-crown"><path className="crown-shape" d="M118 145 L105 85 L148 113 L178 62 L210 113 L253 85 L241 145Z"/><path className="crown-band" d="M119 151 H241 V164 H119Z"/><circle className="crown-flower a" cx="130" cy="70" r="10"/><circle className="crown-flower b" cx="230" cy="65" r="9"/><circle className="crown-flower c" cx="180" cy="45" r="11"/><path className="scene-spark" d={STAR} transform="translate(83 108) scale(.7)"/></g>;
+    case "chest-open": return <g className="scene-chest"><path className="chest-rays" d="M180 104 L101 35 M180 104 V16 M180 104 L259 35 M180 104 L65 83 M180 104 L295 83"/><ellipse className="treasure-orbit" cx="180" cy="131" rx="96" ry="35"/><path className="treasure-gem g1" d="M118 113 L130 99 L143 113 L130 133Z"/><path className="treasure-gem g2" d="M218 105 L229 91 L242 105 L230 124Z"/><circle className="treasure-coin c1" cx="160" cy="92" r="8"/><circle className="treasure-coin c2" cx="197" cy="78" r="6"/><path className="chest-light" d="M155 133 L180 87 L205 133 Q180 149 155 133Z"/></g>;
+    case "diamond-turn": return <g className="scene-diamond"><path className="diamond-beams" d="M74 114 H286 M180 27 V184 M112 54 L248 170 M248 54 L112 170"/><path className="diamond-sweep" d="M130 150 L216 58"/><path className="scene-spark" d={STAR} transform="translate(246 78)"/><circle className="diamond-flare" cx="180" cy="112" r="68"/></g>;
+    case "crown-bloom": return <g className="scene-crown"><path className="crown-shape" d="M118 145 L105 85 L148 113 L178 62 L210 113 L253 85 L241 145Z"/><path className="crown-band" d="M119 149 Q180 168 241 149 L236 160 Q180 178 124 160Z"/><circle className="crown-flower a" cx="130" cy="70" r="10"/><circle className="crown-flower b" cx="230" cy="65" r="9"/><circle className="crown-flower c" cx="180" cy="45" r="11"/><path className="scene-spark" d={STAR} transform="translate(83 108) scale(.7)"/></g>;
     case "cat-wave": return <g className="scene-paws"><path className="paw-print p1" d="M95 103 C88 87 101 79 109 96 C119 78 132 88 123 104 C141 105 138 122 119 121 C105 134 88 123 95 103Z"/><path className="paw-print p2" d="M224 82 C217 66 230 58 238 75 C248 57 261 67 252 83 C270 84 267 101 248 100 C234 113 217 102 224 82Z"/><path className="paw-path" d="M87 157 Q180 206 273 142"/></g>;
     case "shooting-star": return <g className="scene-star"><path className="star-trail" d="M77 157 Q180 128 277 55"/><g className="star-flight"><path d={STAR}/><circle r="13"/><path d="M-8 0 H-72 M-6 5 H-51 M-4 -5 H-48"/></g><path className="star-glint" d={STAR} transform="translate(261 74) scale(.7)"/></g>;
     case "swan-glide": return <g className="scene-swan"><ellipse className="water-ring w1" cx="180" cy="150" rx="48" ry="10"/><ellipse className="water-ring w2" cx="180" cy="150" rx="82" ry="18"/><ellipse className="water-ring w3" cx="180" cy="150" rx="118" ry="27"/><path className="feather f1" d="M119 91 Q91 69 83 43 Q119 55 128 83Z"/><path className="feather f2" d="M244 99 Q273 78 279 52 Q245 62 235 91Z"/><path className="swan-glow" d="M122 139 Q180 115 238 139"/></g>;
@@ -35,12 +40,21 @@ function SceneArtwork({ type }: { type: string }): ReactNode {
   }
 }
 
-export function GiftCinematicScene({ event, duration }: { event: GiftEvent; duration: number }) {
+export function GiftCinematicScene({ event, duration, level }: { event: GiftEvent; duration: number; level: GiftAnimationLevel }) {
   const style = { "--rg-scene-duration": `${duration}ms` } as CSSProperties;
-  return <div className={`rg-gift-scene-stage rg-gift-scene-stage--${event.animationTier ?? "small"}`} data-scene={event.gift.animation_type} style={style} aria-hidden="true">
-    <svg className="rg-gift-scene-art" viewBox="0 0 360 220" role="presentation" focusable="false">
-      <SceneArtwork type={event.gift.animation_type} />
-    </svg>
-    <span className="rg-gift-scene-glow" />
+  return <div className={`rg-gift-scene-stage rg-gift-scene-stage--${level}`} data-scene={event.gift.animation_type} style={style} aria-hidden="true">
+    <span className="rg-gift-scene-vignette" />
+    <span className="rg-gift-scene-glow rg-gift-scene-glow--outer" />
+    <span className="rg-gift-scene-glow rg-gift-scene-glow--inner" />
+    {level !== "prestige" && <svg className="rg-gift-scene-art" viewBox="0 0 360 780" role="presentation" focusable="false">
+      <g transform="translate(-72 236) scale(1.4)"><SceneArtwork type={event.gift.animation_type} /></g>
+    </svg>}
+    <span className="rg-gift-scene-hero" data-animation={event.gift.animation_type}>
+      {level === "prestige" && PRESTIGE_RIGS.has(event.gift.animation_type)
+        ? <PrestigeGiftAnimation animation={event.gift.animation_type} imageUrl={event.gift.image_url} />
+        : <GiftArt src={event.gift.image_url} name={event.gift.name} animation={event.gift.animation_type}
+          animated animationDuration={duration - 350} size={360} />}
+    </span>
+    <GiftSceneParticles scene={event.gift.animation_type} seed={event.id} level={level} />
   </div>;
 }
