@@ -96,7 +96,7 @@ export function DirectMessageDialog({
         </header>
 
         <ChatMessageList messages={messages} me={me} loading={loading}
-          renderAttachment={(message, own) => message.giftBatchId ? <GiftMessageAttachment id={message.giftBatchId} /> :
+          renderAttachment={(message, own) => message.giftBatchId ? <GiftMessageAttachment id={message.giftBatchId} own={own} animate={message.live} /> :
             message.invitationId ? <PrivateGameInvitation id={message.invitationId} own={own} onJoined={onClose} /> :
             message.voiceInvitation ? <VoiceInvitation id={message.id} roomId={message.voiceInvitation.roomId} expiresAt={message.voiceInvitation.expiresAt} own={own} onJoined={onClose} /> : null} />
         <ChatComposer me={me} sending={sending} error={error} onSend={send}

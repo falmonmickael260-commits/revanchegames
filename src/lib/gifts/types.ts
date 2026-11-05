@@ -36,6 +36,11 @@ export type GiftEvent = {
   demo?: boolean;
 };
 
+const recentlyCelebrated = new Set<string>();
+
 export function celebrateGift(gift: GiftEvent) {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("rg:gift-celebration", { detail: gift }));
+  if (typeof window === "undefined" || recentlyCelebrated.has(gift.id)) return;
+  recentlyCelebrated.add(gift.id);
+  if (recentlyCelebrated.size > 100) recentlyCelebrated.delete(recentlyCelebrated.values().next().value!);
+  window.dispatchEvent(new CustomEvent("rg:gift-celebration", { detail: gift }));
 }

@@ -89,7 +89,7 @@ export function ActiveVoiceRoom({ rooms, invite, inviting, sent, inviteError }: 
           <p className="truncate text-text-faint" role="status">{voice.reconnecting ? "Reconnexion…" : speakers.length ? `${speakers.map(member => member.name).join(", ")} parle${speakers.length > 1 ? "nt" : ""}` : "Discussion éphémère"}</p>
         </div>
         <ChatMessageList messages={roomMessages} me={me} loading={false} compact
-          renderAttachment={message => message.giftBatchId ? <GiftMessageAttachment id={message.giftBatchId} /> : null} />
+          renderAttachment={message => message.giftBatchId ? <GiftMessageAttachment id={message.giftBatchId} own={message.userId === me.id} /> : null} />
         <ChatComposer me={me} sending={voice.sending} error={voice.chatError} onSend={voice.sendMessage} compact />
       </section>
       <footer className="flex shrink-0 items-center gap-2 border-t border-border-soft p-2">

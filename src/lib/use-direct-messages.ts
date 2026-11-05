@@ -42,7 +42,7 @@ export function useDirectMessages({
   const seenIds = useRef<Set<string>>(new Set());
 
   const toChatMessage = useCallback(
-    (row: DirectMessageRow): ChatMessage => {
+    (row: DirectMessageRow, live = false): ChatMessage => {
       const isMine = row.from_user_id === me?.id;
       return {
         id: row.id,
@@ -54,6 +54,7 @@ export function useDirectMessages({
         invitationId: row.invitation_id ?? null,
         voiceInvitation: row.voice_room_id && row.voice_expires_at ? { roomId: row.voice_room_id, expiresAt: row.voice_expires_at } : null,
         giftBatchId: row.gift_batch_id ?? null,
+        live,
       };
     },
     [me, other],
@@ -62,7 +63,7 @@ export function useDirectMessages({
   const ingest = useCallback((row: DirectMessageRow) => {
     if (seenIds.current.has(row.id)) return;
     seenIds.current.add(row.id);
-    setMessages((previous) => [...previous, toChatMessage(row)]);
+    setMessages((previous) => [...previous, toChatMessage(row, true)]);
   }, [toChatMessage]);
 
   // Historique, propre à cette paire de joueurs.

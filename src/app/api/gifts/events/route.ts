@@ -42,8 +42,10 @@ export async function GET(request: Request) {
       recipientAvatarUrl: recipient?.avatar_url ?? null,
       animationTier: gift.animation_tier ?? presentation.tier,
       celebrationMessage: gift.celebration_message || presentation.message,
-      totalRev: user.id === batch.recipient_id ? batch.total_rev : null,
-      totalReward: user.id === batch.recipient_id ? batch.total_reward : null,
+      // Les montants réels ne sont visibles que par les deux participants directs.
+      // Les autres membres d'une salle vocale reçoivent uniquement la présentation publique.
+      totalRev: participant ? batch.total_rev : null,
+      totalReward: participant ? batch.total_reward : null,
       createdAt: batch.created_at, context: batch.context }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return apiError(error); }
 }

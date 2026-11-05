@@ -174,15 +174,25 @@ export function ChatMessageList({
                         {formatChatTime(message.createdAt)}
                       </span>
                     </div>
-                    <p
-                      className={`min-w-0 break-words rounded-xl px-3 py-1.5 font-body text-sm text-text ${
+                    {message.giftBatchId ? (
+                      <div className={`min-w-0 max-w-full break-words rounded-xl px-3 py-1.5 font-body text-sm text-text ${
                         own ? "bg-gradient-to-r from-cyan/20 to-violet/20" : "bg-surface-raised"
-                      }`}
-                      style={{ overflowWrap: "anywhere" }}
-                    >
-                      {message.body}
-                    </p>
-                    {renderAttachment?.(message, own)}
+                      }`} style={{ overflowWrap: "anywhere" }}>
+                        {renderAttachment?.(message, own) ?? message.body}
+                      </div>
+                    ) : (
+                      <>
+                        <p
+                          className={`min-w-0 break-words rounded-xl px-3 py-1.5 font-body text-sm text-text ${
+                            own ? "bg-gradient-to-r from-cyan/20 to-violet/20" : "bg-surface-raised"
+                          }`}
+                          style={{ overflowWrap: "anywhere" }}
+                        >
+                          {message.body}
+                        </p>
+                        {renderAttachment?.(message, own)}
+                      </>
+                    )}
                   </div>
                 </div>
                 </div>

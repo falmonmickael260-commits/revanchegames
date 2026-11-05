@@ -24,6 +24,8 @@ export type ChatMessage = {
   invitationId?: string | null;
   voiceInvitation?: { roomId: string; expiresAt: string } | null;
   giftBatchId?: string | null;
+  /** Message arrived through the live subscription; history rows omit this flag. */
+  live?: boolean;
 };
 
 export type ChatIdentity = { id: string; username: string; avatarUrl: string | null };

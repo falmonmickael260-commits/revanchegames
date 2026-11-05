@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { GiftArt } from "./GiftArt";
 import { GiftFireworkAnimation } from "./GiftFireworkAnimation";
+import { GiftCinematicParticles } from "./GiftCinematicParticles";
 import type { GiftEvent } from "@/lib/gifts/types";
 
 function Avatar({ url, name }: { url?: string | null; name: string }) {
@@ -37,12 +38,17 @@ export function GiftCelebrationLayer() {
   const close = () => setQueue(items => items[0]?.id === active.id ? items.slice(1) : items);
   if (active.gift.animation_type === "firework") return <GiftFireworkAnimation key={active.id} event={active} onClose={close} />;
 
-  return <div className={`rg-gift-celebration rg-gift-celebration--${tier}`} aria-live="polite" role="status">
-    {active.demo && <span className="rg-gift-demo-badge">APERÇU ADMIN · AUCUNE TRANSACTION</span>}
-    <div className="rg-gift-celebration-people"><Avatar url={active.senderAvatarUrl} name={active.senderName} />
-      <span aria-hidden="true">offre</span><Avatar url={active.recipientAvatarUrl} name={active.recipientName} /></div>
-    <GiftArt src={active.gift.image_url} name={active.gift.name} animation={active.gift.animation_type} animated size={tier === "small" ? 100 : 140} />
-    <p><strong>{active.senderName}</strong> offre <b>{active.gift.name}{active.quantity > 1 ? ` ×${active.quantity}` : ""}</b> à <strong>{active.recipientName}</strong></p>
-    <blockquote>{active.celebrationMessage ? `« ${active.celebrationMessage} »` : null}</blockquote>
-  </div>;
+  return <>
+    <GiftCinematicParticles event={active} duration={duration - 200} />
+    {tier === "prestige" && <div className="rg-gift-cinematic-backdrop" aria-hidden="true" />}
+    <div className={`rg-gift-celebration rg-gift-celebration--${tier}`} data-animation={active.gift.animation_type} aria-live="polite" role="status">
+      {active.demo && <span className="rg-gift-demo-badge">APERÇU ADMIN · AUCUNE TRANSACTION</span>}
+      <div className="rg-gift-celebration-people"><Avatar url={active.senderAvatarUrl} name={active.senderName} />
+        <span aria-hidden="true">offre</span><Avatar url={active.recipientAvatarUrl} name={active.recipientName} /></div>
+      <GiftArt src={active.gift.image_url} name={active.gift.name} animation={active.gift.animation_type} animated
+        animationDuration={duration - 250} size={tier === "small" ? 100 : 140} />
+      <p><strong>{active.senderName}</strong> offre <b>{active.gift.name}{active.quantity > 1 ? ` ×${active.quantity}` : ""}</b> à <strong>{active.recipientName}</strong></p>
+      <blockquote>{active.celebrationMessage ? `« ${active.celebrationMessage} »` : null}</blockquote>
+    </div>
+  </>;
 }
