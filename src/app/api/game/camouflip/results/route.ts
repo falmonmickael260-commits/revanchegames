@@ -1,7 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createServiceClient } from '@/lib/supabase/server';
 
-export const runtime = 'nodejs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 type Player={userId:string|null;name:string;role:'hunter'|'prop';outcome:'win'|'loss';score:number;eliminations:number;survived:boolean;timeSeconds:number};
 
