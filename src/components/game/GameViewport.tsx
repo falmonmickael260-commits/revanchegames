@@ -118,7 +118,11 @@ export function GameViewport() {
     if (!stage) return;
     try {
       if (document.fullscreenElement === stage) await document.exitFullscreen();
-      else await stage.requestFullscreen();
+      else {
+        await stage.requestFullscreen();
+        const orientation = screen.orientation as ScreenOrientation & { lock?: (value: string) => Promise<void> };
+        await orientation.lock?.("landscape").catch(() => undefined);
+      }
     } catch {
       // Refus du navigateur (geste utilisateur manquant, politique de la page) :
       // sans conséquence, le jeu reste jouable dans la scène.
