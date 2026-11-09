@@ -37,7 +37,7 @@ function describe(notification: PlatformNotification): { icon: typeof Bell; text
     case "friend_accepted":
       return { icon: UserCheck, text: `${who} a accepté ta demande d'ami.` };
     case "game_invitation":
-      return { icon: Gamepad2, text: `${who} t'invite à jouer${game ? ` à ${game}` : ""}.` };
+      return { icon: Gamepad2, text: notification.gameSlug === 'camouflip' ? `${who} t’invite à rejoindre CAMOUFLIP !` : `${who} t'invite à jouer${game ? ` à ${game}` : ""}.` };
     case "invitation_accepted":
       return { icon: Check, text: `${who} a accepté ton invitation${game ? ` à ${game}` : ""}.` };
     case "group_added":

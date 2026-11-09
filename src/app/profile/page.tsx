@@ -28,6 +28,7 @@ type GameStatsRow = {
   draws: number;
   win_rate: number | null;
 };
+type CamouflipStatsRow = {hunter_wins:number;prop_wins:number;props_eliminated:number;rounds_survived:number;time_seconds:number};
 
 // The session lives in cookies, so it's only known at request time — wrapping
 // it in Suspense keeps the route's static shell prerenderable (Next.js 16
@@ -99,6 +100,7 @@ async function ProfileContent() {
     { data: totals },
     { data: matchRows },
     { data: progressRows },
+    { data: camouflipRows },
   ] = await Promise.all([
       supabase
         .from("profiles")
@@ -119,12 +121,14 @@ async function ProfileContent() {
       supabase.rpc("recent_matches", { p_user_id: user.id, p_limit: 10 }),
       // XP et niveau, recalculés depuis les parties réelles.
       supabase.rpc("player_progress", { p_user_id: user.id }),
+      supabase.from('camouflip_stats').select('hunter_wins,prop_wins,props_eliminated,rounds_survived,time_seconds').eq('user_id',user.id).maybeSingle(),
     ]);
 
   const matches = toMatches(matchRows);
   const progress = toProgress(progressRows);
 
   const statsBySlug = new Map((stats as GameStatsRow[] | null)?.map((s) => [s.game_slug, s]));
+  const camouflipStats=camouflipRows as CamouflipStatsRow|null;
   const username = profile?.username ?? "Joueur";
   const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long" })
@@ -142,6 +146,7 @@ async function ProfileContent() {
         <BannerEditor initialUrl={bannerProfile?.banner_url ?? null} />
         <div className="rg-profile-hero-main">
           <ProfileEditor
+            key={profile?.avatar_url ?? "no-avatar"}
             userId={user.id}
             initialUsername={username}
             initialAvatarUrl={profile?.avatar_url ?? null}
@@ -187,7 +192,7 @@ async function ProfileContent() {
 
       <section id="profil-jeux" className="rg-profile-games-section">
         <div className="rg-profile-section-heading"><div><span>TON PARCOURS</span><h2>Mes jeux</h2></div><Link href="/library">Voir les jeux</Link></div>
-        <div className="rg-profile-game-stats">{(catalog??[]).map(game=>{const row=statsBySlug.get(game.slug);const art=GAMES.find(item=>item.id===game.slug);return <article key={game.slug} className="rg-profile-game-row"><div className="rg-profile-game-thumb">{art ? <GameArt game={art} className="h-full w-full" /> : <Gamepad2 aria-hidden="true" />}</div><div className="rg-profile-game-detail"><h3>{game.display_name}</h3><p>{row?.games_played??0} parties · {row?.wins??0} victoires</p><div className="rg-profile-game-meter" aria-label={`Taux de victoire : ${row?.win_rate!=null?`${row.win_rate}%`:"aucune donnée"}`}><span style={{width:`${Math.max(0,Math.min(100,Number(row?.win_rate??0)))}%`}} /></div></div><strong>{row?.win_rate!=null?`${row.win_rate}%`:"—"}</strong></article>;})}</div>
+        <div className="rg-profile-game-stats">{(catalog??[]).map(game=>{const row=statsBySlug.get(game.slug);const art=GAMES.find(item=>item.id===game.slug);return <article key={game.slug} className="rg-profile-game-row"><div className="rg-profile-game-thumb">{art ? <GameArt game={art} className="h-full w-full" /> : <Gamepad2 aria-hidden="true" />}</div><div className="rg-profile-game-detail"><h3>{game.display_name}</h3><p>{row?.games_played??0} parties · {row?.wins??0} victoires{game.slug==='camouflip'?` · ${row?.losses??0} défaites`:''}</p>{game.slug==='camouflip'&&<p>Chasseur : {camouflipStats?.hunter_wins??0} victoires, {camouflipStats?.props_eliminated??0} objets trouvés · Objet : {camouflipStats?.prop_wins??0} victoires, {camouflipStats?.rounds_survived??0} manches survécues · {Math.floor((camouflipStats?.time_seconds??0)/60)} min jouées</p>}<div className="rg-profile-game-meter" aria-label={`Taux de victoire : ${row?.win_rate!=null?`${row.win_rate}%`:"aucune donnée"}`}><span style={{width:`${Math.max(0,Math.min(100,Number(row?.win_rate??0)))}%`}} /></div></div><strong>{row?.win_rate!=null?`${row.win_rate}%`:"—"}</strong></article>;})}</div>
         <p className="mt-3 text-xs text-text-faint">Résultats réellement transmis par les jeux après les parties.</p>
       </section>
 

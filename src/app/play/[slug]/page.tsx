@@ -96,6 +96,7 @@ async function GameLauncher({
   // (signé côté serveur, vérifié par le jeu) ; `rg_room` indique le salon à
   // rejoindre quand on arrive par une invitation.
   const extra = new URLSearchParams();
+  let identity: { username: string; avatarUrl: string | null } | null = null;
 
   if (user) {
     const { data: profile } = await supabase
@@ -104,6 +105,7 @@ async function GameLauncher({
       .eq("id", user.id)
       .single();
     if (profile?.username) {
+      identity = { username: profile.username, avatarUrl: profile.avatar_url };
       extra.set(
         "rg_token",
         createPlatformToken({
@@ -119,5 +121,5 @@ async function GameLauncher({
   const separator = targetUrl.includes("?") ? "&" : "?";
   const iframeSrc = extra.size > 0 ? `${targetUrl}${separator}${extra.toString()}` : targetUrl;
 
-  return <GameMount slug={slug} name={game.name} src={iframeSrc} roomCode={admission?.session.code ?? roomCode} admission={admission} />;
+  return <GameMount slug={slug} name={game.name} src={iframeSrc} roomCode={admission?.session.code ?? roomCode} admission={admission} identity={identity} />;
 }

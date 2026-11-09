@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeft, Maximize2, Minimize2, PowerOff } from "lucide-react";
 import { useGameSession } from "./GameSessionProvider";
 import { ReportIssueButton } from "@/components/social/ReportIssueButton";
+import { Avatar } from "@/components/ui/Avatar";
 import { validRoom } from '@/lib/game-connector/protocol';
 
 /**
@@ -49,16 +50,18 @@ export function GameViewport() {
           const saved = response?.ok ? await response.json().catch(() => null) : null;
           iframeRef.current?.contentWindow?.postMessage({
             type: 'rg:bootstrap', v: 1, game: slug, launch, admission,
+            identity: active?.identity ?? null,
             authenticated: saved?.authenticated === true,
             progress: saved?.progress ?? null,
             syncUnavailable: response !== null && !response.ok,
           }, target);
           return;
         }
-        iframeRef.current?.contentWindow?.postMessage({ type: 'rg:bootstrap', v: 1, game: slug, launch, admission }, target);
+        iframeRef.current?.contentWindow?.postMessage({ type: 'rg:bootstrap', v: 1, game: slug, launch, admission, identity: active?.identity ?? null }, target);
         return;
       }
       if (data.launch !== launch) return;
+      if (data.type === 'rg:invite-request' && slug === 'camouflip') { window.dispatchEvent(new CustomEvent('rg:open-invite')); return; }
       if (slug === 'bombshift' && data.type === 'rg:progress-save') {
         let serialized: string;
         try {
@@ -89,7 +92,7 @@ export function GameViewport() {
     const listener = (event: MessageEvent) => { void receive(event).catch(() => {}); };
     window.addEventListener('message', listener);
     return () => { cancelled = true; window.removeEventListener('message', listener); };
-  }, [slug, target, launch, admission, reportRoom]);
+  }, [slug, target, launch, admission, reportRoom, active?.identity]);
 
   // État du plein écran, lu directement de l'API du navigateur.
   // `useSyncExternalStore` est l'outil prévu pour ça — c'est aussi ce
@@ -167,6 +170,7 @@ export function GameViewport() {
           </p>
 
           <div className="flex shrink-0 items-center gap-0.5">
+            {active.identity && <Avatar username={active.identity.username} avatarUrl={active.identity.avatarUrl} size="sm" />}
             <VoiceGameControl />
             {/* Signaler un souci sans quitter la partie : c'est ici qu'on est
                 quand un jeu ne se lance pas ou qu'un joueur dérape, et le

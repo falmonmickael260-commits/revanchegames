@@ -8,6 +8,7 @@ export type ActiveGame = {
   name: string;
   /** URL de l'iframe, jeton d'identité inclus. Figée pour la durée de la partie. */
   src: string;
+  identity?: { username: string; avatarUrl: string | null } | null;
   /**
    * Salon visé, quand la partie a été ouverte via une invitation.
    * Fait partie de l'identité de la session : changer de salon est une
@@ -22,7 +23,7 @@ export type ActiveGame = {
 type GameSessionValue = {
   active: ActiveGame | null;
   /** Déclare la partie en cours. Sans effet si ce jeu est déjà celui qui tourne. */
-  start: (game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission">) => void;
+  start: (game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission" | "identity">) => void;
   reportRoom: (slug: string, code: string | null) => void;
   /** Termine la partie : démonte l'iframe et ferme ses connexions. */
   stop: () => void;
@@ -52,7 +53,7 @@ const GameSessionContext = createContext<GameSessionValue | null>(null);
 export function GameSessionProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState<ActiveGame | null>(null);
 
-  const start = useCallback((game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission">) => {
+  const start = useCallback((game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission" | "identity">) => {
     setActive((previous) => {
       // Le point crucial de tout ce fichier. Revenir sur /play/<slug> fait
       // re-rendre la page côté serveur, qui re-signe un jeton et produit donc
@@ -65,7 +66,11 @@ export function GameSessionProvider({ children }: { children: React.ReactNode })
       // simple retour sur /play/<slug> ne doit rien toucher.
       if (previous && previous.slug === game.slug && (!game.admission || previous.admission?.id === game.admission.id) &&
           (!game.roomCode || previous.launchRoom === game.roomCode)) {
-        return previous;
+        const identityChanged = previous.identity?.username !== game.identity?.username ||
+          previous.identity?.avatarUrl !== game.identity?.avatarUrl;
+        // Refresh the account avatar/name without changing the iframe URL or
+        // restarting the game session.
+        return identityChanged ? { ...previous, identity: game.identity } : previous;
       }
       return { ...game, launchRoom: game.roomCode, startedAt: Date.now() };
     });

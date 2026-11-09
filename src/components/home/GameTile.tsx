@@ -12,7 +12,7 @@ export function GameTile({ game, large = false }: { game: Game; large?: boolean 
   return (
     <article className={`rg-game-tile ${large ? "rg-game-tile-large" : ""}`}>
       <Link href={`/play/${game.id}`} className="rg-game-tile-link" aria-label={`Jouer à ${game.name}`}>
-        <div className="rg-tile-image"><GameArt game={game} className="h-full w-full" /><span className="rg-tile-play"><Play className="h-4 w-4" fill="currentColor" /></span></div>
+        <div className="rg-tile-image"><GameArt game={game} className="h-full w-full" />{game.newBadge && <span className="rg-new-badge" aria-label="Nouveau jeu">NEW</span>}<span className="rg-tile-play"><Play className="h-4 w-4" fill="currentColor" /></span></div>
         <div className="rg-tile-info"><div className="min-w-0"><h3>{game.name}</h3><p>{game.players}</p></div><ArrowUpRight className="rg-tile-arrow h-4 w-4 shrink-0" /></div>
       </Link>
       <span className="rg-tile-favorite"><FavoriteButton active={isFavorite(game.id)} onToggle={() => toggleFavorite(game.id)} label={game.name} /></span>

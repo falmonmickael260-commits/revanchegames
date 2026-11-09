@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserPlus, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useSocial } from "./SocialProvider";
@@ -32,6 +32,11 @@ export function InGameInviteDock({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  useEffect(() => {
+    const openFromGame = () => setOpen(true);
+    window.addEventListener('rg:open-invite', openFromGame);
+    return () => window.removeEventListener('rg:open-invite', openFromGame);
+  }, []);
 
   // Rien à proposer sans amis : pas la peine d'occuper un coin de l'écran.
   if (friends.length === 0) return null;

@@ -1,4 +1,4 @@
-export const GAME_SLUGS = ['kilomax', 'la-meute', 'quiz-master', 'president', '10000'] as const;
+export const GAME_SLUGS = ['kilomax', 'la-meute', 'quiz-master', 'president', '10000', 'camouflip'] as const;
 export type ConnectedGame = typeof GAME_SLUGS[number];
 export type NativeSession = { code: string; token?: string; playerId?: string; secret?: string; memberId?: number };
 export type RoomSnapshot = { code: string; instance: string; capacity: number; count: number; status: 'open' | 'started' | 'closed' };

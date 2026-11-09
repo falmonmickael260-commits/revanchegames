@@ -48,6 +48,8 @@ export type Game = {
   supportsRooms?: boolean;
   /** False when the game has no Revanche Games room-invitation connector yet. */
   supportsPlatformInvites?: boolean;
+  /** Badge éditorial amovible, réservé aux nouveaux jeux explicitement marqués. */
+  newBadge?: boolean;
   url?: string;
   theme: GameTheme;
   /** Decorative motif icon for the generated fallback illustration — resolved via GAME_ICON_MAP. */

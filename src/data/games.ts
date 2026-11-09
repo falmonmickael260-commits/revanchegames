@@ -8,6 +8,23 @@ import type { Game } from "@/types/game";
  */
 export const GAMES: Game[] = [
   {
+    id: "camouflip",
+    name: "Camouflip",
+    tagline: "Cache-toi. Transforme-toi. Survis !",
+    description: "Prop Hunt 3D cartoon dans la carte Maison Masquée : un chasseur, jusqu’à six fugitifs qui prennent l’apparence des objets du décor. Salons privés, nargues spatialisées et manches chronométrées.",
+    categories: ["action", "ambiance", "strategie"],
+    status: "available",
+    enabled: true,
+    url: process.env.NEXT_PUBLIC_GAME_URL_CAMOUFLIP || (process.env.NODE_ENV === "development" ? "http://localhost:8788" : "https://camouflip-production.up.railway.app/"),
+    supportsPlatformInvites: true,
+    newBadge: true,
+    icon: "target",
+    image: "/games/camouflip-cover.png",
+    theme: { accent: "#f29a26", accentSoft: "#ffe48a" },
+    addedAt: "2026-11-09",
+    players: "2 à 7 joueurs",
+  },
+  {
     id: "devine",
     name: "Devine",
     tagline: "Décris, mime, devine — contre la montre.",

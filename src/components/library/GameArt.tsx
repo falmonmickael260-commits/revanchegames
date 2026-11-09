@@ -25,6 +25,7 @@ export function GameArt({ game, className = "", eager = false }: { game: Game; c
           sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
           className="object-cover"
         />
+        {game.id === "camouflip" && <Image src="/games/camouflip-logo.png" alt="" aria-hidden="true" width={1254} height={1254} className="rg-camouflip-cover-logo" />}
         {motionSprite && <Image
           src={motionSprite.src}
           alt=""
