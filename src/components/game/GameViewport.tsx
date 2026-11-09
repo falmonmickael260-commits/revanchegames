@@ -61,7 +61,11 @@ export function GameViewport() {
         return;
       }
       if (data.launch !== launch) return;
-      if (data.type === 'rg:invite-request' && slug === 'camouflip') { window.dispatchEvent(new CustomEvent('rg:open-invite')); return; }
+      if (data.type === 'rg:invite-request' && slug === 'camouflip') {
+        if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+        window.dispatchEvent(new CustomEvent('rg:open-invite'));
+        return;
+      }
       if (slug === 'bombshift' && data.type === 'rg:progress-save') {
         let serialized: string;
         try {
