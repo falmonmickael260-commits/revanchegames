@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/Avatar";
 import { AvatarCropper } from "./AvatarCropper";
 import { setPlayerTag, updateSignature, SIGNATURE_MAX_LENGTH } from "@/lib/social/api";
+import { PROFILE_MEDIA_ENABLED, PROFILE_MEDIA_PAUSED_MESSAGE } from "@/lib/profile-media";
 import { formatPlayerTag } from "@/lib/player-tag";
 
 const AVATAR_CHOICES = [
@@ -179,6 +180,7 @@ export function ProfileEditor({
    * qu'après recadrage, pour que le joueur voie exactement ce qui part.
    */
   function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    if (!PROFILE_MEDIA_ENABLED) return;
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
@@ -208,6 +210,7 @@ export function ProfileEditor({
    * qui lui permet de refuser une image non conforme avant publication.
    */
   async function handleCropped(blob: Blob) {
+    if (!PROFILE_MEDIA_ENABLED) return;
     setUploading(true);
     setAvatarError("");
 
@@ -462,25 +465,26 @@ export function ProfileEditor({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              disabled={!PROFILE_MEDIA_ENABLED || uploading}
               className="flex items-center gap-1.5 font-display text-xs font-semibold uppercase tracking-wider text-cyan hover:text-cyan-soft disabled:opacity-60"
             >
               <Camera className="h-3.5 w-3.5" />
               {uploading ? "Envoi…" : "Importer une photo"}
             </button>
-            <input
+            {PROFILE_MEDIA_ENABLED && <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={handlePhotoChange}
               className="hidden"
-            />
+            />}
           </div>
+          {!PROFILE_MEDIA_ENABLED && <p className="mt-2 font-body text-xs text-text-faint">{PROFILE_MEDIA_PAUSED_MESSAGE}</p>}
           {avatarError && <p className="mt-2 font-body text-xs text-violet-soft">{avatarError}</p>}
         </div>
       )}
 
-      {pendingPhoto && (
+      {PROFILE_MEDIA_ENABLED && pendingPhoto && (
         <AvatarCropper
           file={pendingPhoto}
           busy={uploading}

@@ -1,3 +1,5 @@
+import { visibleAvatar } from "@/lib/profile-media";
+
 const SIZE_CLASSES = {
   sm: "h-8 w-8 text-sm",
   md: "h-16 w-16 text-2xl",
@@ -17,6 +19,7 @@ export function Avatar({
   avatarUrl: string | null | undefined;
   size?: keyof typeof SIZE_CLASSES;
 }) {
+  avatarUrl = visibleAvatar(avatarUrl);
   return (
     <span
       className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan to-violet font-display font-bold text-void ${SIZE_CLASSES[size]}`}
