@@ -53,7 +53,7 @@ export function GameViewport() {
             identity: active?.identity ?? null,
             authenticated: saved?.authenticated === true,
             progress: saved?.progress ?? null,
-            syncUnavailable: response !== null && !response.ok,
+            syncUnavailable: !response || !response.ok,
           }, target);
           return;
         }
@@ -78,6 +78,7 @@ export function GameViewport() {
           }).catch(() => null);
           iframeRef.current?.contentWindow?.postMessage({
             type: response?.ok ? 'rg:progress-saved' : 'rg:progress-save-error', v: 1, game: slug, launch,
+            requestId: typeof data.requestId === 'number' ? data.requestId : undefined,
           }, target);
         }).catch(() => {});
         return;

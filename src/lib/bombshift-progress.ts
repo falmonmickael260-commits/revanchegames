@@ -1,5 +1,6 @@
 const MAP_IDS = new Set([
   "volcano", "ice", "temple", "volcano2", "ice2", "temple2", "volcano3", "ice3", "temple3",
+  ...Array.from({ length: 31 }, (_, index) => `level-${index + 10}`),
 ]);
 const RANKS = new Set(["C", "B", "A", "S", "SS", "SSS"]);
 const EFFECTS = new Set(["low", "medium", "high"]);
@@ -75,7 +76,7 @@ export function sanitizeBombshiftSave(value: unknown): BombshiftSave | null {
 
   return {
     schema: 3,
-    unlockedMaps: int(value.unlockedMaps, 1, 9),
+    unlockedMaps: int(value.unlockedMaps, 1, MAP_IDS.size),
     maps,
     settings: {
       sfxVolume: decimal(rawSettings.sfxVolume, 0, 1, 0.8),

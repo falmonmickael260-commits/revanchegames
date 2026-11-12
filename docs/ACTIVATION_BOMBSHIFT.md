@@ -31,3 +31,23 @@ TypeScript et ESLint ; ouverture depuis la bibliothèque, menu, neuf cartes,
 démarrage du premier niveau et rendu Phaser dans l’iframe sur ordinateur et
 viewport tactile 390 × 844. Aucun paiement effectué. Captures de contrôle dans
 `/private/tmp/revanche-bombshift-test`.
+
+
+## Compatibilité avec l’extension à quarante niveaux
+
+Le filtre `src/lib/bombshift-progress.ts` conserve désormais les neuf IDs
+historiques et `level-10` à `level-40`, avec un plafond de quarante niveaux.
+Auparavant il ignorait toutes les entrées au-delà du niveau 9, ce qui empêchait
+leur restauration sur un autre appareil même après un POST réussi.
+La table et le protocole iframe restent inchangés : aucune nouvelle migration
+n’est nécessaire si la migration de sauvegarde de compte a déjà été appliquée.
+
+Déployer la correction plateforme avec la nouvelle version de BombShift,
+qui envoie son point de contrôle dès la victoire. Un utilisateur doit être
+connecté à un compte confirmé pour utiliser cette sauvegarde de compte.
+Les invités conservent la sauvegarde locale du jeu.
+
+Validation ciblée : `node --import tsx --test test/bombshift-progress.test.ts`.
+Ces tests couvrent les quarante IDs, la sérialisation/relecture, le niveau 21,
+les mondes miroir 30/40 et la fusion de deux appareils. Ils ne prouvent pas
+que la migration est appliquée à la base de production.
