@@ -1,3 +1,4 @@
+import { PROFILE_MEDIA_ENABLED, PROFILE_MEDIA_PAUSED_MESSAGE } from "@/lib/profile-media";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import sharp from "sharp";
@@ -11,6 +12,10 @@ export async function POST(request: NextRequest) {
   const { data: auth } = await db.auth.getUser();
   const user = auth.user;
   if (!user) return NextResponse.json({ error: "Session expirée." }, { status: 401 });
+
+  if (!PROFILE_MEDIA_ENABLED) {
+    return NextResponse.json({ error: PROFILE_MEDIA_PAUSED_MESSAGE }, { status: 503 });
+  }
 
   let file: File | null = null;
   try {

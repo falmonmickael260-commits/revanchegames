@@ -1,3 +1,4 @@
+import { visibleAvatar } from "./profile-media";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 // Server-only: signs a short-lived proof of identity that a game's own
@@ -27,10 +28,11 @@ export function createPlatformToken(
   const now = Math.floor(Date.now() / 1000);
   // `avatar` n'est ajouté que s'il existe : un jeton plus court pour les
   // comptes sans photo, et un champ absent plutôt que `null` côté jeu.
+  const avatar = visibleAvatar(user.avatarUrl);
   const payload = {
     uid: user.id,
     username: user.username,
-    ...(user.avatarUrl ? { avatar: user.avatarUrl } : {}),
+    ...(avatar ? { avatar } : {}),
     iat: now,
     exp: now + ttlSeconds,
   };

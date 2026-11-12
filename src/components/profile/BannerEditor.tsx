@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { PROFILE_MEDIA_ENABLED, PROFILE_MEDIA_PAUSED_MESSAGE } from "@/lib/profile-media";
+
 const WIDTH = 1000;
 const HEIGHT = 375;
 
@@ -46,7 +48,7 @@ export function BannerEditor({ initialUrl }: { initialUrl: string | null }) {
   }, [image, positionX, positionY, zoom]);
 
   function choose(next: File | undefined) {
-    if (!next) return;
+    if (!PROFILE_MEDIA_ENABLED || !next) return;
     if (!next.type.startsWith("image/") || next.size > 10 * 1024 * 1024) {
       setError("Choisis une image de moins de 10 Mo.");
       return;
@@ -55,7 +57,7 @@ export function BannerEditor({ initialUrl }: { initialUrl: string | null }) {
   }
 
   async function save() {
-    if (!canvas.current || busy) return;
+    if (!PROFILE_MEDIA_ENABLED || !canvas.current || busy) return;
     setBusy(true); setError("");
     const blob = await new Promise<Blob | null>(resolve => canvas.current?.toBlob(resolve, "image/webp", 0.88));
     if (!blob) { setBusy(false); setError("Recadrage impossible."); return; }
@@ -72,11 +74,11 @@ export function BannerEditor({ initialUrl }: { initialUrl: string | null }) {
   }
 
   return <>
-    <div className="rg-profile-banner" style={url ? { backgroundImage: `linear-gradient(0deg,#0d1420aa,transparent 72%),url(${JSON.stringify(url)})` } : undefined}>
-      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="sr-only" onChange={event => { choose(event.target.files?.[0]); event.target.value = ""; }} aria-label="Choisir une bannière" />
-      <button type="button" onClick={() => input.current?.click()}><Camera size={15} /> {url ? "Changer la couverture" : "Ajouter une couverture"}</button>
+    <div className="rg-profile-banner" style={PROFILE_MEDIA_ENABLED && url ? { backgroundImage: `linear-gradient(0deg,#0d1420aa,transparent 72%),url(${JSON.stringify(url)})` } : undefined}>
+      {PROFILE_MEDIA_ENABLED && <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/avif" className="sr-only" onChange={event => { choose(event.target.files?.[0]); event.target.value = ""; }} aria-label="Choisir une bannière" />}
+      <button type="button" disabled={!PROFILE_MEDIA_ENABLED} title={!PROFILE_MEDIA_ENABLED ? PROFILE_MEDIA_PAUSED_MESSAGE : undefined} onClick={() => input.current?.click()}><Camera size={15} /> {PROFILE_MEDIA_ENABLED ? (url ? "Changer la couverture" : "Ajouter une couverture") : "Bannières en pause"}</button>
     </div>
-    {file && <div className="rg-banner-modal" role="dialog" aria-modal="true" aria-label="Recadrer la bannière">
+    {PROFILE_MEDIA_ENABLED && file && <div className="rg-banner-modal" role="dialog" aria-modal="true" aria-label="Recadrer la bannière">
       <div className="rg-banner-dialog">
         <div className="rg-banner-dialog-heading"><h2>Recadrer la couverture</h2><button type="button" aria-label="Fermer" onClick={() => { setFile(null); setImage(null); }}><X size={20} /></button></div>
         <canvas ref={canvas} width={WIDTH} height={HEIGHT} className="rg-banner-canvas" aria-label="Aperçu du recadrage" />

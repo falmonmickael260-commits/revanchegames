@@ -1,3 +1,4 @@
+import { PROFILE_MEDIA_ENABLED, PROFILE_MEDIA_PAUSED_MESSAGE } from "@/lib/profile-media";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
@@ -39,6 +40,10 @@ export async function POST(request: NextRequest) {
   const user = auth.user;
   if (!user) {
     return NextResponse.json({ error: "Session expirée — reconnecte-toi." }, { status: 401 });
+  }
+
+  if (!PROFILE_MEDIA_ENABLED) {
+    return NextResponse.json({ error: PROFILE_MEDIA_PAUSED_MESSAGE }, { status: 503 });
   }
 
   // Un joueur dont la photo a été retirée par la modération ne peut pas en
