@@ -38,7 +38,7 @@ export function SupportLink() {
           {!!current?.unreadCount && <p role="status" className="mt-2 text-sm text-cyan">{current.unreadCount} nouvelle(s) notification(s) d’assistance</p>}
         </div>
       </Link>
-      {current?.isAdmin && <Link href="/settings/support/admin" className="mt-3 inline-block text-sm text-amber">Administration de l’assistance</Link>}
+      {current?.isAdmin && <Link href="/admin" className="mt-3 inline-block text-sm text-amber">Panneau administrateur</Link>}
     </section>
   );
 }
