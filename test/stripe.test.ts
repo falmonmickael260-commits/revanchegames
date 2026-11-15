@@ -129,7 +129,7 @@ test("Stripe : paiement → webhook → portefeuille, remboursements, isolation 
       create schema auth; create table auth.users(id uuid primary key, raw_user_meta_data jsonb default '{}');
       create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
       create publication supabase_realtime;`);
-    for (const file of ["20261025000000_platform_core.sql", "20261031000000_promo_codes.sql", "20261031020000_role_reservations.sql", "20261031030000_wallet_trigger_fix.sql", "20261031040000_role_selection_deferred_charge.sql", "20261101000000_stripe_shop.sql"]) {
+    for (const file of ["20261025000000_platform_core.sql", "20261031000000_promo_codes.sql", "20261031020000_role_reservations.sql", "20261031030000_wallet_trigger_fix.sql", "20261031040000_role_selection_deferred_charge.sql", "20261101000000_stripe_shop.sql", "20261115000000_bombshift_no_ads.sql"]) {
       await db.exec(await readFile(new URL(`../supabase/migrations/${file}`, import.meta.url), "utf8"));
     }
     await db.query("insert into auth.users(id) values($1),($2)", [player, other]);
@@ -220,6 +220,31 @@ test("Stripe : paiement → webhook → portefeuille, remboursements, isolation 
       assert.equal((await db.query("select * from stripe_purchases")).rows.length, 2);
       await db.exec("reset role");
     });
+    await t.test("BombShift : 99 centimes, reprise, droit payé, remboursement et aucun crédit de pièces", async () => {
+      const id = randomUUID();
+      await db.query("select begin_stripe_purchase($1,$2,'bombshift_no_ads',false)", [id, other]);
+      const rows = await db.query<{ id: string; coins: number; amount: number }>("select * from stripe_purchases where id=$1", [id]);
+      assert.equal(Number(rows.rows[0].coins), 0);
+      assert.equal(rows.rows[0].amount, 99);
+      const resumed = await db.query<{ id: string }>("select (begin_stripe_purchase($1,$2,'bombshift_no_ads',false)).id", [randomUUID(), other]);
+      assert.equal(resumed.rows[0].id, id);
+      const entitlement = async () => (await db.query("select id from stripe_purchases where user_id=$1 and pack_id='bombshift_no_ads' and state='paid' and refunded_amount=0 and not livemode", [other])).rows.length;
+      assert.equal(await entitlement(), 0);
+      const apply = async (state: string, refund: number) => {
+        const token = randomUUID();
+        await db.query("select lock_stripe_purchase($1,$2)", [id, token]);
+        await db.query("select apply_stripe_purchase($1,$2,$3,'checkout.session.completed','cs_noads','pi_noads',$4,$5,0,null)", [id, token, randomUUID(), state, refund]);
+      };
+      await apply('paid', 0);
+      assert.equal(await entitlement(), 1);
+      await assert.rejects(db.query("select begin_stripe_purchase($1,$2,'bombshift_no_ads',false)", [randomUUID(), other]), /déjà activé/);
+      await apply('disputed', 0); assert.equal(await entitlement(), 0);
+      await apply('paid', 0); assert.equal(await entitlement(), 1);
+      await apply('partially_refunded', 1); assert.equal(await entitlement(), 0);
+      await apply('refunded', 99); assert.equal(await entitlement(), 0);
+      assert.equal((await db.query("select * from wallet_ledger where user_id=$1", [other])).rows.length, 0);
+      await assert.rejects(db.query("update stripe_purchases set amount=1 where id=$1", [id]), /check constraint/);
+    });
     await t.test("limite persistante de cinq achats par dix minutes", async () => {
       for (let i = 0; i < 3; i++) await db.query("select begin_stripe_purchase($1,$2,'coins_1000',false)", [randomUUID(), player]);
       await assert.rejects(db.query("select begin_stripe_purchase($1,$2,'coins_1000',false)", [randomUUID(), player]), /trop de tentatives/);
@@ -234,4 +259,18 @@ test("Stripe : paiement → webhook → portefeuille, remboursements, isolation 
     if (originalMode === undefined) delete process.env.STRIPE_MODE; else process.env.STRIPE_MODE = originalMode;
     await db.close();
   }
+});
+
+ test("BombShift : Checkout à 0,99 € et validation du compte/montant sans pièces", () => {
+  const order = { id: randomUUID(), user_id: randomUUID(), pack_id: "bombshift_no_ads" as const, created_at: "2026-11-15T10:00:00Z", coins: 0, amount: 99, livemode: false, session_id: null, payment_intent: null };
+  const params = checkoutParameters(order, "https://shop.test");
+  assert.equal(params.get("line_items[0][price_data][unit_amount]"), "99");
+  assert.equal(params.get("line_items[0][price_data][product_data][name]"), "BombShift sans publicité");
+  assert.equal(params.get("success_url"), "https://shop.test/play/bombshift?payment=success");
+  assert.equal(params.get("cancel_url"), "https://shop.test/play/bombshift?payment=cancelled");
+  const session = { mode: "payment", livemode: false, currency: "eur", amount_total: 99, client_reference_id: order.user_id, metadata: { order_id: order.id, user_id: order.user_id, pack_id: order.pack_id } } as CheckoutSession;
+  validatePaidSession(session, order);
+  assert.throws(() => validatePaidSession({ ...session, amount_total: 1 }, order));
+  assert.throws(() => validatePaidSession({ ...session, client_reference_id: randomUUID() }, order));
+  assert.equal(netEntitlement(0, 99, 0, false), 0);
 });

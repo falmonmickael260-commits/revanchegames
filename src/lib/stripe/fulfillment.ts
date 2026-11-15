@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { stripeList, stripeRequest, type Charge, type CheckoutSession, type StripeEvent } from "./api";
-import { COIN_PACKS, isPackId } from "./catalog";
+import { STRIPE_PRODUCTS, isPackId } from "./catalog";
 
 export const STRIPE_EVENTS = new Set([
   "checkout.session.completed", "checkout.session.async_payment_succeeded",
@@ -20,7 +20,7 @@ type Dispute = { id: string; status: string; amount: number };
 
 export function validatePaidSession(session: CheckoutSession, order: Order): void {
   if (!isPackId(order.pack_id)) throw new Error("Pack inconnu.");
-  const pack = COIN_PACKS[order.pack_id];
+  const pack = STRIPE_PRODUCTS[order.pack_id];
   if (session.mode !== "payment" || session.livemode !== order.livemode || session.currency !== "eur" ||
       session.amount_total !== pack.amount || order.amount !== pack.amount || Number(order.coins) !== pack.coins ||
       session.client_reference_id !== order.user_id || session.metadata?.order_id !== order.id ||

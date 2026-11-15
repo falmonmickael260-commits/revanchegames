@@ -5,7 +5,7 @@ import { useSocial } from "@/components/social/SocialProvider";
 import Link from "next/link";
 
 type Purchase = {
-  id: string; coins: number; amount: number; state: string; refunded_amount: number;
+  id: string; pack_id: string; coins: number; amount: number; state: string; refunded_amount: number;
   receipt_url: string | null; created_at: string; livemode: boolean;
   payment_intent: string | null; payment_method: string | null;
 };
@@ -62,7 +62,7 @@ export function PurchaseHistory({ payment }: { payment?: string }) {
         {rows.map((purchase) => (
           <li key={purchase.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-border-soft pt-3 text-sm text-text-dim">
             <div>
-              <p className="text-text">{Number(purchase.coins).toLocaleString("fr-FR")} pièces · {euros(purchase.amount)}{!purchase.livemode && " · Test"}</p>
+              <p className="text-text">{purchase.pack_id === "bombshift_no_ads" ? "BombShift sans publicité" : `${Number(purchase.coins).toLocaleString("fr-FR")} pièces`} · {euros(purchase.amount)}{!purchase.livemode && " · Test"}</p>
               <p>{new Date(purchase.created_at).toLocaleString("fr-FR")} · {labels[purchase.state] || purchase.state}</p>
               <p>{purchase.payment_method ? methods[purchase.payment_method] || purchase.payment_method : "Moyen de paiement non disponible"}</p>
               <p className="break-all text-xs">Transaction : {purchase.payment_intent || purchase.id}</p>

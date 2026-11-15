@@ -40,20 +40,26 @@ export function GameViewport() {
     if (!slug || !target || !launch) return;
     let cancelled = false;
     let inFlight = false;
+    let purchaseInFlight = false;
+    let purchaseRequestId: string | null = null;
     let progressSaveChain = Promise.resolve();
     const receive = async (event: MessageEvent) => {
       const data = event.data;
       if (event.source !== iframeRef.current?.contentWindow || event.origin !== target || data?.v !== 1 || data.game !== slug) return;
       if (data.type === 'rg:ready') {
         if (slug === 'bombshift') {
+          const entitlementResponse = await fetch('/api/bombshift/entitlement', { cache: 'no-store' }).catch(() => null);
+          const entitlement = entitlementResponse?.ok ? await entitlementResponse.json().catch(() => null) : null;
           const response = await fetch('/api/bombshift/progress', { cache: 'no-store' }).catch(() => null);
           const saved = response?.ok ? await response.json().catch(() => null) : null;
+          if (cancelled) return;
           iframeRef.current?.contentWindow?.postMessage({
             type: 'rg:bootstrap', v: 1, game: slug, launch, admission,
             identity: active?.identity ?? null,
             authenticated: saved?.authenticated === true,
             progress: saved?.progress ?? null,
             syncUnavailable: !response || !response.ok,
+            noAds: entitlement?.noAds === true,
           }, target);
           return;
         }
@@ -64,6 +70,30 @@ export function GameViewport() {
       if (data.type === 'rg:invite-request' && slug === 'camouflip') {
         if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
         window.dispatchEvent(new CustomEvent('rg:open-invite'));
+        return;
+      }
+      if (slug === 'bombshift' && data.type === 'rg:purchase-no-ads') {
+        if (purchaseInFlight) return;
+        purchaseInFlight = true;
+        try {
+          purchaseRequestId ||= crypto.randomUUID();
+          const response = await fetch('/api/stripe/checkout', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ packId: 'bombshift_no_ads', requestId: purchaseRequestId }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            if (response.status === 409) purchaseRequestId = null;
+            throw new Error(result.error || 'Paiement indisponible.');
+          }
+          if (!result.url?.startsWith('https://checkout.stripe.com/')) throw new Error('Lien de paiement invalide.');
+          if (!cancelled) window.location.assign(result.url);
+        } catch (error) {
+          iframeRef.current?.contentWindow?.postMessage({
+            type: 'rg:purchase-error', v: 1, game: slug, launch,
+            error: error instanceof Error ? error.message : 'Paiement indisponible.',
+          }, target);
+        } finally { purchaseInFlight = false; }
         return;
       }
       if (slug === 'bombshift' && data.type === 'rg:progress-save') {

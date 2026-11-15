@@ -3,9 +3,13 @@ export const COIN_PACKS = {
   coins_2000: { name: "Standard", coins: 2000, amount: 200 },
 } as const;
 
-export type PackId = keyof typeof COIN_PACKS;
+export const STRIPE_PRODUCTS = {
+  ...COIN_PACKS,
+  bombshift_no_ads: { name: "BombShift sans publicité", coins: 0, amount: 99 },
+} as const;
+export type PackId = keyof typeof STRIPE_PRODUCTS;
 export function isPackId(value: unknown): value is PackId {
-  return typeof value === "string" && Object.hasOwn(COIN_PACKS, value);
+  return typeof value === "string" && Object.hasOwn(STRIPE_PRODUCTS, value);
 }
 
 export function shopOrigin(env: Record<string, string | undefined> = process.env): string {
