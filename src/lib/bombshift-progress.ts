@@ -1,6 +1,6 @@
 const MAP_IDS = new Set([
   "volcano", "ice", "temple", "volcano2", "ice2", "temple2", "volcano3", "ice3", "temple3",
-  ...Array.from({ length: 31 }, (_, index) => `level-${index + 10}`),
+  ...Array.from({ length: 51 }, (_, index) => `level-${index + 10}`),
 ]);
 const RANKS = new Set(["C", "B", "A", "S", "SS", "SSS"]);
 const EFFECTS = new Set(["low", "medium", "high"]);

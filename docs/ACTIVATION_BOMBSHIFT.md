@@ -51,3 +51,13 @@ Validation ciblée : `node --import tsx --test test/bombshift-progress.test.ts`.
 Ces tests couvrent les quarante IDs, la sérialisation/relecture, le niveau 21,
 les mondes miroir 30/40 et la fusion de deux appareils. Ils ne prouvent pas
 que la migration est appliquée à la base de production.
+
+
+## Extension supplémentaire : niveaux 41 à 60
+
+Le filtre conserve désormais les neuf IDs historiques et `level-10` à `level-60`.
+Le plafond suit les soixante IDs canoniques. Les données des quarante premiers
+niveaux ne sont ni supprimées ni réinitialisées. La fusion conserve aussi les
+miroirs 50/60 et la reprise du dernier niveau entre deux appareils.
+Cette extension utilise la même table, le même schéma et le même protocole de
+compte : aucune nouvelle migration SQL n’est nécessaire.
