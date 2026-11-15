@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'node:crypto';
+import { ensureFortuneCatalog } from '@/lib/fortune-empire';
 import { GAMES } from '@/data/games';
 import { RequestError } from '@/lib/request-security';
 import { isConnectedGame, type ConnectorCommand, type ConnectedGame, type NativeSession, type RoomSnapshot } from './protocol';
@@ -22,15 +23,19 @@ export function openSession(value: string): NativeSession {
 }
 export function openGameContext(value: string): { game: ConnectedGame; uid: string | null; session: NativeSession } {
   if (value.length > 8192) throw new RequestError('Lien invalide.');
-  try {
-    const bytes = Buffer.from(value, 'base64url');
-    const key = createHash('sha256').update(`rg-game-context-v1:${secret()}`).digest();
-    const decipher = createDecipheriv('aes-256-gcm', key, bytes.subarray(0, 12)); decipher.setAuthTag(bytes.subarray(12, 28));
-    const context = JSON.parse(Buffer.concat([decipher.update(bytes.subarray(28)), decipher.final()]).toString());
-    if (!isConnectedGame(context.game) || typeof context.exp !== 'number' || context.exp < Date.now() / 1000 || !context.session?.code) throw new Error('expired');
-    return context;
-  } catch { throw new RequestError('Lien expiré : utilise de nouveau « Inviter un ami » dans le jeu.', 409); }
+  for (const keySecret of [secret(), process.env.GAME_CONNECTOR_SECRET_FORTUNE_EMPIRE].filter(Boolean)) {
+    try {
+      const bytes = Buffer.from(value, 'base64url');
+      const key = createHash('sha256').update(`rg-game-context-v1:${keySecret}`).digest();
+      const decipher = createDecipheriv('aes-256-gcm', key, bytes.subarray(0, 12)); decipher.setAuthTag(bytes.subarray(12, 28));
+      const context = JSON.parse(Buffer.concat([decipher.update(bytes.subarray(28)), decipher.final()]).toString());
+      if (!isConnectedGame(context.game) || typeof context.exp !== 'number' || context.exp < Date.now() / 1000 || !context.session?.code || (keySecret !== secret() && context.game !== 'fortune-empire')) continue;
+      return context;
+    } catch { /* Try the game-specific key without changing legacy contexts. */ }
+  }
+  throw new RequestError('Lien expiré : utilise de nouveau « Inviter un ami » dans le jeu.', 409);
 }
+
 export function gameOrigin(slug: ConnectedGame) {
   const key = slug.toUpperCase().replace(/-/g, '_');
   const target = process.env[`GAME_CONNECTOR_URL_${key}`] || process.env[`GAME_URL_${key}`] || GAMES.find(g => g.id === slug)?.url;
@@ -39,8 +44,9 @@ export function gameOrigin(slug: ConnectedGame) {
   return url.origin;
 }
 export async function callGame(command: ConnectorCommand): Promise<{ room: RoomSnapshot; session?: NativeSession }> {
+  if (command.game === 'fortune-empire') await ensureFortuneCatalog();
   const raw = JSON.stringify(command), timestamp = String(Math.floor(Date.now() / 1000));
-  const signature = createHmac('sha256', secret()).update(`rg-connector-v1.${timestamp}.${raw}`).digest('hex');
+  const signature = createHmac('sha256', command.game === 'fortune-empire' ? (process.env.GAME_CONNECTOR_SECRET_FORTUNE_EMPIRE || secret()) : secret()).update(`rg-connector-v1.${timestamp}.${raw}`).digest('hex');
   const response = await fetch(`${gameOrigin(command.game)}/api/platform/connector`, {
     method: 'POST', body: raw, headers: { 'content-type': 'application/json', 'x-rg-signature': `${timestamp}.${signature}` },
     redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(12000),
