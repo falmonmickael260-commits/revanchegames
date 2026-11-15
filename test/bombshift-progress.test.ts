@@ -7,13 +7,13 @@ const save = (maps: Record<string, unknown>, unlockedMaps = 40) => ({
   schema: 3, unlockedMaps, maps, settings: {}, stats: {}, abilities: {},
 });
 
-test('accepts all forty canonical map IDs, including mirror levels 10, 20, 30 and 40', () => {
+test('accepts all sixty canonical map IDs, including mirrors 50 and 60', () => {
   const ids = ['volcano','ice','temple','volcano2','ice2','temple2','volcano3','ice3','temple3',
-    ...Array.from({ length: 31 }, (_, i) => `level-${i + 10}`)];
-  const raw = save(Object.fromEntries(ids.map((id) => [id, progress()])));
+    ...Array.from({ length: 51 }, (_, i) => `level-${i + 10}`)];
+  const raw = save(Object.fromEntries(ids.map((id) => [id, progress()])), 60);
   const restored = sanitizeBombshiftSave(raw)!;
-  assert.equal(restored.unlockedMaps, 40);
-  assert.equal(Object.keys(restored.maps).length, 40);
+  assert.equal(restored.unlockedMaps, 60);
+  assert.equal(Object.keys(restored.maps).length, 60);
   for (const id of ids) assert.equal(restored.maps[id].cleared, true);
   assert.deepEqual(restored.maps['level-40'].secrets, ['level-40-s1']);
 });
@@ -38,8 +38,21 @@ test('merges devices without losing a later level, best score or mirror completi
 });
 
 test('keeps the nine original IDs and ignores unrelated or out-of-campaign IDs', () => {
-  const cleaned = sanitizeBombshiftSave(save({ volcano: progress(), 'level-41': progress(), 'level-9': progress(), unknown: progress() }, 999))!;
+  const cleaned = sanitizeBombshiftSave(save({ volcano: progress(), 'level-61': progress(), 'level-9': progress(), unknown: progress() }, 999))!;
   assert.deepEqual(Object.keys(cleaned.maps), ['volcano']);
-  assert.equal(cleaned.unlockedMaps, 40);
+  assert.equal(cleaned.unlockedMaps, 60);
   assert.equal(sanitizeBombshiftSave(null), null);
+});
+
+
+test('retains wins in the new pack and restores level 60 on another device', () => {
+  const firstDevice = save({ 'level-41': progress(14000), 'level-50': progress(15000), 'level-59': progress(16000) }, 60);
+  const stored = JSON.parse(JSON.stringify(mergeBombshiftSaves(null, firstDevice)));
+  const restored = mergeBombshiftSaves(stored, save({}, 1))!;
+  assert.equal(restored.unlockedMaps, 60);
+  for (const id of ['level-41', 'level-50', 'level-59']) assert.equal(restored.maps[id].cleared, true);
+  assert.equal(restored.maps['level-50'].bestScore, 15000);
+  const final = mergeBombshiftSaves(restored, save({ 'level-60': progress(18000) }, 60))!;
+  assert.equal(final.maps['level-60'].cleared, true);
+  assert.equal(final.maps['level-41'].cleared, true);
 });
