@@ -13,4 +13,4 @@ export function validRoom(value: unknown): value is string {
   return typeof value === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(value);
 }
 
-export const PUBLIC_ROOM_GAMES = ['la-meute', 'president', 'quiz-master', '10000', 'camouflip', 'kilomax'] as const;
+export const PUBLIC_ROOM_GAMES = ['la-meute', 'president', 'quiz-master', '10000', 'camouflip', 'kilomax', 'fortune-empire'] as const;
