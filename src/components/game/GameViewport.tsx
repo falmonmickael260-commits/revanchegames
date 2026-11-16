@@ -4,11 +4,11 @@ import { VoiceGameControl } from "@/components/voice/VoiceDock";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, Maximize2, Minimize2, PowerOff } from "lucide-react";
+import { ChevronLeft, Globe2, Maximize2, Minimize2, PowerOff } from "lucide-react";
 import { useGameSession } from "./GameSessionProvider";
 import { ReportIssueButton } from "@/components/social/ReportIssueButton";
 import { Avatar } from "@/components/ui/Avatar";
-import { validRoom } from '@/lib/game-connector/protocol';
+import { validRoom, type NativeSession, type RoomSnapshot } from '@/lib/game-connector/protocol';
 
 /**
  * L'écran de jeu immersif, et le seul endroit où l'iframe du jeu est rendue.
@@ -25,6 +25,11 @@ export function GameViewport() {
   const stageRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [bridgeError, setBridgeError] = useState('');
+  const [publicRoom, setPublicRoom] = useState<(RoomSnapshot & { listed: boolean; launch: string }) | null>(null);
+  const [publishingLaunch, setPublishingLaunch] = useState<string | null>(null);
+  const currentSession = useRef<{ launch: string; session: NativeSession; instance?: string } | null>(null);
+  const autoPublished = useRef<string | null>(null);
+  const visibilityChange = useRef<{ launch: string } | null>(null);
 
   // Quel jeu a fini de charger. Dérivé plutôt que remis à zéro par un effet :
   // changer de partie suffit à faire repasser `loaded` à faux, sans rendu
@@ -33,9 +38,11 @@ export function GameViewport() {
   const activeKey = active ? `${active.slug}:${active.startedAt}` : null;
   const loaded = activeKey !== null && loadedKey === activeKey;
   const launch = activeKey;
+  const publishing = publishingLaunch !== null && publishingLaunch === launch;
   const target = active ? new URL(active.src).origin : null;
   const slug = active?.slug;
   const admission = active?.admission;
+  const publishOnCreate = active?.publishOnCreate;
   useEffect(() => {
     if (!slug || !target || !launch) return;
     let cancelled = false;
@@ -113,21 +120,67 @@ export function GameViewport() {
         }).catch(() => {});
         return;
       }
-      if (data.type === 'rg:join-error') { setBridgeError('Connexion au salon interrompue. Réessaie depuis ton invitation.'); return; }
-      if (data.type !== 'rg:room' || inFlight) return;
-      if (!data.session) { reportRoom(slug, null); return; }
+      if (data.type === 'rg:join-error') { setBridgeError('Connexion au salon interrompue. Réessaie depuis l’accueil ou ton invitation.'); return; }
+      if (data.type !== 'rg:room') return;
+      if (!data.session) {
+        const previous = currentSession.current;
+        currentSession.current = null;
+        setPublicRoom(null);
+        reportRoom(slug, null);
+        if (previous?.launch === launch && previous.instance) void hideRoom(slug, previous.session.code, previous.instance);
+        return;
+      }
       if (!validRoom(data.session.code) || JSON.stringify(data.session).length > 4096) return;
+      const prior = currentSession.current;
+      if (prior?.launch === launch && prior.session.code !== data.session.code && prior.instance) {
+        void hideRoom(slug, prior.session.code, prior.instance);
+      }
+      currentSession.current = {
+        launch, session: data.session,
+        instance: prior?.launch === launch && prior.session.code === data.session.code ? prior.instance : undefined,
+      };
+      if (inFlight || visibilityChange.current?.launch === launch) return;
       inFlight = true;
       try {
-        const response = await fetch('/api/game/rooms/current', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: slug, session: data.session }) });
-        if (response.ok && !cancelled) { const room = await response.json(); reportRoom(slug, room.code); setBridgeError(''); }
-        else if (response.status !== 401 && !cancelled) { const body = await response.json(); setBridgeError(body.error || 'La connexion aux invitations est momentanément indisponible.'); }
+        const response = await fetch('/api/game/rooms/current', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ game: slug, session: data.session }),
+        });
+        if (cancelled || currentSession.current?.session.code !== data.session.code || visibilityChange.current?.launch === launch) return;
+        if (response.ok) {
+          const room = await response.json();
+          if (cancelled || currentSession.current?.session.code !== data.session.code || visibilityChange.current?.launch === launch) return;
+          const current = currentSession.current;
+          if (!current) return;
+          current.instance = room.instance;
+          reportRoom(slug, room.code);
+          setPublicRoom({ ...room, launch });
+          setBridgeError('');
+          if (publishOnCreate && autoPublished.current !== launch && room.isHost && room.status === 'open' && room.count < room.capacity) {
+            autoPublished.current = launch;
+            const publish = await fetch('/api/game/rooms/current', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ game: slug, session: data.session, publish: true }),
+            });
+            const listed = await publish.json();
+            if (cancelled || currentSession.current?.instance !== room.instance) {
+              if (publish.ok && listed.listed) void hideRoom(slug, listed.code, listed.instance);
+              return;
+            }
+            if (publish.ok) setPublicRoom({ ...listed, launch });
+            else setBridgeError(listed.error || 'Impossible d’afficher le salon sur l’accueil.');
+          }
+        } else if (response.status !== 401) {
+          const body = await response.json();
+          setPublicRoom(null);
+          setBridgeError(body.error || 'La connexion aux invitations est momentanément indisponible.');
+        }
       } finally { inFlight = false; }
     };
     const listener = (event: MessageEvent) => { void receive(event).catch(() => {}); };
     window.addEventListener('message', listener);
     return () => { cancelled = true; window.removeEventListener('message', listener); };
-  }, [slug, target, launch, admission, reportRoom, active?.identity]);
+  }, [slug, target, launch, admission, reportRoom, active?.identity, publishOnCreate]);
 
   // État du plein écran, lu directement de l'API du navigateur.
   // `useSyncExternalStore` est l'outil prévu pour ça — c'est aussi ce
@@ -170,7 +223,41 @@ export function GameViewport() {
     router.push("/");
   }
 
+  async function togglePublicRoom() {
+    const current = currentSession.current;
+    if (!slug || !launch || !publicRoom || current?.launch !== launch || visibilityChange.current?.launch === launch || current.session.code !== publicRoom.code) return;
+    const pending = { launch };
+    visibilityChange.current = pending;
+    setPublishingLaunch(launch);
+    try {
+      const response = await fetch('/api/game/rooms/current', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ game: slug, session: current.session, publish: !publicRoom.listed }),
+      });
+      const room = await response.json();
+      if (currentSession.current?.launch !== launch || currentSession.current.session.code !== current.session.code) {
+        if (response.ok && room.listed) void hideRoom(slug, room.code, room.instance);
+        return;
+      }
+      if (!response.ok) throw new Error(room.error || 'Impossible de modifier la visibilité du salon.');
+      setPublicRoom({ ...room, launch });
+      setBridgeError('');
+    } catch (error) {
+      if (currentSession.current?.launch === launch) {
+        setBridgeError(error instanceof Error ? error.message : 'Impossible de modifier la visibilité du salon.');
+      }
+    } finally {
+      if (visibilityChange.current === pending) {
+        visibilityChange.current = null;
+        setPublishingLaunch(null);
+      }
+    }
+  }
+
   function quit() {
+    const current = currentSession.current;
+    currentSession.current = null;
+    if (slug && current?.launch === launch && current.instance) void hideRoom(slug, current.session.code, current.instance);
     stop();
     router.push("/");
   }
@@ -210,6 +297,20 @@ export function GameViewport() {
 
           <div className="flex shrink-0 items-center gap-0.5">
             {active.identity && <Avatar username={active.identity.username} avatarUrl={active.identity.avatarUrl} size="sm" />}
+            {publicRoom && publicRoom.launch === launch && publicRoom.isHost &&
+              (publicRoom.listed || (publicRoom.status === 'open' && publicRoom.count < publicRoom.capacity)) && (
+                <button
+                  type="button"
+                  onClick={() => void togglePublicRoom()}
+                  disabled={publishing}
+                  aria-label={publicRoom.listed ? 'Masquer le salon sur l’accueil' : 'Ouvrir le salon aux joueurs'}
+                  title={publicRoom.listed ? 'Masquer le salon sur l’accueil' : 'Afficher le salon sur l’accueil'}
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-surface disabled:opacity-50"
+                >
+                  <Globe2 className="h-4 w-4 shrink-0" />
+                  {publishing ? '…' : publicRoom.listed ? 'Public' : 'Rendre public'}
+                </button>
+            )}
             <VoiceGameControl />
             {/* Signaler un souci sans quitter la partie : c'est ici qu'on est
                 quand un jeu ne se lance pas ou qu'un joueur dérape, et le
@@ -279,6 +380,13 @@ export function GameViewport() {
       </div>
     </>
   );
+}
+
+async function hideRoom(game: string, room: string, instance: string) {
+  await fetch('/api/game/rooms/current', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ game, room, instance, session: null }), keepalive: true,
+  }).catch(() => undefined);
 }
 
 /** Abonnement aux changements de plein écran, pour useSyncExternalStore. */

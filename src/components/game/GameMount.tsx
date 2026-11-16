@@ -20,11 +20,13 @@ export function GameMount({
   roomCode = null,
   admission,
   identity = null,
+  publishOnCreate = false,
 }: {
   slug: string;
   name: string;
   src: string;
   roomCode?: string | null;
+  publishOnCreate?: boolean;
   admission?: { id: string; session: NativeSession };
   identity?: { username: string; avatarUrl: string | null } | null;
 }) {
@@ -34,9 +36,9 @@ export function GameMount({
     // `start` ignore un couple (slug, salon) déjà actif, donc ni le double
     // appel du mode strict de React, ni un retour sur cette page, ne
     // rechargent la partie.
-    start({ slug, name, src, roomCode, admission, identity });
+    start({ slug, name, src, roomCode, admission, identity, publishOnCreate });
     recordRecentGame(slug);
-  }, [start, slug, name, src, roomCode, admission, identity]);
+  }, [start, slug, name, src, roomCode, admission, identity, publishOnCreate]);
 
   return null;
 }

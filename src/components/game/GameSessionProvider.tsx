@@ -16,6 +16,7 @@ export type ActiveGame = {
    */
   roomCode: string | null;
   launchRoom?: string | null;
+  publishOnCreate?: boolean;
   admission?: { id: string; session: NativeSession };
   startedAt: number;
 };
@@ -23,7 +24,7 @@ export type ActiveGame = {
 type GameSessionValue = {
   active: ActiveGame | null;
   /** Déclare la partie en cours. Sans effet si ce jeu est déjà celui qui tourne. */
-  start: (game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission" | "identity">) => void;
+  start: (game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission" | "identity" | "publishOnCreate">) => void;
   reportRoom: (slug: string, code: string | null) => void;
   /** Termine la partie : démonte l'iframe et ferme ses connexions. */
   stop: () => void;
@@ -53,7 +54,7 @@ const GameSessionContext = createContext<GameSessionValue | null>(null);
 export function GameSessionProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState<ActiveGame | null>(null);
 
-  const start = useCallback((game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission" | "identity">) => {
+  const start = useCallback((game: Pick<ActiveGame, "slug" | "name" | "src" | "roomCode" | "admission" | "identity" | "publishOnCreate">) => {
     setActive((previous) => {
       // Le point crucial de tout ce fichier. Revenir sur /play/<slug> fait
       // re-rendre la page côté serveur, qui re-signe un jeton et produit donc
@@ -65,7 +66,8 @@ export function GameSessionProvider({ children }: { children: React.ReactNode })
       // autre salon du même jeu doit bien recharger la partie, alors qu'un
       // simple retour sur /play/<slug> ne doit rien toucher.
       if (previous && previous.slug === game.slug && (!game.admission || previous.admission?.id === game.admission.id) &&
-          (!game.roomCode || previous.launchRoom === game.roomCode)) {
+          (!game.roomCode || previous.launchRoom === game.roomCode) &&
+          (!game.publishOnCreate || previous.publishOnCreate || previous.roomCode)) {
         const identityChanged = previous.identity?.username !== game.identity?.username ||
           previous.identity?.avatarUrl !== game.identity?.avatarUrl;
         // Refresh the account avatar/name without changing the iframe URL or

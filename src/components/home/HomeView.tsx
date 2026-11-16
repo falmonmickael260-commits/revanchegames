@@ -11,6 +11,7 @@ import type { FriendEntry } from "@/lib/social/types";
 import { useRecentGames } from "@/lib/use-recent-games";
 import { useFavorites } from "@/lib/use-favorites";
 import { GameTile } from "./GameTile";
+import { PublicGameRooms } from "./PublicGameRooms";
 import { WalletPill } from "@/components/shell/WalletPill";
 import { LevelBadge, type PlayerProgress } from "@/components/stats/LevelBadge";
 const available = GAMES.filter(game => game.enabled && game.url);
@@ -30,6 +31,7 @@ export function HomeView({ popularIds, newIds, progress }: { popularIds: string[
     <h1 className="rg-visually-hidden">Accueil Revanche Games</h1>
     {me && <div className="rg-home-player"><Link href="/profile" className="rg-home-player-profile"><span className="rg-home-avatar"><Avatar username={me.username} avatarUrl={me.avatarUrl} size="md" /></span><span className="rg-home-player-info"><strong>{me.username}</strong>{progress ? <><LevelBadge progress={progress} compact /><span className="rg-home-xp"><span style={{ width: `${progress.xpForLevel ? Math.max(0,Math.min(100,progress.xpIntoLevel/progress.xpForLevel*100)) : 0}%` }} /></span><small>{progress.xp.toLocaleString("fr-FR")} XP</small></> : <small>Mon espace joueur</small>}</span></Link><WalletPill /></div>}
     {ready && !me && <div className="rg-auth-strip"><p>Un compte pour jouer et retrouver tes amis.</p><div><Link href="/sign-in" className="rg-text-link">Connexion</Link><Link href="/sign-up" className="rg-primary-button">S’inscrire</Link></div></div>}
+    <PublicGameRooms />
     <section className="rg-home-hero rg-home-feature" aria-label="Jeu à la une">
       <Image src="/images/la-meute-hero-refonte.webp" alt="" fill sizes="(min-width: 1024px) 920px, 100vw" loading="eager" className="rg-home-feature-art" />
       <div className="rg-home-feature-shade" aria-hidden="true" />

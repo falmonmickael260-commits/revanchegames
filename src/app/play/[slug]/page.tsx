@@ -6,6 +6,7 @@ import { createPlatformToken } from "@/lib/platform-token";
 import { createClient } from "@/lib/supabase/server";
 import { GameMount } from "@/components/game/GameMount";
 import { loadGameAdmission } from '@/lib/game-connector/platform';
+import { canPublishGame, loadPublicGameAdmission } from '@/lib/game-connector/public-rooms';
 import { UUID_PATTERN } from '@/lib/request-security';
 
 function resolveGameUrl(slug: string, fallback?: string): string | undefined {
@@ -30,7 +31,7 @@ export default function PlayGamePage({
   params: Promise<{ slug: string }>;
   // `?room=<code>` : posé quand on arrive par une invitation acceptée
   // (voir InvitationToast). Absent en navigation normale.
-  searchParams: Promise<{ room?: string; invitation?: string }>;
+  searchParams: Promise<{ room?: string; invitation?: string; salon?: string; public?: string }>;
 }) {
   return (
     <Suspense fallback={<GameBoot />}>
@@ -67,14 +68,14 @@ async function GameLauncher({
   searchParamsPromise,
 }: {
   paramsPromise: Promise<{ slug: string }>;
-  searchParamsPromise: Promise<{ room?: string; invitation?: string }>;
+  searchParamsPromise: Promise<{ room?: string; invitation?: string; salon?: string; public?: string }>;
 }) {
   // createPlatformToken() below reads Date.now() (token iat/exp), which Next.js's
   // Cache Components treat as unstable during prerendering — connection() marks
   // this subtree as request-time only (see the same fix in app/profile/page.tsx).
   await connection();
   const { slug } = await paramsPromise;
-  const { room, invitation } = await searchParamsPromise;
+  const { room, invitation, salon, public: publicRoom } = await searchParamsPromise;
   // Le code de salon vient d'une URL : on n'y laisse passer que ce qui a la
   // forme d'un code, pour ne rien injecter dans l'URL du jeu.
   const roomCode = typeof room === "string" && /^[A-Za-z0-9_-]{1,32}$/.test(room) ? room : null;
@@ -85,8 +86,12 @@ async function GameLauncher({
   const targetUrl = resolveGameUrl(slug, game.url);
   if (!targetUrl) notFound();
   let admission: Awaited<ReturnType<typeof loadGameAdmission>> | undefined;
-  try { admission = typeof invitation === 'string' && UUID_PATTERN.test(invitation) ? await loadGameAdmission(invitation, slug) : undefined; }
-  catch { return <p role="alert" className="p-6 text-text">Cette connexion au salon n’est plus disponible. Demande une nouvelle invitation à ton ami.</p>; }
+  try {
+    if (typeof salon === 'string' && UUID_PATTERN.test(salon)) admission = await loadPublicGameAdmission(salon, slug);
+    else if (typeof invitation === 'string' && UUID_PATTERN.test(invitation)) admission = await loadGameAdmission(invitation, slug);
+  } catch {
+    return <p role="alert" className="p-6 text-text">{salon ? 'Cette connexion n’est plus disponible. Retourne à l’accueil pour rejoindre un salon.' : 'Cette connexion au salon n’est plus disponible. Demande une nouvelle invitation à ton ami.'}</p>;
+  }
 
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
@@ -121,5 +126,5 @@ async function GameLauncher({
   const separator = targetUrl.includes("?") ? "&" : "?";
   const iframeSrc = extra.size > 0 ? `${targetUrl}${separator}${extra.toString()}` : targetUrl;
 
-  return <GameMount slug={slug} name={game.name} src={iframeSrc} roomCode={admission?.session.code ?? roomCode} admission={admission} identity={identity} />;
+  return <GameMount slug={slug} name={game.name} src={iframeSrc} roomCode={admission?.session.code ?? roomCode} admission={admission} identity={identity} publishOnCreate={publicRoom === '1' && !admission && !roomCode && canPublishGame(slug)} />;
 }

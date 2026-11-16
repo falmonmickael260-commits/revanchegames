@@ -4,17 +4,17 @@ import { RequestError } from '@/lib/request-security';
 import { callGame, openSession, sealSession } from './server';
 import { isConnectedGame, validRoom, type ConnectedGame, type NativeSession } from './protocol';
 
-export async function gameUser() {
+export async function gameUser(message = 'Connecte-toi pour inviter un ami.') {
   const auth = await createClient();
   const { data: { user }, error } = await auth.auth.getUser();
-  if (error || !user || user.is_anonymous) throw new RequestError('Connecte-toi pour inviter un ami.', 401);
+  if (error || !user || user.is_anonymous) throw new RequestError(message, 401);
   const { data: profile } = await auth.from('profiles').select('username').eq('id', user.id).single();
   if (!profile) throw new RequestError('Profil introuvable.', 401);
   return { auth, user, name: profile.username as string };
 }
 
-export async function registerGameRoom(slug: ConnectedGame, session: NativeSession) {
-  const { user, name } = await gameUser();
+export async function registerGameRoom(slug: ConnectedGame, session: NativeSession, account?: Awaited<ReturnType<typeof gameUser>>) {
+  const { user, name } = account ?? await gameUser();
   if (!validRoom(session?.code)) throw new RequestError('Salon invalide.');
   const { room } = await callGame({ v: 1, game: slug, operation: 'inspect', room: session.code, uid: user.id, name, proof: session });
   const db = createServiceClient();
