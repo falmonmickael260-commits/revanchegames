@@ -9,7 +9,12 @@
     "lint": "eslint",
     "test:wallet": "node scripts/test-wallet.mjs",
     "test:gifts": "node scripts/test-gifts.mjs",
-    "test": "node --import tsx --test test/*.test.ts && npm run test:wallet && npm run test:gifts"
+    "test": "node --import tsx --test test/*.test.ts && npm run test:wallet && npm run test:gifts",
+    "dev:admin": "next dev apps/admin --port 3001",
+    "build:admin": "next build apps/admin",
+    "start:admin": "next start apps/admin --hostname 0.0.0.0",
+    "test:admin": "node --import tsx --test test/admin-*.test.ts",
+    "typecheck:admin": "tsc -p apps/admin/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

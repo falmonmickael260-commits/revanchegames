@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { ArrowDown } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { PlayerCardDialog } from "@/components/social/PlayerCardDialog";
+import { ReportDialog } from '@/components/social/ReportDialog';
 import { formatChatTime, type ChatMessage, type ChatIdentity } from "@/lib/chat-shared";
 
 /** Marge, en pixels, en dessous de laquelle on considère être « en bas ». */
@@ -47,6 +48,7 @@ export function ChatMessageList({
   // Joueur dont on consulte la fiche, ouverte depuis son avatar ou son
   // pseudonyme dans la conversation.
   const [viewing, setViewing] = useState<string | null>(null);
+  const [reporting,setReporting] = useState<ChatMessage|null>(null);
   const missed = Math.max(0, messages.length - seenCount);
 
   // useLayoutEffect : on repositionne avant que le navigateur ne peigne, pour
@@ -173,6 +175,7 @@ export function ChatMessageList({
                       <span className="shrink-0 font-body text-[0.7rem] text-text-faint">
                         {formatChatTime(message.createdAt)}
                       </span>
+                      {!own&&me&&!renderAttachment&&<button onClick={()=>setReporting(message)} className="text-[10px] text-text-faint hover:text-cyan" aria-label={`Signaler le message de ${message.username}`}>Signaler</button>}
                     </div>
                     {message.giftBatchId ? (
                       <div className={`min-w-0 max-w-full break-words rounded-xl px-3 py-1.5 font-body text-sm text-text ${
@@ -216,6 +219,7 @@ export function ChatMessageList({
       {viewing && (
         <PlayerCardDialog userId={viewing} onClose={() => setViewing(null)} />
       )}
+      {reporting&&<ReportDialog messageId={reporting.id} target={{id:reporting.userId,username:reporting.username}} context="general" onClose={()=>setReporting(null)}/>}
     </div>
   );
 }

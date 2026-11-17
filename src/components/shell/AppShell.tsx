@@ -4,6 +4,7 @@ import { ShellFrame } from "./ShellFrame";
 import { VoiceProvider } from "@/components/voice/VoiceProvider";
 import { VoiceInviteToast } from "@/components/voice/VoiceInviteToast";
 import { ThemePreferenceSync } from "@/components/theme/ThemePreference";
+import { PlatformAdministration } from './PlatformAdministration';
 
 /**
  * Les fournisseurs enveloppent la coquille entière, et non la seule page
@@ -20,7 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <GameSessionProvider>
       <SocialProvider>
-        <VoiceProvider><ThemePreferenceSync /><ShellFrame>{children}</ShellFrame><VoiceInviteToast /></VoiceProvider>
+        <VoiceProvider><ThemePreferenceSync /><ShellFrame>{children}</ShellFrame><VoiceInviteToast /><PlatformAdministration /></VoiceProvider>
       </SocialProvider>
     </GameSessionProvider>
   );

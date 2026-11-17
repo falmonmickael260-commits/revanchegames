@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Flag, X } from "lucide-react";
-import { submitReport, type ReportKind } from "@/lib/social/api";
+import type { ReportKind } from "@/lib/social/api";
+import Link from 'next/link';
 
 const DETAILS_MAX = 1000;
 
@@ -36,37 +37,40 @@ const ISSUE_REASONS: { value: ReportKind; label: string; hint: string }[] = [
 export function ReportDialog({
   target,
   context,
+  messageId,
   onClose,
 }: {
   /** Le joueur visé. Absent : signalement d'un problème, sans cible. */
   target?: { id: string; username: string };
   /** Où le problème a été rencontré — slug de jeu, salon, page. */
   context?: string;
+  messageId?: string;
   onClose: () => void;
 }) {
-  const reasons = target ? PLAYER_REASONS : ISSUE_REASONS;
+  const reasons = messageId ? PLAYER_REASONS.filter(r=>r.value==='message') : target ? PLAYER_REASONS.filter(r=>r.value!=='message') : ISSUE_REASONS;
 
   const [kind, setKind] = useState<ReportKind>(reasons[0].value);
   const [details, setDetails] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
+  const [attachment,setAttachment] = useState<File|null>(null);
+  const operation = useRef<{signature:string;id:string}|null>(null);
 
   async function submit() {
     setPending(true);
     setError("");
-    const result = await submitReport({
-      kind,
-      targetUserId: target?.id ?? null,
-      context: context ?? null,
-      details: details.trim() || null,
-    });
-    setPending(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    setSent(true);
+    try {
+      const signature=JSON.stringify([kind,target?.id,context,details,messageId,attachment?.name,attachment?.size,attachment?.lastModified]);
+      if(operation.current?.signature!==signature)operation.current={signature,id:crypto.randomUUID()};
+      const form=new FormData();
+      for(const [key,value] of Object.entries({id:operation.current.id,kind,target:target?.id||'',context:context||'',details:details.trim(),message:messageId||''}))form.set(key,value);
+      if(attachment)form.set('attachment',attachment);
+      const response=await fetch('/api/reports',{method:'POST',body:form});const result=await response.json();
+      if(!response.ok)throw new Error(result.error||'Envoi impossible.');
+      setSent(true);
+    }catch(error){setError(error instanceof Error?error.message:'Connexion interrompue. Réessaie.');}
+    finally{setPending(false);}
   }
 
   return (
@@ -107,6 +111,7 @@ export function ReportDialog({
             <p className="font-body text-sm text-text-dim">
               Signalement envoyé. Merci — il sera examiné.
             </p>
+            <Link href="/settings/reports" className="text-sm text-cyan">Suivre mes signalements</Link>
             <button
               type="button"
               onClick={onClose}
@@ -169,7 +174,8 @@ export function ReportDialog({
                 </span>
               </label>
 
-              {error && <p className="mt-2 font-body text-xs text-violet-soft">{error}</p>}
+              <label className="mt-3 block text-sm text-text-dim">Capture (JPEG, PNG ou WebP, 5 Mo maximum)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setAttachment(e.target.files?.[0]||null)} className="mt-2 block w-full" /></label>
+              {error && <p role="alert" className="mt-2 font-body text-xs text-violet-soft">{error}</p>}
             </div>
 
             <div className="flex shrink-0 gap-2 border-t border-border-soft p-4">

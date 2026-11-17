@@ -29,7 +29,20 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+  const path=request.nextUrl.pathname;
+  // Support and reporting remain available to suspended players. Server-to-server
+  // game/webhook requests have their own authentication and no player cookie.
+  if(user && (path.startsWith('/play/') || (path.startsWith('/api/') &&
+    !['/api/support/','/api/reports','/api/platform-status','/api/stripe/webhook'].some(prefix=>path.startsWith(prefix))))) {
+    const access=await supabase.rpc('my_platform_access');
+    if(access.error || access.data?.restricted) {
+      const denied=NextResponse.json({error:access.error?'Vérification de l’accès indisponible.':'Accès suspendu.'},
+        {status:access.error?503:403,headers:{'Cache-Control':'no-store, private'}});
+      for(const cookie of response.cookies.getAll())denied.cookies.set(cookie);
+      return denied;
+    }
+  }
 
   return response;
 }

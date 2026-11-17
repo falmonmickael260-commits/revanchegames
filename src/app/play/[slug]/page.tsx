@@ -85,6 +85,10 @@ async function GameLauncher({
 
   const targetUrl = resolveGameUrl(slug, game.url);
   if (!targetUrl) notFound();
+  const settingsDb=await createClient();
+  const settings=await settingsDb.from('game_admin_settings').select('maintenance,message').eq('game_slug',slug).maybeSingle();
+  if(settings.error)return <p role="alert" className="p-6 text-text">La disponibilité du jeu ne peut pas être vérifiée. Réessaie plus tard.</p>;
+  if(settings.data?.maintenance)return <p role="status" className="p-6 text-text">{settings.data.message||'Ce jeu est temporairement en maintenance.'}</p>;
   let admission: Awaited<ReturnType<typeof loadGameAdmission>> | undefined;
   try {
     if (typeof salon === 'string' && UUID_PATTERN.test(salon)) admission = await loadPublicGameAdmission(salon, slug);
