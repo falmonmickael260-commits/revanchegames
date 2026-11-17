@@ -55,6 +55,11 @@ export default function SettingsPage() {
       <ThemeSetting />
 
       <SupportLink />
+      <Link href="/settings/report" className="rounded-xl border border-border-soft bg-surface p-4">
+        <span className="block font-display text-sm font-semibold text-cyan">Signaler un joueur</span>
+        <span className="mt-1 block text-xs text-text-dim">Par pseudo ou identifiant, avec une description et des captures d’écran privées pour la modération.</span>
+      </Link>
+      <Link href="/settings/reports" className="text-sm text-cyan">Suivre mes signalements</Link>
       <Link href="/profile#mes-achats" className="rounded-xl border border-border-soft bg-surface p-4 font-display text-sm font-semibold text-cyan">Mes achats et reçus de paiement</Link>
 
       <SocialSettings />
