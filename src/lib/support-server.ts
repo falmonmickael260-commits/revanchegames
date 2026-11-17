@@ -2,10 +2,10 @@ import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 import { RequestError } from "@/lib/request-security";
 
-export async function supportSession() {
+export async function supportSession(message = "Connecte-toi avec un compte confirmé pour contacter l’assistance.") {
   const db = await createClient();
   const { data: { user }, error } = await db.auth.getUser();
-  if (error || !user || user.is_anonymous || !user.email_confirmed_at) throw new RequestError("Connecte-toi avec un compte confirmé pour contacter l’assistance.", 401);
+  if (error || !user || user.is_anonymous || !user.email_confirmed_at) throw new RequestError(message, 401);
   return { db, user };
 }
 

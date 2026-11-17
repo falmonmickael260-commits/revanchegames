@@ -1,3 +1,4 @@
+import { validateReportCaptures } from "@/lib/report-evidence";
 import { createServiceClient } from "@/lib/supabase/server";
 import { supportSession, normalizeScreenshot } from "@/lib/support-server";
 import {
@@ -10,7 +11,7 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const { db, user } = await supportSession();
+    const { db, user } = await supportSession("Connecte-toi avec un compte confirmé pour envoyer un signalement.");
     const offset = Number(new URL(request.url).searchParams.get("offset") || 0);
     if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000)
       throw new RequestError("Page invalide.");
@@ -32,8 +33,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     requireSameOrigin(request);
-    const { db, user } = await supportSession();
-    const raw = await readLimitedBody(request, 6 * 1024 * 1024);
+    const { db, user } = await supportSession("Connecte-toi avec un compte confirmé pour envoyer un signalement.");
+    const raw = await readLimitedBody(request, 16 * 1024 * 1024);
     const form = await new Request(request.url, {
       method: "POST",
       headers: { "Content-Type": request.headers.get("content-type") || "" },
@@ -62,11 +63,12 @@ export async function POST(request: Request) {
       context.length > 200
     )
       throw new RequestError("Signalement invalide.");
-    const file = form.get("attachment");
-    const image =
-      file instanceof File && file.size
-        ? await normalizeScreenshot(file)
-        : null;
+    if (target === user.id) throw new RequestError("Tu ne peux pas signaler ton propre profil.");
+    const files = form.getAll("attachment").filter((file): file is File => file instanceof File);
+    const invalid = validateReportCaptures(files);
+    if (invalid) throw new RequestError(invalid, 413);
+    const images: Buffer[] = [];
+    for (const file of files) images.push(await normalizeScreenshot(file));
     const { error } = await db.rpc("submit_evidenced_report", {
       p_id: id,
       p_kind: kind,
@@ -74,7 +76,7 @@ export async function POST(request: Request) {
       p_context: context,
       p_details: details,
       p_message: message || null,
-      p_attachment: Boolean(image),
+      p_attachment: images.length > 0,
     });
     if (error)
       throw new RequestError(
@@ -85,23 +87,16 @@ export async function POST(request: Request) {
             : "Envoi refusé. Vérifie le message, le joueur et ta connexion.",
         error.code === "54000" ? 429 : 409,
       );
-    if (image) {
-      const stored = await createServiceClient()
-        .storage.from("report-evidence")
-        .upload(`${user.id}/${id}.webp`, image, {
-          contentType: "image/webp",
-          upsert: false,
-        });
-      if (
-        stored.error &&
-        stored.error.message !== "The resource already exists" &&
-        String((stored.error as { statusCode?: string }).statusCode) !== "409"
-      )
-        throw new RequestError(
-          "Le signalement est enregistré, mais la capture n’a pas été reçue. Réessaie sans fermer le formulaire.",
-          503,
-        );
+    const service = images.length ? createServiceClient() : null;
+    for (let position = 0; position < images.length; position++) {
+      const path = `${user.id}/${id}${position ? `-${position + 1}` : ""}.webp`;
+      const stored = await service!.storage.from("report-evidence").upload(path, images[position], { contentType: "image/webp", upsert: false });
+      if (stored.error && stored.error.message !== "The resource already exists" && String((stored.error as { statusCode?: string }).statusCode) !== "409")
+        throw new RequestError("Le signalement est enregistré, mais une capture n’a pas été reçue. Réessaie sans fermer le formulaire.", 503);
+      const metadata = await service!.from("report_attachments").upsert({ report_id: id, position, storage_path: path }, { onConflict: "report_id,position", ignoreDuplicates: true });
+      if (metadata.error) throw new RequestError("La capture est reçue, mais sa confirmation a échoué. Réessaie sans fermer le formulaire.", 503);
     }
+
     return Response.json(
       { id },
       { headers: { "Cache-Control": "no-store, private" } },

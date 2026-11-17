@@ -34,3 +34,11 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+### Signalements depuis le profil
+
+Profil → Paramètres → Signaler un joueur ouvre la recherche par pseudo, identifiant public RG ou UUID. Le joueur sélectionne le profil, décrit les faits et peut joindre trois captures de 5 Mo maximum chacune. Les JPEG, PNG et WebP sont décodés et normalisés en WebP sans métadonnées ; les preuves restent dans un bucket privé, accessible à la modération avec MFA. Le compte signalé ne reçoit pas les captures.
+
+La recherche `report_player_lookup` ne renvoie que UUID, pseudo et identifiant public à des comptes confirmés. Les profils masqués ne sont pas proposés par recherche partielle ; un identifiant connu reste utilisable pour un signalement. Aucun e-mail n’est exposé. L’[avertissement Supabase sur les fonctions SECURITY DEFINER](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable) est intentionnel pour cette API limitée : accès anonyme révoqué, compte confirmé obligatoire, résultats bornés.
+
+Le signalement et les fichiers gardent leurs identifiants lors d’une nouvelle tentative après interruption. Le panneau administrateur propose un lien privé pour chaque capture, avec vérification du rôle et de la MFA à chaque téléchargement. Les anciens signalements avec une seule capture restent compatibles.
