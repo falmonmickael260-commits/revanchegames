@@ -12,6 +12,8 @@ export type PublicGameRoom = {
   host_name: string;
   player_count: number;
   capacity: number;
+  isHost: boolean;
+  ownRoomCode?: string;
 };
 type DirectoryRoom = PublicGameRoom & { room_code: string; instance_key: string; host_id: string };
 const directoryGames: readonly string[] = PUBLIC_ROOM_GAMES;
@@ -26,8 +28,9 @@ async function directory(viewer: string | null, id?: string) {
 export async function listPublicGameRooms(): Promise<PublicGameRoom[]> {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
-  return (await directory(user?.id ?? null)).map(({ id, game_slug, host_name, player_count, capacity }) => ({
-    id, game_slug, host_name, player_count, capacity,
+  return (await directory(user?.id ?? null)).map(({ id, game_slug, host_name, player_count, capacity, host_id, room_code }) => ({
+    id, game_slug, host_name, player_count, capacity, isHost: host_id === user?.id,
+    ...(host_id === user?.id ? { ownRoomCode: room_code } : {}),
   }));
 }
 
@@ -42,6 +45,13 @@ export async function joinPublicGameRoom(id: string) {
     .eq('instance_key', room.instance_key).maybeSingle();
   if (!host) throw new RequestError('L’hôte a quitté le salon.', 409);
 
+  // The host already has a seat: do not run admission against their own room.
+  if (room.host_id === user.id) {
+    const proof = openSession(host.sealed_session);
+    const checked = await callGame({ v: 1, game: room.game_slug, operation: 'inspect', room: room.room_code, uid: user.id, name, proof });
+    if (!checked.room?.isHost || checked.room.instance !== room.instance_key) throw new RequestError('Ce salon a été remplacé.', 409);
+    return { game_slug: room.game_slug };
+  }
   const { session } = await callGame({
     v: 1, game: room.game_slug, operation: 'admit', room: room.room_code, uid: user.id, name,
     proof: openSession(host.sealed_session), inviter: room.host_id, instance: room.instance_key,
@@ -91,6 +101,13 @@ export async function updatePublicRoom(slug: ConnectedGame, room: RoomSnapshot, 
     }, { onConflict: 'game_slug,room_code,instance_key' });
     if (error) throw new RequestError('Impossible de publier ce salon.', 503);
     return true;
+  }
+  if (publish === undefined && room.status === 'open' && room.count < room.capacity) {
+    // Only insert a new listing. A previous explicit private choice is kept.
+    const { error } = await db.from('public_game_rooms').upsert({
+      ...target, host_id: hostId, refreshed_at: new Date().toISOString(),
+    }, { onConflict: 'game_slug,room_code,instance_key', ignoreDuplicates: true });
+    if (error) throw new RequestError('Impossible de publier ce salon.', 503);
   }
   const active = db.from('public_game_rooms').update({ refreshed_at: publish === false ? null : new Date().toISOString() })
     .match({ ...target, host_id: hostId }).not('refreshed_at', 'is', null);
