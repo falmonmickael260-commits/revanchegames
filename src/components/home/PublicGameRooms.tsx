@@ -54,6 +54,10 @@ export function PublicGameRooms() {
   }, [reload, me?.id]);
 
   async function join(room: PublicGameRoom) {
+    if (room.isHost && active?.slug === room.game_slug && active.roomCode === room.ownRoomCode) {
+      router.push(`/play/${room.game_slug}`);
+      return;
+    }
     if (joiningRef.current) return;
     joiningRef.current = true;
     setJoining(room.id);
@@ -126,7 +130,7 @@ export function PublicGameRooms() {
                     <p className="truncate text-xs text-text-dim">{room.host_name} · {room.player_count}/{room.capacity} joueurs</p>
                   </div>
                   <button type="button" disabled={joining !== null} className="rg-primary-button shrink-0 disabled:opacity-50" onClick={() => void join(room)}>
-                    {joining === room.id ? 'Connexion…' : 'Rejoindre'}
+                    {joining === room.id ? 'Connexion…' : room.isHost ? 'Reprendre ma partie' : 'Rejoindre'}
                   </button>
                 </li>
               );

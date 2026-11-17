@@ -66,8 +66,7 @@ export function GameSessionProvider({ children }: { children: React.ReactNode })
       // autre salon du même jeu doit bien recharger la partie, alors qu'un
       // simple retour sur /play/<slug> ne doit rien toucher.
       if (previous && previous.slug === game.slug && (!game.admission || previous.admission?.id === game.admission.id) &&
-          (!game.roomCode || previous.launchRoom === game.roomCode) &&
-          (!game.publishOnCreate || previous.publishOnCreate || previous.roomCode)) {
+          (!game.roomCode || previous.launchRoom === game.roomCode)) {
         const identityChanged = previous.identity?.username !== game.identity?.username ||
           previous.identity?.avatarUrl !== game.identity?.avatarUrl;
         // Refresh the account avatar/name without changing the iframe URL or

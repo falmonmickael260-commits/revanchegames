@@ -4,7 +4,7 @@ import { VoiceGameControl } from "@/components/voice/VoiceDock";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, Globe2, Maximize2, Minimize2, PowerOff } from "lucide-react";
+import { ChevronLeft, Globe2, LockKeyhole, Maximize2, Minimize2, PowerOff } from "lucide-react";
 import { useGameSession } from "./GameSessionProvider";
 import { ReportIssueButton } from "@/components/social/ReportIssueButton";
 import { Avatar } from "@/components/ui/Avatar";
@@ -28,7 +28,6 @@ export function GameViewport() {
   const [publicRoom, setPublicRoom] = useState<(RoomSnapshot & { listed: boolean; launch: string }) | null>(null);
   const [publishingLaunch, setPublishingLaunch] = useState<string | null>(null);
   const currentSession = useRef<{ launch: string; session: NativeSession; instance?: string } | null>(null);
-  const autoPublished = useRef<string | null>(null);
   const visibilityChange = useRef<{ launch: string } | null>(null);
 
   // Quel jeu a fini de charger. Dérivé plutôt que remis à zéro par un effet :
@@ -42,7 +41,6 @@ export function GameViewport() {
   const target = active ? new URL(active.src).origin : null;
   const slug = active?.slug;
   const admission = active?.admission;
-  const publishOnCreate = active?.publishOnCreate;
   useEffect(() => {
     if (!slug || !target || !launch) return;
     let cancelled = false;
@@ -156,20 +154,6 @@ export function GameViewport() {
           reportRoom(slug, room.code);
           setPublicRoom({ ...room, launch });
           setBridgeError('');
-          if (publishOnCreate && autoPublished.current !== launch && room.isHost && room.status === 'open' && room.count < room.capacity) {
-            autoPublished.current = launch;
-            const publish = await fetch('/api/game/rooms/current', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ game: slug, session: data.session, publish: true }),
-            });
-            const listed = await publish.json();
-            if (cancelled || currentSession.current?.instance !== room.instance) {
-              if (publish.ok && listed.listed) void hideRoom(slug, listed.code, listed.instance);
-              return;
-            }
-            if (publish.ok) setPublicRoom({ ...listed, launch });
-            else setBridgeError(listed.error || 'Impossible d’afficher le salon sur l’accueil.');
-          }
         } else if (response.status !== 401) {
           const body = await response.json();
           setPublicRoom(null);
@@ -180,7 +164,7 @@ export function GameViewport() {
     const listener = (event: MessageEvent) => { void receive(event).catch(() => {}); };
     window.addEventListener('message', listener);
     return () => { cancelled = true; window.removeEventListener('message', listener); };
-  }, [slug, target, launch, admission, reportRoom, active?.identity, publishOnCreate]);
+  }, [slug, target, launch, admission, reportRoom, active?.identity]);
 
   // État du plein écran, lu directement de l'API du navigateur.
   // `useSyncExternalStore` est l'outil prévu pour ça — c'est aussi ce
@@ -285,7 +269,7 @@ export function GameViewport() {
             type="button"
             onClick={minimize}
             aria-label="Retour à l’accueil"
-            className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 font-display text-xs font-semibold text-text-dim transition-colors hover:bg-surface hover:text-text"
+            className="flex shrink-0 items-center gap-1 rounded-lg px-1 py-1.5 font-display text-xs sm:px-2 font-semibold text-text-dim transition-colors hover:bg-surface hover:text-text"
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Plateforme</span>
@@ -303,12 +287,12 @@ export function GameViewport() {
                   type="button"
                   onClick={() => void togglePublicRoom()}
                   disabled={publishing}
-                  aria-label={publicRoom.listed ? 'Masquer le salon sur l’accueil' : 'Ouvrir le salon aux joueurs'}
-                  title={publicRoom.listed ? 'Masquer le salon sur l’accueil' : 'Afficher le salon sur l’accueil'}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-surface disabled:opacity-50"
+                  aria-label={publicRoom.listed ? 'Rendre la partie privée' : 'Rendre la partie publique'}
+                  title={publicRoom.listed ? 'Partie publique : cliquer pour la rendre privée' : 'Partie privée : cliquer pour la rendre publique'}
+                  className="inline-flex items-center gap-1 rounded-lg px-1 py-1.5 text-xs sm:px-2 font-semibold text-text transition-colors hover:bg-surface disabled:opacity-50"
                 >
-                  <Globe2 className="h-4 w-4 shrink-0" />
-                  <span className="hidden sm:inline">{publishing ? '…' : publicRoom.listed ? 'Public' : 'Rendre public'}</span>
+                  {publicRoom.listed ? <LockKeyhole className="h-4 w-4 shrink-0" /> : <Globe2 className="h-4 w-4 shrink-0" />}
+                  <span>{publishing ? '…' : publicRoom.listed ? 'Privé' : 'Public'}</span>
                 </button>
             )}
             <VoiceGameControl />
@@ -325,7 +309,7 @@ export function GameViewport() {
                 type="button"
                 onClick={toggleFullscreen}
                 aria-label={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
-                className="rounded-lg p-2 text-text-faint transition-colors hover:bg-surface hover:text-text"
+                className="hidden rounded-lg p-2 text-text-faint transition-colors hover:bg-surface hover:text-text sm:inline-flex"
               >
                 {isFullscreen ? (
                   <Minimize2 className="h-4 w-4" />
