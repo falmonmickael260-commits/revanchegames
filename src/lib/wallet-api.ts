@@ -15,10 +15,14 @@ export type PromoRedemption = { rewardCoins: number; newBalance: number };
 
 /** Code promo → pièces créditées. Toute la logique (unicité, plafond, expiration) vit côté serveur. */
 export async function redeemPromoCode(code: string): Promise<ActionResult<PromoRedemption>> {
-  const supabase = createClient();
-  const { data, error } = await supabase.rpc("redeem_promo_code", { p_code: code });
-  if (error) return { ok: false, error: toMessage(error) };
-  const row = (data as { reward_coins: number; new_balance: number }[] | null)?.[0];
-  if (!row) return { ok: false, error: "Réponse inattendue du serveur." };
-  return { ok: true, data: { rewardCoins: row.reward_coins, newBalance: row.new_balance } };
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("redeem_promo_code", { p_code: code.trim().toUpperCase() });
+    if (error) return { ok: false, error: toMessage(error) };
+    const row = (data as { reward_coins: number; new_balance: number }[] | null)?.[0];
+    if (!row) return { ok: false, error: "Réponse inattendue du serveur." };
+    // Refresh every mounted balance from the database even when Realtime is delayed.
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("rg:wallet-updated"));
+    return { ok: true, data: { rewardCoins: Number(row.reward_coins), newBalance: Number(row.new_balance) } };
+  } catch { return { ok: false, error: "Problème de connexion — réessaie." }; }
 }
