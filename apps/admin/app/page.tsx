@@ -963,7 +963,9 @@ export default function AdminPage() {
                   <span>{title}</span>
                   <strong>
                     {data[key] === null
-                      ? "Accès restreint"
+                      ? key === "activeLast2m"
+                        ? "Collecte non démarrée"
+                        : "Accès restreint"
                       : display(data[key])}
                   </strong>
                 </article>

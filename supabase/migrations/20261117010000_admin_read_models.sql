@@ -33,7 +33,8 @@ begin
     return jsonb_build_object(
       'players',(select count(*) from public.profiles),
       'registrations24h',(select count(*) from public.profiles where created_at>now()-interval '24 hours'),
-      'activeLast2m',(select count(*) from public.player_activity where last_seen_at>now()-interval '2 minutes'),
+      'activeLast2m',case when exists(select 1 from public.player_activity)
+        then (select count(*) from public.player_activity where last_seen_at>now()-interval '2 minutes') end,
       'reports',case when public.admin_allowed('moderate') then (select count(*) from public.reports where status in ('open','reviewing')) end,
       'tickets',case when public.admin_allowed('support') then (select count(*) from public.support_tickets where status<>'resolved') end,
       'purchases24h',case when public.admin_allowed('economy') then (select count(*) from public.stripe_purchases where created_at>now()-interval '24 hours') end,

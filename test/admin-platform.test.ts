@@ -431,7 +431,8 @@ test("Administration : permissions SQL, MFA, économie, preuves et assistance", 
         ).rows[0].admin_query;
         assert.deepEqual(data.rows, []);
         assert.ok((await query("player", player)).rows[0].admin_query.profile);
-        for (const s of [
+        assert.equal((await query("dashboard")).rows[0].admin_query.activeLast2m, null);
+      for (const s of [
           "session",
           "dashboard",
           "players",
