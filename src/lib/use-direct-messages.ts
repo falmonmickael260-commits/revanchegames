@@ -106,10 +106,11 @@ export function useDirectMessages({
     const resume = () => { if (document.visibilityState === "visible") void load(); };
     document.addEventListener("visibilitychange", resume);
     window.addEventListener("pageshow", resume);
+    window.addEventListener("rg:messages-updated", resume);
 
     return () => {
       cancelled = true; clearTimeout(first);
-      document.removeEventListener("visibilitychange", resume); window.removeEventListener("pageshow", resume);
+      document.removeEventListener("visibilitychange", resume); window.removeEventListener("pageshow", resume); window.removeEventListener("rg:messages-updated", resume);
     };
   }, [enabled, me, other, toChatMessage]);
 

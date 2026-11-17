@@ -24,10 +24,12 @@ export function ChatMessageList({
   compact = false,
   unreadFrom,
   renderAttachment,
+  emptyMessage,
 }: {
   messages: ChatMessage[];
   me: ChatIdentity | null;
   loading?: boolean;
+  emptyMessage?: string;
   compact?: boolean;
   /** Horodatage ISO du dernier message lu : trace un repere avant le premier
    * message plus recent, pour qu'on voie ou on s'etait arrete. */
@@ -114,7 +116,7 @@ export function ChatMessageList({
           </p>
         ) : messages.length === 0 ? (
           <p className={`text-center font-body text-text-faint ${compact ? "py-2 text-xs" : "py-10 text-sm"}`}>
-            Aucun message pour l&apos;instant — sois le premier à dire bonjour !
+            {emptyMessage ?? "Aucun message pour l’instant — sois le premier à dire bonjour !"}
           </p>
         ) : (
           <div className="flex flex-col gap-3">
