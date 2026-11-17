@@ -10,26 +10,29 @@ import { giftPresentation } from "@/lib/gifts/presentation";
 type Recipient = { id: string; name: string };
 type Catalog = { gifts: GiftItem[]; settings: { enabled: boolean; max_quantity: number } };
 
-export function GiftLauncher({ meId, recipients, context, roomId, onSent }: {
+export function GiftLauncher({ meId, recipients, context, roomId, onSent, defaultOpen = false }: {
   meId: string;
   recipients: Recipient[];
   context: "dm" | "voice";
   roomId?: string;
+  defaultOpen?: boolean;
   onSent?: (batchId: string, messageId: string | null) => void | Promise<void>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [loading, setLoading] = useState(false);
   const [recipientId, setRecipientId] = useState(recipients[0]?.id ?? "");
   const [giftId, setGiftId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [busy, setBusy] = useState(false);
-  const [now, setNow] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState("");
   const attempt = useRef<{ signature: string; id: string } | null>(null);
   const { balance, ready } = useWallet(meId);
   const selected = catalog?.gifts.find(gift => gift.id === giftId);
   const receiver = recipients.find(person => person.id === recipientId) ?? recipients[0];
+  const selfGift = receiver?.id === meId;
+  const label = selfGift ? "M’offrir un cadeau" : "Offrir un cadeau";
   const total = (selected?.price_coins ?? 0) * quantity;
   const available = useMemo(() => (catalog?.gifts ?? []).filter(gift => gift.active
     && (!gift.starts_at || Date.parse(gift.starts_at) <= now)
@@ -67,8 +70,10 @@ export function GiftLauncher({ meId, recipients, context, roomId, onSent }: {
           idempotencyKey: attempt.current.id }) });
       const result = await response.json();
       if (!response.ok || !result.batch?.id) throw new Error(result.error || "Envoi impossible.");
-      const eventResponse = await fetch(`/api/gifts/events?id=${encodeURIComponent(result.batch.id)}`, { cache: "no-store" });
-      if (eventResponse.ok) celebrateGift(await eventResponse.json() as GiftEvent);
+      window.dispatchEvent(new Event("rg:wallet-updated"));
+      window.dispatchEvent(new Event("rg:messages-updated"));
+      const eventResponse = await fetch(`/api/gifts/events?id=${encodeURIComponent(result.batch.id)}`, { cache: "no-store" }).catch(() => null);
+      if (eventResponse?.ok) celebrateGift(await eventResponse.json() as GiftEvent);
       attempt.current = null;
       setOpen(false);
       try { await onSent?.(result.batch.id, result.messageId ?? null); } catch { /* cadeau confirmé, signal complémentaire facultatif */ }
@@ -78,24 +83,25 @@ export function GiftLauncher({ meId, recipients, context, roomId, onSent }: {
   }
 
   return <>
-    <button type="button" aria-label="Offrir un cadeau" title="Offrir un cadeau" className="rg-gift-launcher" onClick={() => { setOpen(true); setNow(Date.now()); setError(""); }}>
+    <button type="button" aria-label={label} title={label} className="rg-gift-launcher" onClick={() => { setOpen(true); setNow(Date.now()); setError(""); }}>
       <Gift size={20} />
     </button>
     {open && <div className="rg-gift-sheet-backdrop" onClick={event => { if (event.target === event.currentTarget && !busy) setOpen(false); }}>
-      <section role="dialog" aria-modal="true" aria-label="Offrir un cadeau" className="rg-gift-sheet">
-        <header><div><span>UNE ATTENTION POUR UN AMI</span><h2>Offrir un cadeau</h2></div><button type="button" aria-label="Fermer" onClick={() => setOpen(false)} disabled={busy}><X size={20} /></button></header>
+      <section role="dialog" aria-modal="true" aria-label={label} className="rg-gift-sheet">
+        <header><div><span>{selfGift ? "UN CADEAU POUR MOI" : "UNE ATTENTION POUR UN AMI"}</span><h2>{label}</h2></div><button type="button" aria-label="Fermer" onClick={() => setOpen(false)} disabled={busy}><X size={20} /></button></header>
         <div className="rg-gift-sheet-content">
-          <div className="rg-gift-sheet-summary"><span>Destinataire <strong>{context === "voice" ? <select aria-label="Destinataire du cadeau" value={receiver?.id ?? ""} onChange={event => { setRecipientId(event.target.value); attempt.current = null; }}>{recipients.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select> : receiver?.name ?? "—"}</strong></span><span>Mon solde <strong>{ready && balance !== null ? balance.toLocaleString("fr-FR") : "—"} pièces</strong></span></div>
+          {selfGift && <p className="rg-gift-sheet-message">Payé avec tes pièces. Tes cadeaux et leurs récompenses sont conservés dans cette conversation privée.</p>}
+          <div className="rg-gift-sheet-summary"><span>Destinataire <strong>{context === "voice" ? <select aria-label="Destinataire du cadeau" disabled={busy} value={receiver?.id ?? ""} onChange={event => { setRecipientId(event.target.value); attempt.current = null; }}>{recipients.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select> : receiver?.name ?? "—"}</strong></span><span>Mon solde <strong>{ready && balance !== null ? balance.toLocaleString("fr-FR") : "—"} pièces</strong></span></div>
           {loading && <p className="rg-gift-sheet-message">Chargement des cadeaux…</p>}
           {!loading && !catalog?.settings.enabled && <p className="rg-gift-sheet-message">Les cadeaux ne sont pas disponibles pour le moment.</p>}
-          <div className="rg-gift-grid">{available.map(gift => <button type="button" key={gift.id} className={gift.id === giftId ? "is-selected" : ""} onClick={() => { setGiftId(gift.id); attempt.current = null; }} aria-pressed={gift.id === giftId}>
+          <div className="rg-gift-grid">{available.map(gift => <button type="button" key={gift.id} disabled={busy} className={gift.id === giftId ? "is-selected" : ""} onClick={() => { setGiftId(gift.id); attempt.current = null; }} aria-pressed={gift.id === giftId}>
             <GiftArt src={gift.image_url} name={gift.name} animation={gift.animation_type} size={70} /><strong>{gift.name}</strong><span>{gift.price_coins} pièces</span>
           </button>)}</div>
           {selected && <div className="rg-gift-selection"><GiftArt src={selected.image_url} name={selected.name} animation={selected.animation_type} size={82} /><div><strong>{selected.name}</strong><span>Une attention pour {receiver?.name ?? "ton ami"}</span><small>{selected.celebration_message || giftPresentation(selected).message}</small></div></div>}
-          <div className="rg-gift-quantity"><span>Quantité</span><div>{[1,5,10,20].filter(value => value <= (catalog?.settings.max_quantity ?? 20)).map(value => <button key={value} type="button" aria-pressed={quantity === value} onClick={() => { setQuantity(value); attempt.current = null; }}>×{value}</button>)}<input type="number" aria-label="Quantité personnalisée" min="1" max={catalog?.settings.max_quantity ?? 20} value={quantity} onChange={event => { setQuantity(Math.max(1,Math.min(catalog?.settings.max_quantity ?? 20,Number(event.target.value)||1))); attempt.current = null; }} /></div></div>
+          <div className="rg-gift-quantity"><span>Quantité</span><div>{[1,5,10,20].filter(value => value <= (catalog?.settings.max_quantity ?? 20)).map(value => <button key={value} type="button" disabled={busy} aria-pressed={quantity === value} onClick={() => { setQuantity(value); attempt.current = null; }}>×{value}</button>)}<input type="number" disabled={busy} aria-label="Quantité personnalisée" min="1" max={catalog?.settings.max_quantity ?? 20} value={quantity} onChange={event => { setQuantity(Math.max(1,Math.min(catalog?.settings.max_quantity ?? 20,Number(event.target.value)||1))); attempt.current = null; }} /></div></div>
           {error && <p role="alert" className="rg-gift-error">{error}</p>}
         </div>
-        <footer><span>Total <strong>{total.toLocaleString("fr-FR")} pièces</strong></span><button type="button" onClick={() => void send()} disabled={busy || !catalog?.settings.enabled || !selected || !receiver || balance === null || balance < total}>{busy ? "Envoi…" : "Envoyer le cadeau"}</button></footer>
+        <footer><span>Total <strong>{total.toLocaleString("fr-FR")} pièces</strong></span><button type="button" onClick={() => void send()} disabled={busy || !catalog?.settings.enabled || !selected || !receiver || balance === null || balance < total}>{busy ? "Envoi…" : selfGift ? "M’offrir ce cadeau" : "Envoyer le cadeau"}</button></footer>
       </section>
     </div>}
   </>;

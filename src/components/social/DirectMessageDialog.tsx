@@ -30,11 +30,14 @@ export function DirectMessageDialog({
   me,
   friend,
   onClose,
+  openGiftsInitially = false,
 }: {
   me: ChatIdentity;
   friend: FriendEntry;
   onClose: () => void;
+  openGiftsInitially?: boolean;
 }) {
+  const personal = me.id === friend.id;
   const keyboardInset = useKeyboardInset();
   // Mémoïsé sur les seules valeurs primitives : sans ça, cet objet littéral
   // changerait d'identité à chaque rendu (la présence de l'ami se
@@ -54,17 +57,17 @@ export function DirectMessageDialog({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !document.querySelector(".rg-gift-sheet")) onClose();
     }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [onClose]);
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Conversation avec ${friend.username}`}
+      aria-label={personal ? "Mes cadeaux" : `Conversation avec ${friend.username}`}
       className="rg-direct-dialog"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -75,13 +78,13 @@ export function DirectMessageDialog({
         style={{ "--rg-keyboard-inset": `${keyboardInset}px` } as CSSProperties}
       >
         <header className="flex shrink-0 items-center gap-2.5 border-b border-border-soft px-3 py-2.5">
-          <Link href={`/profile/${friend.id}`} aria-label={`Profil de ${friend.username}`} className="flex min-w-0 flex-1 items-center gap-3">
+          <Link href={personal ? "/profile" : `/profile/${friend.id}`} aria-label={`Profil de ${friend.username}`} className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar username={friend.username} avatarUrl={friend.avatarUrl} size="sm" />
           <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-sm font-semibold text-text">{friend.username}</p>
+            <p className="truncate font-display text-sm font-semibold text-text">{personal ? "Mes cadeaux" : friend.username}</p>
             <p className="flex items-center gap-1.5 font-body text-[11px] text-text-faint">
               <PresenceDot status={friend.presence} />
-              {presenceLabel(friend.presence)}
+              {personal ? "Conversation privée · Toi uniquement" : presenceLabel(friend.presence)}
             </p>
           </div>
           </Link>
@@ -95,13 +98,16 @@ export function DirectMessageDialog({
           </button>
         </header>
 
-        <ChatMessageList messages={messages} me={me} loading={loading}
+        <ChatMessageList messages={messages} me={me} loading={loading} emptyMessage={personal ? "Tes cadeaux apparaîtront ici. Appuie sur le cadeau ci-dessous pour t’en offrir un." : undefined}
           renderAttachment={(message, own) => message.giftBatchId ? <GiftMessageAttachment id={message.giftBatchId} own={own} animate={message.live} /> :
             message.invitationId ? <PrivateGameInvitation id={message.invitationId} own={own} onJoined={onClose} /> :
             message.voiceInvitation ? <VoiceInvitation id={message.id} roomId={message.voiceInvitation.roomId} expiresAt={message.voiceInvitation.expiresAt} own={own} onJoined={onClose} /> : null} />
-        <ChatComposer me={me} sending={sending} error={error} onSend={send}
+        {personal ? <div className="flex items-center gap-3 border-t border-border-soft p-4">
+          <GiftLauncher meId={me.id} recipients={[{ id: me.id, name: me.username }]} context="dm" defaultOpen={openGiftsInitially} />
+          <span className="text-sm text-text-muted">M’offrir un cadeau · payé avec mes pièces</span>
+        </div> : <ChatComposer me={me} sending={sending} error={error} onSend={send}
           leadingAction={<GiftLauncher meId={me.id} recipients={[{ id: friend.id, name: friend.username }]} context="dm"
-            onSent={(_id, messageId) => { if (messageId) void requestPushDelivery({ type: "direct_message", messageId }); }} />} />
+            onSent={(_id, messageId) => { if (messageId) void requestPushDelivery({ type: "direct_message", messageId }); }} />} />}
       </section>
     </div>
   );

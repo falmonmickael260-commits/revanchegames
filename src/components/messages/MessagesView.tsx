@@ -31,9 +31,12 @@ export function MessagesView() {
     const channel=db.channel(`rg-inbox-${me.id}`).on("postgres_changes",{event:"*",schema:"public",table:"direct_messages"},refresh).subscribe(status=>{if(status==="SUBSCRIBED")refresh();});
     const first=setTimeout(refresh,0);
     const visible=()=>{if(document.visibilityState==="visible")refresh();}; document.addEventListener("visibilitychange",visible);
-    return()=>{stopped=true;clearTimeout(first);document.removeEventListener("visibilitychange",visible);void db.removeChannel(channel);};
+    window.addEventListener("rg:messages-updated",refresh);
+    return()=>{window.removeEventListener("rg:messages-updated",refresh);stopped=true;clearTimeout(first);document.removeEventListener("visibilitychange",visible);void db.removeChannel(channel);};
   },[me,load]);
-  const rows = snapshot?.userId===me?.id ? snapshot?.rows ?? [] : [];
+  const history = snapshot?.userId===me?.id ? snapshot?.rows ?? [] : [];
+  const own = history.find(row=>row.other_id===me?.id);
+  const rows:Conversation[] = me ? [{other_id:me.id,username:"Mes cadeaux",avatar_url:me.avatarUrl,last_body:own?.last_body ?? "M’offrir un cadeau et retrouver mon historique privé",last_at:own?.last_at ?? "",unread:0},...history.filter(row=>row.other_id!==me.id)] : [];
   const known=new Set(rows.map(row=>row.other_id));
   const entries=[...rows,...friends.filter(friend=>!known.has(friend.id)).map(friend=>({other_id:friend.id,username:friend.username,avatar_url:friend.avatarUrl,last_body:"Commencer une conversation",last_at:"",unread:0}))]
     .filter(row=>row.username.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
@@ -48,7 +51,7 @@ export function MessagesView() {
       <label className="rg-search-field"><Search className="h-4 w-4" /><input aria-label="Rechercher une conversation" placeholder="Un ami, une conversation…" value={query} onChange={event=>setQuery(event.target.value)} /></label>
       {error && <p role="alert" className="text-sm text-rose-300">{error}<button type="button" onClick={()=>void load()} className="ml-3 underline">Réessayer</button></p>}
       {!snapshot && !error ? <div className="rg-skeleton h-40" /> : <div className="rg-conversation-list">{entries.map(row=>{
-        const count=dmUnread.get(row.other_id) ?? Number(row.unread);
+        const count=row.other_id===me.id ? 0 : dmUnread.get(row.other_id) ?? Number(row.unread);
         const online=presence.get(row.other_id)?.status;
         return <button type="button" key={row.other_id} onClick={()=>open(row)} className="rg-conversation-row" aria-label={`Conversation avec ${row.username}${count ? `, ${count} non lus` : ""}`}>
           <span className={online==="online"||online==="in_game"?"rg-online-avatar":""}><Avatar username={row.username} avatarUrl={row.avatar_url} /></span><span className="min-w-0 flex-1 text-left"><strong>{row.username}</strong><span className="rg-message-preview">{row.last_body}</span></span><span className="rg-conversation-meta">{row.last_at && <time dateTime={row.last_at}>{new Date(row.last_at).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</time>}{count>0&&<span className="rg-unread-bubble">{count>99?"99+":count}</span>}</span>
@@ -56,6 +59,6 @@ export function MessagesView() {
       })}{!entries.length&&<div className="rg-inline-empty"><MessageCircle /><p>{query?"Aucune conversation correspondante.":"Les bons moments commencent par un message."}</p><Link href="/friends">Trouver mes amis</Link></div>}</div>}
       {tab==="all" && <section className="rg-message-groups"><div className="rg-section-heading"><h2>Groupes</h2><button type="button" onClick={()=>setTab("groups")}>Tout voir <ArrowUpRight className="h-3.5 w-3.5" /></button></div><GroupsSection /></section>}
     </>}
-    {selected&&me&&<DirectMessageDialog me={me} friend={selected} onClose={()=>router.replace("/messages",{scroll:false})} />}
+    {selected&&me&&<DirectMessageDialog key={selected.id} me={me} friend={selected} openGiftsInitially={selected.id===me.id && params.get("gift")==="1"} onClose={()=>router.replace("/messages",{scroll:false})} />}
   </div>;
 }
