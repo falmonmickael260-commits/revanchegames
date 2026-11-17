@@ -82,8 +82,11 @@ ne lit pas cette table ; les notes et attributions ne sont pas ajoutées aux
 tables dont il possède déjà une politique de lecture. Un échec d'upload est
 signalé et le même formulaire peut être réessayé sans créer un autre dossier.
 
-Les clés service, Stripe et signatures des jeux sont des variables serveur.
-`server-only` empêche leur import dans le client administrateur. Les journaux et
+Les clés service, Stripe et signatures des jeux restent dans le serveur existant
+de la plateforme. Le nouveau service administrateur n'en reçoit aucune copie :
+il appelle les routes de contrôle de la plateforme avec le JWT de l'administrateur,
+revérifié côté plateforme (compte confirmé, rôle courant et MFA). `server-only`
+empêche l'import des modules sensibles dans les clients. Les journaux et
 réponses d'erreur n'incluent pas les exceptions Stripe/Supabase ni les requêtes
 contenant des secrets. Le panneau refuse les mutations si `ADMIN_SITE_URL` est
 absent ou si l'origine ne correspond pas exactement. HTTPS est fourni par
@@ -106,12 +109,14 @@ l'hébergeur ; l'adresse séparée ne remplace aucun contrôle d'autorisation.
 
    Ne pas sélectionner un utilisateur au hasard ou créer un compte joueur en double.
 4. Déployer le panneau comme un **nouveau service**, avec le dépôt complet comme
-   contexte (des modules Stripe et sécurité sont partagés depuis `src/lib`).
+   contexte (le helper de sécurité est partagé depuis `src/lib`).
    Build : `npm ci && npm run build:admin`. Démarrage :
    `npm run start:admin -- --port $PORT`. Ne pas limiter la racine à `apps/admin`.
 5. Fournir les variables de `apps/admin/.env.example`, sans inscrire de valeurs
-   secrètes dans Git. Sur Railway, les références au service `revanchegames`
-   permettent de réutiliser les valeurs sans les recopier dans le chat.
+   secrètes dans Git. Sur Railway, seules les références aux deux variables publiques Supabase
+   sont nécessaires. Ne pas accorder les clés service-role, Stripe ou des jeux
+   au nouveau service : les opérations privilégiées passent par le serveur existant
+   indiqué dans `ADMIN_PLATFORM_ORIGIN`.
    `ADMIN_SITE_URL` doit être l'origine HTTPS publique exacte du panneau.
 6. Déployer la branche plateforme seulement après les migrations : son proxy
    et ses écrans de jeu refusent l'accès lorsque la vérification n'est pas
@@ -174,3 +179,25 @@ Stripe avec webhook et réconciliation concurrents, contrôle du bundle navigate
 
 Les sauvegardes, la politique de conservation des preuves et la procédure de
 récupération TOTP doivent être établies par l'équipe avant une exploitation courante.
+
+## Ressources de revue créées
+
+- Panneau et plateforme : https://github.com/falmonmickael260-commits/revanchegames/pull/7
+- Président : https://github.com/falmonmickael260-commits/presidente/pull/1
+- Quiz Master : https://github.com/falmonmickael260-commits/QuizzMaster/pull/1
+- La Meute : https://github.com/falmonmickael260-commits/Leloupbo/pull/3
+- 10000 : https://github.com/falmonmickael260-commits/lewisdee/pull/1
+- Camouflip : https://github.com/falmonmickael260-commits/camouflip/pull/1
+- Fortune Empire : https://github.com/falmonmickael260-commits/Atlasroyal/pull/4
+- Kilomax : https://github.com/falmonmickael260-commits/Enroute/pull/14
+
+Un nouveau service Railway `revanche-admin` est créé dans le projet existant,
+avec l'adresse provisoire `https://revanche-admin-production.up.railway.app`.
+Les PR restent en brouillon et ne changent pas les branches de production des jeux.
+
+Le contrôle automatique a refusé le transfert des secrets au nouveau service.
+L'architecture a ensuite été adaptée pour **ne pas effectuer ce transfert** :
+les routes `/api/admin/reconcile` et `/api/admin/observer` restent sur la plateforme
+qui possède déjà les secrets. La configuration du panneau n'utilise que les clés
+publiques Supabase et les origines des deux applications. Aucune approbation pour
+copier des secrets n'est nécessaire avec cette architecture.
