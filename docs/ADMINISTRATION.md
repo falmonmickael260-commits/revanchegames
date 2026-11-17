@@ -2,8 +2,11 @@
 
 ## État de la livraison
 
-Application Next.js séparée dans `apps/admin`, avec ses propres routes serveur,
-cookies de session, interface et adresse de déploiement. Elle réutilise les
+Application Next.js séparée désormais maintenue dans le dépôt
+`falmonmickael260-commits/adminrevanchegames`, avec ses propres routes serveur,
+cookies de session, interface et adresse de déploiement. Le dossier `apps/admin`
+de cette branche conserve la version initiale avant extraction ; la source
+canonique du service administrateur est maintenant `adminrevanchegames/main`. Elle réutilise les
 comptes et tables du projet central `wrsmtdtzilpckfcjmyri`. Aucune base joueur ni
 économie parallèle, aucun jeu de données fictives dans l'interface.
 
@@ -108,11 +111,11 @@ l'hébergeur ; l'adresse séparée ne remplace aucun contrôle d'autorisation.
    ```
 
    Ne pas sélectionner un utilisateur au hasard ou créer un compte joueur en double.
-4. Déployer le panneau comme un **nouveau service**, avec le dépôt complet comme
-   contexte (le helper de sécurité est partagé depuis `src/lib`).
-   Build : `npm ci && npm run build:admin`. Démarrage :
-   `npm run start:admin -- --port $PORT`. Ne pas limiter la racine à `apps/admin`.
-5. Fournir les variables de `apps/admin/.env.example`, sans inscrire de valeurs
+4. Déployer le dépôt indépendant `adminrevanchegames`, branche `main`, avec la
+   racine de ce dépôt comme contexte. Il ne dépend d’aucun fichier de ce dépôt
+   plateforme. Build : `npm ci && npm run build`. Démarrage :
+   `npm start -- --port $PORT`.
+5. Fournir les variables de `.env.example` dans `adminrevanchegames`, sans inscrire de valeurs
    secrètes dans Git. Sur Railway, seules les références aux deux variables publiques Supabase
    sont nécessaires. Ne pas accorder les clés service-role, Stripe ou des jeux
    au nouveau service : les opérations privilégiées passent par le serveur existant
@@ -193,6 +196,7 @@ récupération TOTP doivent être établies par l'équipe avant une exploitation
 
 Un nouveau service Railway `revanche-admin` est créé dans le projet existant,
 avec l'adresse provisoire `https://revanche-admin-production.up.railway.app`.
+Sa source GitHub est `falmonmickael260-commits/adminrevanchegames`, branche `main`.
 Les PR restent en brouillon et ne changent pas les branches de production des jeux.
 
 Le contrôle automatique a refusé le transfert des secrets au nouveau service.
