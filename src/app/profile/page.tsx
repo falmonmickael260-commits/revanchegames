@@ -163,6 +163,7 @@ async function ProfileContent() {
             <Settings className="h-4 w-4" strokeWidth={2} />
             <span>Paramètres</span>
           </Link>
+          <Link href={`/messages?with=${user.id}&gift=1`} className="rg-secondary-button">M’offrir un cadeau</Link>
           <SignOutButton />
         </div>
         {progress && <div className="rg-profile-hero-level"><LevelBadge progress={progress} /></div>}

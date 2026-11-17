@@ -158,6 +158,57 @@ try {
   assert.equal(visual.celebration_message, 'Un message personnalisé pour le test.');
   assert.equal((await query("select count(*)::integer as n from public.gift_admin_audit where target='gift:feu-artifice' and action='visual'")).rows[0].n, 1);
   console.log('✓ visuels configurables par admin et journalisés ; règles de récompense inchangées');
+  await file('20261117210822_personal_gift_conversation.sql');
+  await query("grant select on public.direct_messages to authenticated");
+  const self = (gift='rose-rouge', key=randomUUID(), qty=1) => query(
+    'select * from public.send_self_gift($1,$2,$3,$4)', [stranger,gift,qty,key]);
+  await query("insert into public.wallet_ledger(user_id,delta_coins,reason,reference) values($1,1000,'adjustment','test:self')", [stranger]);
+  await query("update public.gift_catalog set active=true where id='rose-rouge'");
+  const selfBefore = await balance(stranger);
+  const selfKey = randomUUID();
+  const personal = (await self('rose-rouge',selfKey)).rows[0];
+  assert.equal(personal.is_self,true);
+  assert.equal(personal.sender_id,stranger);
+  assert.equal(personal.recipient_id,stranger);
+  assert.equal(await balance(stranger),selfBefore-10);
+  assert.equal(await rev(stranger),5);
+  const message = (await query('select * from public.direct_messages where gift_batch_id=$1',[personal.id])).rows[0];
+  assert.equal(message.from_user_id,stranger);
+  assert.equal(message.to_user_id,stranger);
+  assert.ok(message.read_at);
+  assert.equal((await self('rose-rouge',selfKey)).rows[0].id,personal.id);
+  assert.equal(await balance(stranger),selfBefore-10);
+  assert.equal(await rev(stranger),5);
+  await assert.rejects(self('bonbon-sucre',selfKey),/autres paramètres/);
+  await assert.rejects(query("insert into public.direct_messages(from_user_id,to_user_id,body,gift_batch_id) values($1,$1,'faux',$2)",[sender,personal.id]),/personnel invalide/);
+  await assert.rejects(query("insert into public.direct_messages(from_user_id,to_user_id,body) values($1,$1,'faux')",[stranger]),/constraint|personnel invalide/);
+  const paidBefore = await balance(stranger);
+  const paid = (await self('ourson-calin')).rows[0];
+  assert.ok(Number(paid.total_reward)>=1 && Number(paid.total_reward)<=30);
+  assert.equal(await balance(stranger),paidBefore-30+Number(paid.total_reward));
+  await query('update public.gift_settings set max_daily_spend=40');
+  await assert.rejects(self(),/quotidienne/);
+  await query('update public.gift_settings set max_daily_spend=5000,max_daily_to_recipient=40');
+  await assert.rejects(self(),/quotidienne/);
+  await query('update public.gift_settings set max_daily_to_recipient=5000,cooldown_seconds=5');
+  await assert.rejects(self(),/quelques secondes/);
+  await query('update public.gift_settings set cooldown_seconds=0,gifts_enabled=false');
+  await assert.rejects(self(),/pas encore activés/);
+  await query('update public.gift_settings set gifts_enabled=true');
+  await assert.rejects(self('diamant-violet',randomUUID(),3),/insuffisant/);
+  await query("insert into public.role_reservations(game_slug,room_code,user_id,role_key,price_coins,charged) values('la-meute','SELFTEST',$1,'villager',$2,false)",[stranger,await balance(stranger)]);
+  await assert.rejects(self(),/solde insuffisant/);
+  await query("update public.role_reservations set status='cancelled' where user_id=$1",[stranger]);
+  await db.exec(`set role authenticated; set request.jwt.claim.sub = '${sender}';`);
+  try {
+    await assert.rejects(self(),/permission denied/);
+    assert.equal((await query('select * from public.direct_messages where gift_batch_id=$1',[personal.id])).rows.length,0);
+  } finally {await db.exec('reset role; reset request.jwt.claim.sub;');}
+  await db.exec('set role anon');
+  try {await assert.rejects(self(),/permission denied/);} finally {await db.exec('reset role');}
+  assert.equal((await query('select count(*)::integer as n from public.notifications where user_id=$1',[stranger])).rows[0].n,0);
+  assert.equal((await query('select quantity from public.gift_collection where recipient_id=$1 and gift_id=$2',[stranger,'rose-rouge'])).rows[0].quantity,1);
+  console.log('✓ cadeaux personnels : débit, récompense, REV, collection, MP privé lu, retry unique, plafonds, cooldown, réservations, droits et faux messages');
 } finally {
   await db.close();
 }

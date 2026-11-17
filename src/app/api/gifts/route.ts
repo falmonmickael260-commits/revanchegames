@@ -49,7 +49,8 @@ export async function POST(request: Request) {
       || typeof quantity !== "number" || !Number.isInteger(quantity) || quantity < 1 || quantity > 100
       || typeof idempotencyKey !== "string" || !UUID_PATTERN.test(idempotencyKey)
       || (context !== "dm" && context !== "voice")) throw new RequestError("Choix de cadeau invalide.");
-    if (user.id === recipientId) throw new RequestError("Tu ne peux pas t’envoyer un cadeau.");
+    const selfGift = user.id === recipientId;
+    if (selfGift && context !== "dm") throw new RequestError("Ouvre Mes cadeaux dans tes messages pour t’offrir un cadeau.");
     let roomSid: string | null = null;
     let voiceRoomId: string | null = null;
     if (context === "voice") {
@@ -58,11 +59,13 @@ export async function POST(request: Request) {
       roomSid = await verifyVoiceParticipants(voiceRoomId, user.id, recipientId);
     }
     const service = createServiceClient();
-    const { data: batch, error } = await service.rpc("send_virtual_gift", {
+    const { data: batch, error } = await (selfGift ? service.rpc("send_self_gift", {
+      p_user: user.id, p_gift_id: giftId, p_quantity: quantity, p_idempotency_key: idempotencyKey,
+    }) : service.rpc("send_virtual_gift", {
       p_sender: user.id, p_recipient: recipientId, p_gift_id: giftId, p_quantity: quantity,
       p_context: context, p_room_id: voiceRoomId, p_room_sid: roomSid,
       p_idempotency_key: idempotencyKey,
-    });
+    }));
     if (error) {
       await service.from("gift_attempts").insert({ sender_id: user.id, recipient_id: recipientId,
         gift_id: giftId, idempotency_key: idempotencyKey, error_code: error.code || "unknown" });
