@@ -21,7 +21,7 @@ export function PromoCodeForm() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const trimmed = code.trim();
-    if (!trimmed) return;
+    if (!trimmed || busy) return;
 
     setBusy(true);
     setResult(null);
@@ -35,7 +35,7 @@ export function PromoCodeForm() {
 
     setResult({
       kind: "success",
-      text: `Félicitations ! Tu as reçu ${outcome.data.rewardCoins.toLocaleString("fr-FR")} pièces Revanche !`,
+      text: `Tu as reçu ${outcome.data.rewardCoins.toLocaleString("fr-FR")} pièces Revanche sur ton compte. Ton solde est maintenant de ${outcome.data.newBalance.toLocaleString("fr-FR")} pièces.`,
     });
     setCode("");
     setCelebrate(true);
@@ -75,12 +75,16 @@ export function PromoCodeForm() {
         </h2>
       </div>
 
+      <p className="mt-2 text-xs text-text-dim">Les pièces sont créditées sur le compte connecté qui saisit le code. Chaque code est utilisable une seule fois par compte.</p>
       <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-2.5 sm:flex-row">
         <input
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="Code Games"
-          maxLength={32}
+          maxLength={60}
+          autoCapitalize="characters"
+          autoComplete="off"
+          disabled={busy}
           aria-label="Code promotionnel"
           className="w-full rounded-lg border border-border-soft bg-void px-3.5 py-2.5 font-body text-base uppercase tracking-wide text-text placeholder:text-text-faint placeholder:normal-case focus:border-cyan/50 focus:outline-none focus:ring-2 focus:ring-cyan/20 sm:text-sm"
         />
@@ -96,6 +100,7 @@ export function PromoCodeForm() {
 
       {result && (
         <p
+          role={result.kind === "error" ? "alert" : "status"}
           className={`mt-2.5 font-body text-sm ${result.kind === "success" ? "text-cyan" : "text-violet-soft"}`}
         >
           {result.text}
