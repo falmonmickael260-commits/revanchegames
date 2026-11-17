@@ -42,3 +42,9 @@ Profil → Paramètres → Signaler un joueur ouvre la recherche par pseudo, ide
 La recherche `report_player_lookup` ne renvoie que UUID, pseudo et identifiant public à des comptes confirmés. Les profils masqués ne sont pas proposés par recherche partielle ; un identifiant connu reste utilisable pour un signalement. Aucun e-mail n’est exposé. L’[avertissement Supabase sur les fonctions SECURITY DEFINER](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable) est intentionnel pour cette API limitée : accès anonyme révoqué, compte confirmé obligatoire, résultats bornés.
 
 Le signalement et les fichiers gardent leurs identifiants lors d’une nouvelle tentative après interruption. Le panneau administrateur propose un lien privé pour chaque capture, avec vérification du rôle et de la MFA à chaque téléchargement. Les anciens signalements avec une seule capture restent compatibles.
+
+### Solde après un code promo
+
+La boutique accepte les mêmes codes de 60 caractères maximum que le panneau. Après une utilisation validée par `redeem_promo_code`, les composants de solde relisent le portefeuille authentifié même si Realtime est retardé. Le message de succès affiche le montant reçu et le nouveau solde retournés par la base. Une erreur réseau rend le formulaire réutilisable ; elle ne déclenche jamais un crédit côté navigateur.
+
+La création administrateur utilise une API distincte `admin_save_promo`, limitée aux tables de codes et au journal d’administration. Elle normalise le code et valide montant, limite facultative et date. Les autres actions administrateur restent dans leur fonction existante. La création d’un code ne crédite aucun portefeuille ; l’utilisation par le joueur emploie les protections existantes de transaction, d’unicité par compte et de plafond global.
