@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Flag, X } from "lucide-react";
-import { submitReport, type ReportKind } from "@/lib/social/api";
+import type { ReportKind } from "@/lib/social/api";
+import Link from 'next/link';
+import { validateReportCaptures } from "@/lib/report-evidence";
 
 const DETAILS_MAX = 1000;
 
@@ -38,23 +40,29 @@ const ISSUE_REASONS: { value: ReportKind; label: string; hint: string }[] = [
 export function ReportDialog({
   target,
   context,
+  messageId,
+  requireDetails = false,
   gameName,
   onClose,
 }: {
   /** Le joueur visé. Absent : signalement d'un problème, sans cible. */
-  target?: { id: string; username: string };
+  target?: { id: string; username: string; playerTag?: string };
   /** Où le problème a été rencontré — slug de jeu, salon, page. */
   context?: string;
+  messageId?: string;
+  requireDetails?: boolean;
   gameName?: string;
   onClose: () => void;
 }) {
-  const reasons = target ? PLAYER_REASONS : ISSUE_REASONS;
+  const reasons = messageId ? PLAYER_REASONS.filter(r=>r.value==='message') : target ? PLAYER_REASONS.filter(r=>r.value!=='message') : ISSUE_REASONS;
 
   const [kind, setKind] = useState<ReportKind>(reasons[0].value);
   const [details, setDetails] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
+  const [attachments,setAttachments] = useState<File[]>([]);
+  const operation = useRef<{signature:string;id:string}|null>(null);
 
   const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -66,18 +74,20 @@ export function ReportDialog({
   async function submit() {
     setPending(true);
     setError("");
-    const result = await submitReport({
-      kind,
-      targetUserId: target?.id ?? null,
-      context: context ?? null,
-      details: details.trim() || null,
-    });
-    setPending(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    setSent(true);
+    try {
+      const invalid = validateReportCaptures(attachments);
+      if (invalid) throw new Error(invalid);
+      if (requireDetails && details.trim().length < 10) throw new Error("Décris les faits en au moins 10 caractères.");
+      const signature=JSON.stringify([kind,target?.id,context,details,messageId,attachments.map(file=>[file.name,file.size,file.lastModified])]);
+      if(operation.current?.signature!==signature)operation.current={signature,id:crypto.randomUUID()};
+      const form=new FormData();
+      for(const [key,value] of Object.entries({id:operation.current.id,kind,target:target?.id||'',context:context||'',details:details.trim(),message:messageId||''}))form.set(key,value);
+      for (const file of attachments) form.append('attachment',file);
+      const response=await fetch('/api/reports',{method:'POST',body:form});const result=await response.json();
+      if(!response.ok)throw new Error(result.error||'Envoi impossible.');
+      setSent(true);
+    }catch(error){setError(error instanceof Error?error.message:'Connexion interrompue. Réessaie.');}
+    finally{setPending(false);}
   }
 
   return createPortal(
@@ -87,7 +97,7 @@ export function ReportDialog({
       role="dialog"
       aria-modal="true"
       onKeyDown={(event) => {
-        if (event.key === "Escape") { event.stopPropagation(); onClose(); }
+        if (event.key === "Escape" && !pending) { event.stopPropagation(); onClose(); }
         if (event.key !== "Tab") return;
         const controls = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
           'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), a[href]'
@@ -102,7 +112,7 @@ export function ReportDialog({
       aria-label={target ? `Signaler ${target.username}` : "Signalement"}
       className="fixed inset-0 z-[70] flex items-end justify-center bg-void/80 p-3 backdrop-blur-sm sm:items-center"
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget && !pending) onClose();
       }}
     >
       <div className="flex max-h-[85dvh] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_12px_48px_rgba(0,0,0,0.6)]">
@@ -112,6 +122,7 @@ export function ReportDialog({
               <Flag className="h-4 w-4 text-violet-soft" />
               {target ? `Signaler ${target.username}` : "Signalement"}
             </p>
+            {target?.playerTag && <p className="mt-1 text-xs text-cyan">RG-{target.playerTag}</p>}
             <p className="mt-0.5 font-body text-[11px] text-text-faint">
               {target
                 ? "Ton signalement est confidentiel — la personne n'en est pas informée."
@@ -121,6 +132,7 @@ export function ReportDialog({
           <button
             type="button"
             onClick={onClose}
+            disabled={pending}
             aria-label="Fermer"
             className="shrink-0 rounded-lg p-1 text-text-faint hover:text-text"
           >
@@ -133,6 +145,7 @@ export function ReportDialog({
             <p className="font-body text-sm text-text-dim">
               Signalement envoyé. Merci — il sera examiné.
             </p>
+            <Link href="/settings/reports" className="text-sm text-cyan">Suivre mes signalements</Link>
             <button
               type="button"
               onClick={onClose}
@@ -170,6 +183,7 @@ export function ReportDialog({
                       name="report-kind"
                       value={reason.value}
                       checked={kind === reason.value}
+                      disabled={pending}
                       onChange={() => setKind(reason.value)}
                       className="mt-0.5 shrink-0 accent-cyan"
                     />
@@ -187,12 +201,14 @@ export function ReportDialog({
 
               <label className="mt-4 flex flex-col gap-1.5">
                 <span className="font-display text-xs font-semibold uppercase tracking-[0.15em] text-text-faint">
-                  Détails {target ? "(facultatif)" : ""}
+                  Détails {requireDetails ? "(10 caractères minimum)" : target ? "(facultatif)" : ""}
                 </span>
                 <textarea
                   value={details}
                   onChange={(event) => setDetails(event.target.value.slice(0, DETAILS_MAX))}
                   rows={4}
+                  disabled={pending}
+                  minLength={requireDetails ? 10 : undefined}
                   placeholder={target ? "Ce qui s'est passé, où, quand…" : "Décris les faits, le moment et le pseudo concerné, si nécessaire…"}
                   // text-base sous sm : en dessous de 16 px, iOS Safari zoome
                   // au focus et sort le formulaire de l'écran.
@@ -203,13 +219,24 @@ export function ReportDialog({
                 </span>
               </label>
 
-              {error && <p className="mt-2 font-body text-xs text-violet-soft">{error}</p>}
+              <label className="mt-3 block text-sm text-text-dim">Captures d’écran (facultatif, 3 maximum, 5 Mo par image)
+                <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={pending} onChange={event => {
+                  const selected = Array.from(event.target.files || []);
+                  const files = [...attachments, ...selected].filter((file,index,all)=>all.findIndex(other=>other.name===file.name&&other.size===file.size&&other.lastModified===file.lastModified)===index);
+                  const invalid = validateReportCaptures(files);
+                  if (invalid) { setError(invalid); event.target.value = ""; return; }
+                  setAttachments(files); setError(""); event.target.value = "";
+                }} className="mt-2 block w-full" />
+              </label>
+              {!!attachments.length && <ul className="mt-2 text-xs text-text-dim">{attachments.map((file,index)=><li className="flex items-center justify-between gap-2 py-1" key={`${file.name}:${index}`}><span className="min-w-0 truncate">{file.name}</span><button type="button" disabled={pending} aria-label={`Retirer ${file.name}`} onClick={()=>setAttachments(current=>current.filter((_,i)=>i!==index))}>Retirer</button></li>)}</ul>}
+              <p className="mt-2 text-xs text-text-faint">Les captures restent privées et sont consultables par la modération.</p>
+              {error && <p role="alert" className="mt-2 font-body text-xs text-violet-soft">{error}</p>}
             </div>
 
             <div className="flex shrink-0 gap-2 border-t border-border-soft p-4">
               <button
                 type="button"
-                disabled={pending}
+                disabled={pending || (requireDetails && details.trim().length < 10)}
                 onClick={submit}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan to-violet px-4 py-2.5 font-display text-sm font-semibold text-void disabled:opacity-50"
               >
