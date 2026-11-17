@@ -25,7 +25,7 @@ test("Administration : permissions SQL, MFA, économie, preuves et assistance", 
     payload: Record<string, unknown>,
     id = randomUUID(),
   ) =>
-    db.query<{ admin_execute: unknown }>("select admin_execute($1,$2,$3)", [
+    db.query<{ admin_execute: unknown }>(action === "promo" ? "select admin_save_promo($1,$2) as admin_execute" : "select admin_execute($1,$2,$3)", action === "promo" ? [id, { reason: "Vérification administrateur", ...payload }] : [
       id,
       action,
       { reason: "Vérification administrateur", ...payload },
@@ -61,6 +61,7 @@ test("Administration : permissions SQL, MFA, économie, preuves et assistance", 
       "20261117010000_admin_read_models.sql",
       "20261117020000_admin_observer_access.sql",
       "20261117030000_admin_reconciliation.sql",
+      "20261117200711_promo_code_creation.sql",
     ])
       await db.exec(
         await readFile(
@@ -454,6 +455,34 @@ test("Administration : permissions SQL, MFA, économie, preuves et assistance", 
         await assert.rejects(query("tickets"), /non autorisée/);
       },
     );
+    await t.test("codes promo : création puis crédit du seul compte qui saisit le code", async () => {
+      await login(owner);
+      await execute("member", { target: admin, role: "admin", canCredit: false, enabled: true });
+      await login(admin);
+      const operation = randomUUID();
+      const payload = { code: " test-promo_37 ", coins: 37, active: true, limit: 2, expires: "" };
+      const created = await execute("promo", payload, operation);
+      const result = created.rows[0].admin_execute as { code: string; reward_coins: number };
+      assert.equal(result.code, "TEST-PROMO_37");
+      assert.equal(result.reward_coins, 37);
+      await execute("promo", payload, operation);
+      await login(player);
+      const before = Number((await db.query("select balance_coins from wallet_accounts where user_id=$1", [player])).rows[0]?.balance_coins || 0);
+      const redeemed = await db.query<{ reward_coins: number; new_balance: number }>("select * from redeem_promo_code(' test-promo_37 ')");
+      assert.equal(redeemed.rows[0].reward_coins, 37);
+      assert.equal(Number(redeemed.rows[0].new_balance), before + 37);
+      await assert.rejects(db.query("select * from redeem_promo_code('TEST-PROMO_37')"), /déjà utilisé/);
+      await login(other);
+      const received = await db.query<{ reward_coins: number }>("select * from redeem_promo_code('TEST-PROMO_37')");
+      assert.equal(received.rows[0].reward_coins, 37);
+      await login(owner);
+      await assert.rejects(db.query("select * from redeem_promo_code('TEST-PROMO_37')"), /invalide|expiré/);
+      await assert.rejects(execute("promo", {code:"BAD CODE",coins:50,active:true}), /Code promo invalide/);
+      await assert.rejects(execute("promo", {code:"BADAMOUNT",coins:0,active:true}), /Nombre de pièces/);
+      await assert.rejects(execute("promo", {code:"PASTDATE",coins:10,active:true,expires:"2000-01-01"}), /Date d’expiration/);
+      await login(support);
+      await assert.rejects(execute("promo", {code:"NOTALLOWED",coins:50,active:true}), /non autorisée/);
+    });
   } finally {
     await db.close();
   }
