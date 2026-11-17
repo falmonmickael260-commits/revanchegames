@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LifeBuoy } from "lucide-react";
+import { Flag, LifeBuoy } from "lucide-react";
 import { ReportDialog } from "./ReportDialog";
 import { useSocial } from "./SocialProvider";
 
@@ -18,12 +18,14 @@ import { useSocial } from "./SocialProvider";
  */
 export function ReportIssueButton({
   context,
+  gameName,
   variant = "row",
   className = "",
 }: {
   context?: string;
-  /** "row" dans les paramètres, "icon" dans la barre de jeu. */
-  variant?: "row" | "icon";
+  gameName?: string;
+  /** "tab" dans la barre commune à tous les jeux. */
+  variant?: "row" | "icon" | "tab";
   className?: string;
 }) {
   const { me } = useSocial();
@@ -33,7 +35,18 @@ export function ReportIssueButton({
 
   return (
     <>
-      {variant === "icon" ? (
+      {variant === "tab" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          title="Signaler un problème technique, de la triche ou un comportement déplacé"
+          className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-cyan/30 bg-cyan/5 px-2 font-display text-xs font-semibold text-cyan transition-colors hover:bg-cyan/15 ${className}`}
+        >
+          <Flag className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Signalement
+        </button>
+      ) : variant === "icon" ? (
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -64,7 +77,7 @@ export function ReportIssueButton({
         </button>
       )}
 
-      {open && <ReportDialog context={context} onClose={() => setOpen(false)} />}
+      {open && <ReportDialog context={context} gameName={gameName} onClose={() => setOpen(false)} />}
     </>
   );
 }

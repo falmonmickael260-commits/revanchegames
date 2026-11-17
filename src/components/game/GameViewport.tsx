@@ -296,7 +296,7 @@ export function GameViewport() {
           </p>
 
           <div className="flex shrink-0 items-center gap-0.5">
-            {active.identity && <Avatar username={active.identity.username} avatarUrl={active.identity.avatarUrl} size="sm" />}
+            {active.identity && <span className="hidden sm:inline-flex"><Avatar username={active.identity.username} avatarUrl={active.identity.avatarUrl} size="sm" /></span>}
             {publicRoom && publicRoom.launch === launch && publicRoom.isHost &&
               (publicRoom.listed || (publicRoom.status === 'open' && publicRoom.count < publicRoom.capacity)) && (
                 <button
@@ -308,7 +308,7 @@ export function GameViewport() {
                   className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-surface disabled:opacity-50"
                 >
                   <Globe2 className="h-4 w-4 shrink-0" />
-                  {publishing ? '…' : publicRoom.listed ? 'Public' : 'Rendre public'}
+                  <span className="hidden sm:inline">{publishing ? '…' : publicRoom.listed ? 'Public' : 'Rendre public'}</span>
                 </button>
             )}
             <VoiceGameControl />
@@ -316,7 +316,8 @@ export function GameViewport() {
                 quand un jeu ne se lance pas ou qu'un joueur dérape, et le
                 contexte (jeu + salon) part avec le signalement. */}
             <ReportIssueButton
-              variant="icon"
+              variant="tab"
+              gameName={active.name}
               context={`jeu:${active.slug}${active.roomCode ? `:salon:${active.roomCode}` : ""}`}
             />
             {canFullscreen && (

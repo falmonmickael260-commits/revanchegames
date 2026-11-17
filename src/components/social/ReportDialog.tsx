@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Flag, X } from "lucide-react";
 import type { ReportKind } from "@/lib/social/api";
 import Link from 'next/link';
@@ -19,7 +20,8 @@ const PLAYER_REASONS: { value: ReportKind; label: string; hint: string }[] = [
 
 /** Motifs proposés quand on signale un problème sans viser personne. */
 const ISSUE_REASONS: { value: ReportKind; label: string; hint: string }[] = [
-  { value: "bug", label: "Problème technique", hint: "Quelque chose ne fonctionne pas" },
+  { value: "bug", label: "Problème technique", hint: "Jeu bloqué, déconnexion, erreur ou affichage incorrect" },
+  { value: "behaviour", label: "Triche ou comportement déplacé", hint: "Triche présumée, insultes, harcèlement ou propos haineux" },
   { value: "other", label: "Autre", hint: "Décris le problème ci-dessous" },
 ];
 
@@ -38,6 +40,7 @@ export function ReportDialog({
   target,
   context,
   messageId,
+  gameName,
   onClose,
 }: {
   /** Le joueur visé. Absent : signalement d'un problème, sans cible. */
@@ -45,6 +48,7 @@ export function ReportDialog({
   /** Où le problème a été rencontré — slug de jeu, salon, page. */
   context?: string;
   messageId?: string;
+  gameName?: string;
   onClose: () => void;
 }) {
   const reasons = messageId ? PLAYER_REASONS.filter(r=>r.value==='message') : target ? PLAYER_REASONS.filter(r=>r.value!=='message') : ISSUE_REASONS;
@@ -56,6 +60,13 @@ export function ReportDialog({
   const [sent, setSent] = useState(false);
   const [attachment,setAttachment] = useState<File|null>(null);
   const operation = useRef<{signature:string;id:string}|null>(null);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement;
+    dialogRef.current?.focus();
+    return () => { if (previous instanceof HTMLElement) previous.focus(); };
+  }, []);
 
   async function submit() {
     setPending(true);
@@ -73,11 +84,26 @@ export function ReportDialog({
     finally{setPending(false);}
   }
 
-  return (
+  return createPortal(
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
-      aria-label={target ? `Signaler ${target.username}` : "Signaler un problème"}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") { event.stopPropagation(); onClose(); }
+        if (event.key !== "Tab") return;
+        const controls = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), a[href]'
+        ) ?? []);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+          event.preventDefault(); last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault(); first?.focus();
+        }
+      }}
+      aria-label={target ? `Signaler ${target.username}` : "Signalement"}
       className="fixed inset-0 z-[70] flex items-end justify-center bg-void/80 p-3 backdrop-blur-sm sm:items-center"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -88,12 +114,12 @@ export function ReportDialog({
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 font-display text-sm font-semibold text-text">
               <Flag className="h-4 w-4 text-violet-soft" />
-              {target ? `Signaler ${target.username}` : "Signaler un problème"}
+              {target ? `Signaler ${target.username}` : "Signalement"}
             </p>
             <p className="mt-0.5 font-body text-[11px] text-text-faint">
               {target
                 ? "Ton signalement est confidentiel — la personne n'en est pas informée."
-                : "Décris ce qui ne va pas, on regardera."}
+                : "Transmets un problème à l’équipe de modération pour examen."}
             </p>
           </div>
           <button
@@ -123,6 +149,14 @@ export function ReportDialog({
         ) : (
           <>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
+              {!target && (
+                <div className="mb-4 rounded-xl border border-border-soft bg-void p-3 font-body text-xs leading-relaxed text-text-dim">
+                  {gameName && <p className="mb-2 font-semibold text-text">Jeu concerné : {gameName}</p>}
+                  <p>Un signalement sert à prévenir l’équipe d’un problème technique, d’une triche présumée ou d’un comportement déplacé. Choisis le motif, puis décris les faits et indique le pseudo concerné si nécessaire.</p>
+                  {gameName && <p className="mt-2">Le jeu et le salon, si disponible, sont joints automatiquement. Ta partie reste ouverte.</p>}
+                  <p className="mt-2">L’équipe examine les faits avant toute décision : un signalement ne déclenche pas de sanction automatique.</p>
+                </div>
+              )}
               <fieldset className="flex flex-col gap-1.5">
                 <legend className="mb-1.5 font-display text-xs font-semibold uppercase tracking-[0.15em] text-text-faint">
                   Motif
@@ -164,7 +198,7 @@ export function ReportDialog({
                   value={details}
                   onChange={(event) => setDetails(event.target.value.slice(0, DETAILS_MAX))}
                   rows={4}
-                  placeholder="Ce qui s'est passé, où, quand…"
+                  placeholder={target ? "Ce qui s'est passé, où, quand…" : "Décris les faits, le moment et le pseudo concerné, si nécessaire…"}
                   // text-base sous sm : en dessous de 16 px, iOS Safari zoome
                   // au focus et sort le formulaire de l'écran.
                   className="w-full resize-none rounded-lg border border-border-soft bg-void px-3 py-2.5 font-body text-base text-text placeholder:text-text-faint focus:border-cyan/50 focus:outline-none sm:text-sm"
@@ -200,6 +234,7 @@ export function ReportDialog({
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
