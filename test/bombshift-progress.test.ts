@@ -7,13 +7,13 @@ const save = (maps: Record<string, unknown>, unlockedMaps = 40) => ({
   schema: 3, unlockedMaps, maps, settings: {}, stats: {}, abilities: {},
 });
 
-test('accepts all sixty canonical map IDs, including mirrors 50 and 60', () => {
+test('accepts all eighty canonical map IDs, including mirrors 70 and 80', () => {
   const ids = ['volcano','ice','temple','volcano2','ice2','temple2','volcano3','ice3','temple3',
-    ...Array.from({ length: 51 }, (_, i) => `level-${i + 10}`)];
-  const raw = save(Object.fromEntries(ids.map((id) => [id, progress()])), 60);
+    ...Array.from({ length: 71 }, (_, i) => `level-${i + 10}`)];
+  const raw = save(Object.fromEntries(ids.map((id) => [id, progress()])), 80);
   const restored = sanitizeBombshiftSave(raw)!;
-  assert.equal(restored.unlockedMaps, 60);
-  assert.equal(Object.keys(restored.maps).length, 60);
+  assert.equal(restored.unlockedMaps, 80);
+  assert.equal(Object.keys(restored.maps).length, 80);
   for (const id of ids) assert.equal(restored.maps[id].cleared, true);
   assert.deepEqual(restored.maps['level-40'].secrets, ['level-40-s1']);
 });
@@ -38,9 +38,9 @@ test('merges devices without losing a later level, best score or mirror completi
 });
 
 test('keeps the nine original IDs and ignores unrelated or out-of-campaign IDs', () => {
-  const cleaned = sanitizeBombshiftSave(save({ volcano: progress(), 'level-61': progress(), 'level-9': progress(), unknown: progress() }, 999))!;
+  const cleaned = sanitizeBombshiftSave(save({ volcano: progress(), 'level-81': progress(), 'level-9': progress(), unknown: progress() }, 999))!;
   assert.deepEqual(Object.keys(cleaned.maps), ['volcano']);
-  assert.equal(cleaned.unlockedMaps, 60);
+  assert.equal(cleaned.unlockedMaps, 80);
   assert.equal(sanitizeBombshiftSave(null), null);
 });
 
@@ -55,4 +55,11 @@ test('retains wins in the new pack and restores level 60 on another device', () 
   const final = mergeBombshiftSaves(restored, save({ 'level-60': progress(18000) }, 60))!;
   assert.equal(final.maps['level-60'].cleared, true);
   assert.equal(final.maps['level-41'].cleared, true);
+});
+
+
+test('never turns a corrupted time into a one-millisecond ranking record', () => {
+  for (const value of [-1, 0, null, "fast", Number.NaN, Number.POSITIVE_INFINITY, 90000000]) {
+    assert.equal(sanitizeBombshiftSave(save({ volcano: {...progress(), bestTimeMs: value} }))!.maps.volcano.bestTimeMs, null);
+  }
 });
