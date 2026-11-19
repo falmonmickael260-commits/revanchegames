@@ -1,12 +1,31 @@
 import type { Game } from "@/types/game";
 
+const lotoUrl = process.env.NEXT_PUBLIC_GAME_URL_LOTO;
+
 /**
- * Official Revanche Games catalog — 17 titles, launch roster.
+ * Official Revanche Games catalog.
  * To activate a game: set `status: "available"`, `enabled: true`, and supply
  * a real, verified `url`. Do that in this one file — cards, buttons and routing
  * all read from it, so nothing else needs to change.
  */
 export const GAMES: Game[] = [
+  {
+    id: "loto",
+    name: "Loto Revanche",
+    tagline: "Deux quines. Un carton plein.",
+    description: "Un loto en salle avec roulette 3D, tableau des 90 numéros et chat dédié. Achète tes cartons avec tes pièces Revanche Games, coche toi-même tes numéros et réclame tes gains.",
+    categories: ["ambiance", "plateau"],
+    status: lotoUrl ? "available" : "coming-soon",
+    enabled: Boolean(lotoUrl),
+    url: lotoUrl,
+    supportsPlatformInvites: false,
+    newBadge: true,
+    icon: "circle-dot",
+    image: "/games/loto-revanche.webp",
+    theme: { accent: "#e5ac57", accentSoft: "#f4d7a2" },
+    addedAt: "2026-11-19",
+    players: "2 à 40 joueurs",
+  },
   {
     id: "camouflip",
     name: "Camouflip",
