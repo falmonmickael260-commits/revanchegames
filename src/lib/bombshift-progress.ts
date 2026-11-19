@@ -1,7 +1,8 @@
 const MAP_IDS = new Set([
   "volcano", "ice", "temple", "volcano2", "ice2", "temple2", "volcano3", "ice3", "temple3",
-  ...Array.from({ length: 51 }, (_, index) => `level-${index + 10}`),
+  ...Array.from({ length: 71 }, (_, index) => `level-${index + 10}`),
 ]);
+export const isBombshiftMapId = (value: unknown): value is string => typeof value === "string" && MAP_IDS.has(value);
 const RANKS = new Set(["C", "B", "A", "S", "SS", "SSS"]);
 const EFFECTS = new Set(["low", "medium", "high"]);
 const DIFFICULTIES = new Set(["detente", "normal", "veteran"]);
@@ -60,7 +61,7 @@ export function sanitizeBombshiftSave(value: unknown): BombshiftSave | null {
       cleared: bool(raw.cleared),
       bestScore: int(raw.bestScore, 0, 10_000_000),
       bestRank: typeof raw.bestRank === "string" && RANKS.has(raw.bestRank) ? raw.bestRank : null,
-      bestTimeMs: raw.bestTimeMs === null || raw.bestTimeMs === undefined ? null : int(raw.bestTimeMs, 1, 86_400_000, 1),
+      bestTimeMs: typeof raw.bestTimeMs === "number" && Number.isFinite(raw.bestTimeMs) && raw.bestTimeMs >= 1 && raw.bestTimeMs <= 86_400_000 ? Math.round(raw.bestTimeMs) : null,
       attempts: int(raw.attempts, 0, 10_000_000),
       wins: int(raw.wins, 0, 10_000_000),
       secrets,
