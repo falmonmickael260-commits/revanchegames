@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const db = await createClient();
     const { data: { user } } = await db.auth.getUser();
     if (!user || user.is_anonymous) throw new RequestError("Connexion requise.", 401);
-    const { data: allowed } = await db.rpc("is_support_admin");
+    const { data: allowed } = await db.rpc("admin_allowed", { p_permission: "economy" });
     if (!allowed) throw new RequestError("Administration réservée.", 403);
     const form = await request.formData();
     const giftId = form.get("giftId"), file = form.get("file");

@@ -8,6 +8,8 @@ export async function gameUser(message = 'Connecte-toi pour inviter un ami.') {
   const auth = await createClient();
   const { data: { user }, error } = await auth.auth.getUser();
   if (error || !user || user.is_anonymous) throw new RequestError(message, 401);
+  const access=await auth.rpc('my_platform_access');
+  if(access.error || access.data?.restricted) throw new RequestError('Accès au jeu indisponible ou suspendu.',403);
   const { data: profile } = await auth.from('profiles').select('username').eq('id', user.id).single();
   if (!profile) throw new RequestError('Profil introuvable.', 401);
   return { auth, user, name: profile.username as string };
