@@ -7,13 +7,13 @@ const save = (maps: Record<string, unknown>, unlockedMaps = 40) => ({
   schema: 3, unlockedMaps, maps, settings: {}, stats: {}, abilities: {},
 });
 
-test('accepts all eighty canonical map IDs, including mirrors 70 and 80', () => {
+test('accepts all 110 canonical map IDs, including mirrors 90, 100 and 110', () => {
   const ids = ['volcano','ice','temple','volcano2','ice2','temple2','volcano3','ice3','temple3',
-    ...Array.from({ length: 71 }, (_, i) => `level-${i + 10}`)];
-  const raw = save(Object.fromEntries(ids.map((id) => [id, progress()])), 80);
+    ...Array.from({ length: 101 }, (_, i) => `level-${i + 10}`)];
+  const raw = save(Object.fromEntries(ids.map((id) => [id, progress()])), 110);
   const restored = sanitizeBombshiftSave(raw)!;
-  assert.equal(restored.unlockedMaps, 80);
-  assert.equal(Object.keys(restored.maps).length, 80);
+  assert.equal(restored.unlockedMaps, 110);
+  assert.equal(Object.keys(restored.maps).length, 110);
   for (const id of ids) assert.equal(restored.maps[id].cleared, true);
   assert.deepEqual(restored.maps['level-40'].secrets, ['level-40-s1']);
 });
@@ -38,9 +38,9 @@ test('merges devices without losing a later level, best score or mirror completi
 });
 
 test('keeps the nine original IDs and ignores unrelated or out-of-campaign IDs', () => {
-  const cleaned = sanitizeBombshiftSave(save({ volcano: progress(), 'level-81': progress(), 'level-9': progress(), unknown: progress() }, 999))!;
+  const cleaned = sanitizeBombshiftSave(save({ volcano: progress(), 'level-111': progress(), 'level-9': progress(), unknown: progress() }, 999))!;
   assert.deepEqual(Object.keys(cleaned.maps), ['volcano']);
-  assert.equal(cleaned.unlockedMaps, 80);
+  assert.equal(cleaned.unlockedMaps, 110);
   assert.equal(sanitizeBombshiftSave(null), null);
 });
 
@@ -62,4 +62,13 @@ test('never turns a corrupted time into a one-millisecond ranking record', () =>
   for (const value of [-1, 0, null, "fast", Number.NaN, Number.POSITIVE_INFINITY, 90000000]) {
     assert.equal(sanitizeBombshiftSave(save({ volcano: {...progress(), bestTimeMs: value} }))!.maps.volcano.bestTimeMs, null);
   }
+});
+
+
+test('keeps records on level 110 after account merge with an older device', () => {
+  const account = save({'level-80': progress(), 'level-110': {...progress(), bestTimeMs: 240000}}, 110);
+  const merged = mergeBombshiftSaves(account, save({'level-80': {...progress(), bestTimeMs: 90000}}, 80))!;
+  assert.equal(merged.unlockedMaps, 110);
+  assert.equal(merged.maps['level-110'].bestTimeMs, 240000);
+  assert.equal(merged.maps['level-80'].bestTimeMs, 90000);
 });
