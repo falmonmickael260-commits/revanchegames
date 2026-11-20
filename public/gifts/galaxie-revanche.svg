@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <title>Galaxie Revanche</title>
+  <defs>
+    <linearGradient id="metal" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fff"/><stop offset=".32" stop-color="#a770ff"/><stop offset=".63" stop-color="#493363"/><stop offset="1" stop-color="#a770ff"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#a770ff" stop-opacity=".65"/><stop offset="1" stop-color="#a770ff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>@media(prefers-reduced-motion:no-preference){.figure{transform-origin:center;animation:reveal 3s ease-in-out infinite alternate}@keyframes reveal{from{transform:rotate(-25deg) scale(.82)}to{transform:none}}}</style>
+  <circle cx="100" cy="105" r="98" fill="url(#halo)"/>
+  <g class="figure"><path d="M12 118Q52 40 139 49q47 8 29 42-28 43-93 48-41 0-40-21 7 25 55 8 64-21 66-48-1-25-59-8-48 15-85 48Z M188 86q-18 56-84 73-42 11-65-2 81-1 149-71Z" fill="url(#metal)" fill-rule="evenodd" stroke="#a770ff" stroke-width="2" stroke-linejoin="round"/><circle cx='102' cy='101' r='18' fill='#e1ceff'/><ellipse cx='102' cy='101' rx='36' ry='7' transform='rotate(-28 102 101)' fill='none' stroke='#fff' stroke-width='3'/></g>
+</svg>

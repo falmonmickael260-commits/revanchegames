@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <title>Loup de foudre</title>
+  <defs>
+    <linearGradient id="metal" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fff"/><stop offset=".32" stop-color="#9682ff"/><stop offset=".63" stop-color="#493363"/><stop offset="1" stop-color="#9682ff"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#9682ff" stop-opacity=".65"/><stop offset="1" stop-color="#9682ff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>@media(prefers-reduced-motion:no-preference){.figure{transform-origin:center;animation:reveal 3s ease-in-out infinite alternate}@keyframes reveal{from{transform:translateY(5px) scale(.91)}to{transform:none}}}</style>
+  <circle cx="100" cy="105" r="98" fill="url(#halo)"/>
+  <g class="figure"><path d="M42 43l44 27 22-1 45-30-4 56 17 25-25-7 6 19-43 34-12 0-47-33 7-19-24 7 18-29Z" fill="url(#metal)" fill-rule="evenodd" stroke="#9682ff" stroke-width="2" stroke-linejoin="round"/><path d='m61 99 28 8-10 6zm79 0-28 8 11 6z' fill='#efffff'/><path d='m91 138 20 0-11 10Z' fill='#28204b'/><path d='m125 39-23 42h13l-18 31 36-43h-15Z' fill='#fff594'/></g>
+</svg>

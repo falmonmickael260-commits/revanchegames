@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <title>Phénix solaire</title>
+  <defs>
+    <linearGradient id="metal" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fff"/><stop offset=".32" stop-color="#ff633a"/><stop offset=".63" stop-color="#493363"/><stop offset="1" stop-color="#ff633a"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#ff633a" stop-opacity=".65"/><stop offset="1" stop-color="#ff633a" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>@media(prefers-reduced-motion:no-preference){.figure{transform-origin:center;animation:reveal 3s ease-in-out infinite alternate}@keyframes reveal{from{transform:translateY(10px) scaleX(.82)}to{transform:none}}}</style>
+  <circle cx="100" cy="105" r="98" fill="url(#halo)"/>
+  <g class="figure"><path d="M99 111Q58 106 17 42l9 47 20 22-21-7q18 33 60 39l-16 29 27-16-3 27 21-32q47-8 66-47l-21 8 19-28 5-42q-34 50-70 65l8-28 15-4-19-6q-19 2-18 42Z" fill="url(#metal)" fill-rule="evenodd" stroke="#ff633a" stroke-width="2" stroke-linejoin="round"/><path d='m30 60 37 52 27 15-32-10Zm138 4-32 47-25 17 32-12Z' fill='#ffdf60'/><circle cx='118' cy='78' r='2.5' fill='#fff'/></g>
+</svg>

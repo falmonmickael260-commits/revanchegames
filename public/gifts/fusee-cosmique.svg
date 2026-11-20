@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <title>Fusée cosmique</title>
+  <defs>
+    <linearGradient id="metal" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fff"/><stop offset=".32" stop-color="#61dcff"/><stop offset=".63" stop-color="#493363"/><stop offset="1" stop-color="#61dcff"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#61dcff" stop-opacity=".65"/><stop offset="1" stop-color="#61dcff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>@media(prefers-reduced-motion:no-preference){.figure{transform-origin:center;animation:reveal 3s ease-in-out infinite alternate}@keyframes reveal{from{transform:translate(-19px,23px) rotate(-7deg)}to{transform:none}}}</style>
+  <circle cx="100" cy="105" r="98" fill="url(#halo)"/>
+  <g class="figure"><path d="M76 114Q90 50 165 30q-6 76-74 102l-25-9z M82 84l-34 11-13 28 41-12m37 6-5 39-25 15 6-40" fill="url(#metal)" fill-rule="evenodd" stroke="#61dcff" stroke-width="2" stroke-linejoin="round"/><circle cx='128' cy='68' r='13' fill='#193e74' stroke='#fff' stroke-width='4'/><path d='m77 123-43 47 55-36Z' fill='#ffab47'/></g>
+</svg>

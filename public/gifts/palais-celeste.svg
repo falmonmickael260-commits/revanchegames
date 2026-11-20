@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <title>Palais céleste</title>
+  <defs>
+    <linearGradient id="metal" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fff"/><stop offset=".32" stop-color="#9dbdff"/><stop offset=".63" stop-color="#493363"/><stop offset="1" stop-color="#9dbdff"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#9dbdff" stop-opacity=".65"/><stop offset="1" stop-color="#9dbdff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>@media(prefers-reduced-motion:no-preference){.figure{transform-origin:center;animation:reveal 3s ease-in-out infinite alternate}@keyframes reveal{from{transform:translateY(16px) scale(.88)}to{transform:none}}}</style>
+  <circle cx="100" cy="105" r="98" fill="url(#halo)"/>
+  <g class="figure"><path d="M27 148v-49h28v49h14V77h22v-9h24v10h19v70h13V96h26v53l11 6H17Z M22 97l19-38 20 38Zm44-21 15-33 14 33Zm19-9 18-42 18 42Zm57 28 18-37 18 37Z" fill="url(#metal)" fill-rule="evenodd" stroke="#9dbdff" stroke-width="2" stroke-linejoin="round"/><path d='M90 148v-20q11-26 24 0v20' fill='#48417d'/><path d='M34 113h12m108 0h12M76 91h8m33 0h8' stroke='#fff4a8' stroke-width='6'/></g>
+</svg>

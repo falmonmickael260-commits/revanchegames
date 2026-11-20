@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <title>Paon de cristal</title>
+  <defs>
+    <linearGradient id="metal" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fff"/><stop offset=".32" stop-color="#16dfbe"/><stop offset=".63" stop-color="#493363"/><stop offset="1" stop-color="#16dfbe"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#16dfbe" stop-opacity=".65"/><stop offset="1" stop-color="#16dfbe" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>@media(prefers-reduced-motion:no-preference){.figure{transform-origin:center;animation:reveal 3s ease-in-out infinite alternate}@keyframes reveal{from{transform:scaleX(.73) rotate(-4deg)}to{transform:none}}}</style>
+  <circle cx="100" cy="105" r="98" fill="url(#halo)"/>
+  <g class="figure"><path d="M98 144Q8 139 21 89q5-21 24-11-13-50 20-42 8-24 24-12 17-25 31 2 30-14 36 18 34-4 24 32 30 17 0 40-23 32-82 28Z" fill="url(#metal)" fill-rule="evenodd" stroke="#16dfbe" stroke-width="2" stroke-linejoin="round"/><path d='M100 138 45 80m55 58L65 45m35 93L92 35m8 103 24-98m-24 98 49-81m-49 81 70-49' stroke='#15799d' stroke-width='5'/><path d='M80 146q29-19 25-56-2-20 14-20l12 8-10 4q-4 51-11 69Z' fill='#2775bd'/></g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <title>Supercar néon</title>
+  <defs>
+    <linearGradient id="metal" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#fff"/><stop offset=".32" stop-color="#ff39be"/><stop offset=".63" stop-color="#493363"/><stop offset="1" stop-color="#ff39be"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#ff39be" stop-opacity=".65"/><stop offset="1" stop-color="#ff39be" stop-opacity="0"/></radialGradient>
+  </defs>
+  <style>@media(prefers-reduced-motion:no-preference){.figure{transform-origin:center;animation:reveal 3s ease-in-out infinite alternate}@keyframes reveal{from{transform:translate(-34px,5px) skewX(-8deg)}to{transform:none}}}</style>
+  <circle cx="100" cy="105" r="98" fill="url(#halo)"/>
+  <g class="figure"><path d="M20 130l9-24 32-8 25-28h48l37 29 12 13-2 22H21z M76 98l18-20h34l23 20z" fill="url(#metal)" fill-rule="evenodd" stroke="#ff39be" stroke-width="2" stroke-linejoin="round"/><g fill='#162136' stroke='#80ffff' stroke-width='4'><circle cx='53' cy='133' r='13'/><circle cx='151' cy='133' r='13'/></g></g>
+</svg>
