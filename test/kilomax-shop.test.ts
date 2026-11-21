@@ -22,16 +22,17 @@ test('Kilomax debits the platform wallet once per vehicle and chest', async () =
     const account = randomUUID();
     const other = randomUUID();
     await db.query('insert into auth.users(id) values ($1),($2)', [account, other]);
-    await db.query("insert into wallet_ledger(user_id,delta_coins,reason) values ($1,1000,'reward')", [account]);
+    await db.query("insert into wallet_ledger(user_id,delta_coins,reason) values ($1,2000,'reward')", [account]);
     const shop = async (user: string, action: string, item?: string, price?: number, match?: string, player?: string) =>
       (await db.query<{ data: { error?: string; balance?: number; owned?: string[]; receipt?: { id: string; reward: string } } }>(
         'select kilomax_shop($1,$2,$3,$4,$5,$6) as data', [user, action, item ?? null, match ?? null, player ?? null, price ?? null],
       )).rows[0].data;
     assert.deepEqual((await shop(other,'catalog')).owned, []);
-    assert.equal((await shop(other,'vehicle','gt-circuit',500)).error,'insufficient_balance');
+    assert.equal((await shop(other,'vehicle','gt-circuit',1500)).error,'insufficient_balance');
     assert.equal((await shop(account,'vehicle','gt-circuit',300)).error,'price_changed');
-    assert.deepEqual((await shop(account,'vehicle','gt-circuit',500)).owned,['gt-circuit']);
-    assert.equal((await shop(account,'vehicle','gt-circuit',500)).balance,500);
+    assert.equal((await shop(account,'vehicle','gt-circuit',500)).error,'price_changed');
+    assert.deepEqual((await shop(account,'vehicle','gt-circuit',1500)).owned,['gt-circuit']);
+    assert.equal((await shop(account,'vehicle','gt-circuit',1500)).balance,500);
     const paid = await shop(account,'chest','repair',300,'ENR-TEST:123','p-1');
     assert.equal(paid.balance,200);
     assert.equal(paid.receipt?.reward,'repair');

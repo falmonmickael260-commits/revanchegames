@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       p_item: typeof data?.item === "string" ? data.item : null,
       p_match: typeof data?.match === "string" ? data.match : null,
       p_player: typeof data?.player === "string" ? data.player : null,
-      p_expected_price: data?.price === 300 || data?.price === 500 ? data.price : null,
+      p_expected_price: data?.price === 300 || data?.price === 1500 ? data.price : null,
     });
     if (error || !result) throw new RequestError("Portefeuille indisponible.", 503);
     if (result.error === "insufficient_balance") throw new RequestError("Solde de pièces insuffisant.", 409);

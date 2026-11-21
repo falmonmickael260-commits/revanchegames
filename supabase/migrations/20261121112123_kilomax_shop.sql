@@ -32,7 +32,7 @@ begin
     if p_item is null or p_item not in ('concept-gt', 'gt-circuit', 'pickup-classic', 'moto-amethyste', 'chenille') then
       return jsonb_build_object('error', 'invalid_item');
     end if;
-    v_price := 500;
+    v_price := 1500;
   elsif p_action = 'chest' then
     if p_item is null or p_item not in ('purple', 'repair') or
         coalesce(p_match, '') !~ '^[A-Za-z0-9_:-]{1,96}$' or
