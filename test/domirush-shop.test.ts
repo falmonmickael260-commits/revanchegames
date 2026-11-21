@@ -60,6 +60,18 @@ test('Domirush shop locks unpriced skins and atomically credits a paid skin once
     assert.equal(equipped.equipped, 'jade');
     assert.equal((await shop('equip', owner, 'boardclassic')).equipped, 'jade');
     assert.equal((await shop('catalog', owner)).equippedBoard, 'boardclassic');
+    await db.exec(await readFile(new URL('../supabase/migrations/20261121175826_domirush_illustrated_skins.sql', import.meta.url), 'utf8'));
+    const illustrated = await shop('catalog', owner);
+    assert.equal(Object.keys(illustrated.prices ?? {}).length, 27);
+    assert.ok(Object.values(illustrated.prices ?? {}).every(price => price === 500));
+    await db.query("insert into wallet_ledger (user_id, delta_coins, reason) values ($1, 1000, 'reward')", [owner]);
+    assert.equal((await shop('buy', owner, 'dragon', 500)).balance, 1070);
+    assert.equal((await shop('buy', owner, 'dragon', 500)).balance, 1070);
+    assert.equal((await shop('buy', owner, 'boardvolcano', 500)).balance, 570);
+    assert.equal((await shop('equip', owner, 'dragon')).equipped, 'dragon');
+    const newEquipment = await shop('equip', owner, 'boardvolcano');
+    assert.equal(newEquipment.equipped, 'dragon');
+    assert.equal(newEquipment.equippedBoard, 'boardvolcano');
     await db.exec('set role authenticated');
     await assert.rejects(shop('buy', owner, 'jade'), /permission denied/);
   } finally {

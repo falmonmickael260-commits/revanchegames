@@ -1,0 +1,16 @@
+insert into public.domirush_skin_catalog (id, price_coins, category) values
+  ('dragon', 500, 'domino'),
+  ('thunder', 500, 'domino'),
+  ('lotus', 500, 'domino'),
+  ('lunar', 500, 'domino'),
+  ('shark', 500, 'domino'),
+  ('scarab', 500, 'domino'),
+  ('sakura', 500, 'domino'),
+  ('wolf', 500, 'domino'),
+  ('phoenix', 500, 'domino'),
+  ('cobra', 500, 'domino'),
+  ('boardvolcano', 500, 'board'),
+  ('boardstorm', 500, 'board'),
+  ('boardzen', 500, 'board'),
+  ('boardmoon', 500, 'board'),
+  ('boardreef', 500, 'board');
