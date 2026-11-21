@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { readLimitedBody, RequestError, UUID_PATTERN } from './request-security';
 import { createServiceClient } from './supabase/server';
 
-export async function readDomirushRequest(request: Request, purpose: 'identity' | 'result') {
+export async function readDomirushRequest(request: Request, purpose: 'identity' | 'result' | 'shop') {
   const secret = process.env.GAME_CONNECTOR_SECRET_DOMINORUSH;
   const header = /^(\d{10})\.([a-f0-9]{64})$/.exec(request.headers.get('x-rg-signature') ?? '');
   if (!secret || !header || Math.abs(Date.now() / 1000 - Number(header[1])) > 30) {
