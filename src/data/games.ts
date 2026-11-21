@@ -1,5 +1,6 @@
 import type { Game } from "@/types/game";
 
+const domirushUrl = process.env.NEXT_PUBLIC_GAME_URL_DOMINORUSH;
 const lotoUrl = process.env.NEXT_PUBLIC_GAME_URL_LOTO;
 
 /**
@@ -199,16 +200,18 @@ export const GAMES: Game[] = [
   },
   {
     id: "dominorush",
-    name: "DominoRush",
+    name: "Domirush",
     tagline: "Posez vite. Pensez plus vite.",
     description:
-      "Jeu de dominos avec une identité visuelle dynamique et compétitive.",
+      "Jouez aux dominos en solo ou à plusieurs. Posez vos tuiles aux deux extrémités et remportez la partie au score.",
     categories: ["plateau", "strategie"],
-    status: "development",
-    enabled: false,
+    status: domirushUrl ? "available" : "development",
+    enabled: Boolean(domirushUrl),
+    supportsPlatformInvites: true,
+    url: domirushUrl,
     icon: "grid",
     image: "/games/dominorush.webp",
-    theme: { accent: "#fb4570", accentSoft: "#ff9fb8" },
+    theme: { accent: "#ddba70", accentSoft: "#ffefd1" },
     addedAt: "2026-10-21",
     players: "2 à 4 joueurs",
   },

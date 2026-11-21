@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'node:crypto';
+import { ensureDomirushCatalog } from '@/lib/dominorush';
 import { ensureFortuneCatalog } from '@/lib/fortune-empire';
 import { GAMES } from '@/data/games';
 import { RequestError } from '@/lib/request-security';
@@ -46,7 +47,16 @@ export function gameOrigin(slug: ConnectedGame) {
 export async function callGame(command: ConnectorCommand): Promise<{ room: RoomSnapshot; session?: NativeSession }> {
   if (command.game === 'fortune-empire') await ensureFortuneCatalog();
   const raw = JSON.stringify(command), timestamp = String(Math.floor(Date.now() / 1000));
-  const signature = createHmac('sha256', command.game === 'fortune-empire' ? (process.env.GAME_CONNECTOR_SECRET_FORTUNE_EMPIRE || secret()) : secret()).update(`rg-connector-v1.${timestamp}.${raw}`).digest('hex');
+  let connectorKey: string;
+  if (command.game === 'dominorush') {
+    const dedicatedKey = process.env.GAME_CONNECTOR_SECRET_DOMINORUSH;
+    if (!dedicatedKey) throw new RequestError('Connexion à Domirush indisponible.', 503);
+    await ensureDomirushCatalog();
+    connectorKey = dedicatedKey;
+  } else {
+    connectorKey = command.game === 'fortune-empire' ? (process.env.GAME_CONNECTOR_SECRET_FORTUNE_EMPIRE || secret()) : secret();
+  }
+  const signature = createHmac('sha256', connectorKey).update(`rg-connector-v1.${timestamp}.${raw}`).digest('hex');
   const response = await fetch(`${gameOrigin(command.game)}/api/platform/connector`, {
     method: 'POST', body: raw, headers: { 'content-type': 'application/json', 'x-rg-signature': `${timestamp}.${signature}` },
     redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(12000),

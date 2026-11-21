@@ -83,7 +83,7 @@ export function InvitationToast() {
             {invitation.gameSlug === 'camouflip' ? "t’invite à rejoindre " : "t’invite à jouer à "}
             <strong className="font-display font-semibold text-cyan">{gameLabel}</strong>{invitation.gameSlug === 'camouflip' ? ' !' : '.'}
           </p>
-          {invitation.roomCode && invitation.gameSlug !== 'camouflip' && (
+          {invitation.roomCode && invitation.gameSlug !== 'camouflip' && invitation.gameSlug !== 'dominorush' && (
             <p className="mt-0.5 font-body text-[11px] text-text-faint">
               Salon {invitation.roomCode}
             </p>
