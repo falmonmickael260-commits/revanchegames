@@ -67,7 +67,7 @@ export function GameViewport() {
         return;
       }
       if (data.launch !== launch) return;
-      if (data.type === 'rg:invite-request' && (slug === 'camouflip' || slug === 'fortune-empire')) {
+      if (data.type === 'rg:invite-request' && (slug === 'camouflip' || slug === 'fortune-empire' || slug === 'tabou')) {
         if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
         window.dispatchEvent(new CustomEvent('rg:open-invite'));
         return;
