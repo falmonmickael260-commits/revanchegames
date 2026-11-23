@@ -3,8 +3,7 @@ grant select,insert,update,delete on public.taboo_players,public.taboo_rooms,pub
 create or replace function public.taboo_platform_bind_member(p_code text,p_token text,p_user_id uuid)
 returns jsonb language plpgsql security definer set search_path=''
 as $$
-declare v_room public.taboo_rooms%rowtype; v_player public.taboo_players%rowtype;
-declare v_count integer;
+declare v_room public.taboo_rooms%rowtype; v_player public.taboo_players%rowtype; v_count integer;
 begin
   if p_token is null or p_token !~ '^[a-f0-9]{64}$' then raise exception 'Session invalide.'; end if;
   if p_user_id is null or not exists(select 1 from public.profiles where id=p_user_id)
