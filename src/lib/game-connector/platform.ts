@@ -16,7 +16,18 @@ export async function gameUser() {
 export async function registerGameRoom(slug: ConnectedGame, session: NativeSession) {
   const { user, name } = await gameUser();
   if (!validRoom(session?.code)) throw new RequestError('Salon invalide.');
-  const { room } = await callGame({ v: 1, game: slug, operation: 'inspect', room: session.code, uid: user.id, name, proof: session });
+  let room;
+  if (slug === 'tabou') {
+    if (!/^[a-f0-9]{64}$/.test(session?.token || '')) throw new RequestError('Session Tabou invalide.', 409);
+    const result = await createServiceClient().rpc('taboo_platform_bind_member', {
+      p_code: session.code, p_token: session.token, p_user_id: user.id,
+    });
+    if (result.error || !result.data) throw new RequestError(result.error?.message || 'Salon Tabou indisponible.', 409);
+    room = result.data;
+  } else {
+    ({ room } = await callGame({ v: 1, game: slug, operation: 'inspect',
+      room: session.code, uid: user.id, name, proof: session }));
+  }
   const db = createServiceClient();
   const r = await db.from('room_registry').upsert({ game_slug: slug, room_code: room.code, instance_key: room.instance,
     capacity: room.capacity, player_count: room.count, status: room.status === 'open' && room.count >= room.capacity ? 'full' : room.status,
@@ -46,10 +57,24 @@ export async function acceptGameInvitation(id: string) {
       const { data: member } = await db.from('game_room_memberships').select('*').eq('user_id', invitation.from_user_id)
         .eq('game_slug', invitation.game_slug).eq('room_code', invitation.room_code).single();
       if (!member || member.instance_key !== invitation.room_instance) throw new RequestError('Ce salon a fermé ou a été remplacé.', 409);
-      const result = await callGame({ v: 1, game: invitation.game_slug, operation: 'admit', room: invitation.room_code,
-        uid: user.id, name, proof: openSession(member.sealed_session), inviter: invitation.from_user_id,
-        instance: invitation.room_instance, invitation: id });
-      const complete = await db.rpc('complete_game_admission', { p_invitation: id, p_lease: lease, p_session: sealSession(result.session!) });
+      let admitted;
+      if (invitation.game_slug === 'tabou') {
+        const proof = openSession(member.sealed_session);
+        if (!/^[a-f0-9]{64}$/.test(proof.token || '')) throw new RequestError('Preuve Tabou invalide.',409);
+        const token = randomUUID().replaceAll('-','') + randomUUID().replaceAll('-','');
+        const join = await db.rpc('taboo_platform_admit', {
+          p_code: invitation.room_code, p_instance: invitation.room_instance,
+          p_inviter_id: invitation.from_user_id, p_inviter_token: proof.token,
+          p_user_id: user.id, p_name: name, p_token: token,
+        });
+        if (join.error || !join.data) throw new RequestError(join.error?.message || 'Salon indisponible.',409);
+        admitted = { session: { code: invitation.room_code, token } };
+      } else {
+        admitted = await callGame({ v: 1, game: invitation.game_slug, operation: 'admit', room: invitation.room_code,
+          uid: user.id, name, proof: openSession(member.sealed_session), inviter: invitation.from_user_id,
+          instance: invitation.room_instance, invitation: id });
+      }
+      const complete = await db.rpc('complete_game_admission', { p_invitation: id, p_lease: lease, p_session: sealSession(admitted.session!) });
       if (complete.error) throw new RequestError('Connexion créée ; réessaie pour la reprendre.', 503);
     } catch (error) {
       await db.from('game_admissions').update({ lease_token: null, lease_until: null }).eq('invitation_id', id).eq('lease_token', lease);
