@@ -68,7 +68,7 @@ export async function acceptGameInvitation(id: string) {
           p_user_id: user.id, p_name: name, p_token: token,
         });
         if (join.error || !join.data) throw new RequestError(join.error?.message || 'Salon indisponible.',409);
-        admitted = { session: { code: invitation.room_code, token } };
+        admitted = { session: { code: invitation.room_code, token, playerId: join.data.playerId } };
       } else {
         admitted = await callGame({ v: 1, game: invitation.game_slug, operation: 'admit', room: invitation.room_code,
           uid: user.id, name, proof: openSession(member.sealed_session), inviter: invitation.from_user_id,
