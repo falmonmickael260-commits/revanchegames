@@ -274,7 +274,7 @@ export function GameViewport() {
           title={active.name}
           className="rg-game-frame"
           onLoad={() => setLoadedKey(activeKey)}
-          allow="fullscreen; autoplay; clipboard-write; gamepad; microphone"
+          allow="fullscreen; autoplay; clipboard-write; web-share; gamepad; microphone"
         />
       </div>
     </>
