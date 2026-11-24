@@ -232,18 +232,21 @@ export const GAMES: Game[] = [
   {
     id: "bombshift",
     name: "BombShift",
-    tagline: "Neuf niveaux. Trois boss. Une seule mèche.",
-    description: "Jeu d’action en solo : labyrinthes de bombes, neuf niveaux et trois boss.",
+    tagline: "140 niveaux. Solo ou coop à deux. Défiez les boss ensemble.",
+    description: "Jeu d’action aux bombes : 140 niveaux, mode solo ou coopération en ligne à 2 joueurs, salons privés par niveau, invitations par lien ou code et classement duo.",
     categories: ["action", "strategie"],
     status: "available",
     enabled: true,
+    // Les salons sont gérés dans BombShift ; les invitations Revanche par lien
+    // restent disponibles sans prétendre utiliser le connecteur natif des salons.
     supportsRooms: false,
+    supportsPlatformInvites: false,
     url: "https://bombshift-production-81b4.up.railway.app/",
     icon: "bomb",
     image: "/games/bombshift-motion-bg.webp",
     theme: { accent: "#ff5c3d", accentSoft: "#ffab8a" },
     addedAt: "2026-10-21",
-    players: "1 joueur",
+    players: "1 à 2 joueurs",
   },
   {
     id: "worms",
