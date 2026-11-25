@@ -49,7 +49,7 @@ export function HomeView({ popularIds, newIds, progress }: { popularIds: string[
     {popular.length > 0 && <HomeSection title="Tendances" href="/library" detail="D’après les participations réellement enregistrées."><div className="rg-home-games">{popular.slice(0, 4).map(game => <GameTile key={game.id} game={game} large />)}</div></HomeSection>}
     <HomeSection title="La communauté" href="/community"><div className="rg-community-preview"><div className="rg-community-orbit"><MessageCircle /><Users /><Headphones /></div><div><h3>Une partie commence par une rencontre.</h3><p>Messages, groupes d’amis et salons vocaux : garde le lien, même entre deux parties.</p><Link className="rg-text-link" href="/community">Explorer la communauté <ArrowRight className="h-4 w-4" /></Link></div></div></HomeSection>
     {newGames.length > 0 && <HomeSection title="Nouveautés" href="/new" detail="Les jeux ajoutés au catalogue ces 30 derniers jours."><div className="rg-home-games">{newGames.slice(0, 4).map(game => <GameTile key={game.id} game={game} />)}</div></HomeSection>}
-    <div className="rg-home-footer"><Sparkles className="h-4 w-4" /> Revanche Games · Le plaisir de se retrouver.</div>
+    <div className="rg-home-footer"><Sparkles className="h-4 w-4" /> Revanche Games · Le plaisir de se retrouver. <Link className="rg-text-link" href="/jeux">Découvrir tous nos jeux en ligne</Link></div>
     {inviting && <InviteFriendDialog friend={inviting} onClose={() => setInviting(null)} />}
   </div>;
 }
