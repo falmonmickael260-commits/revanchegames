@@ -7,7 +7,8 @@ export async function POST(request: Request) {
   try {
     requireSameOrigin(request);
     const raw = await readLimitedBody(request, 8192);
-    const body = JSON.parse(Buffer.from(raw).toString());
+    let body;
+    try { body = JSON.parse(Buffer.from(raw).toString()); } catch { throw new RequestError("Demande invalide."); }
     if (!body || !isConnectedGame(body.game)) throw new RequestError('Jeu inconnu.');
     if (body.session === null && validRoom(body.room) && typeof body.instance === 'string' && body.instance.length > 0 && body.instance.length <= 160) {
       await hidePublicRoom(body.game, body.room, body.instance);
