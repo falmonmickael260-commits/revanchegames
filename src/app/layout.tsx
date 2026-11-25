@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import { AppShell } from "@/components/shell/AppShell";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { GiftCelebrationLayer } from "@/components/gifts/GiftCelebrationLayer";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, jsonLd } from "@/lib/seo";
 import "./globals.css";
 import "./refonte.css";
 import "./gifts.css";
@@ -13,9 +14,13 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Revanche Games",
-  description:
-    "Revanche Games — joue, discute et retrouve tes amis. Tes jeux, messages, groupes et salons vocaux dans une seule application.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: "Revanche Games – Jeux multijoueurs en ligne entre amis", template: "%s | Revanche Games" },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  robots: { index: false, follow: true },
+  openGraph: { siteName: SITE_NAME, locale: "fr_FR", type: "website", title: "Revanche Games – Jeux multijoueurs en ligne", description: SITE_DESCRIPTION, images: ["/icons/icon-512.png"] },
+  twitter: { card: "summary", title: SITE_NAME, description: SITE_DESCRIPTION, images: ["/icons/icon-512.png"] },
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
@@ -54,6 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({ "@context": "https://schema.org", "@graph": [{ "@type": "Organization", "@id": SITE_URL + "/#organization", name: SITE_NAME, url: SITE_URL, logo: SITE_URL + "/icons/icon-512.png" }, { "@type": "WebSite", "@id": SITE_URL + "/#website", name: SITE_NAME, url: SITE_URL, inLanguage: "fr", publisher: { "@id": SITE_URL + "/#organization" } }] }) }} />
         <ServiceWorkerRegister />
         <AppShell>{children}</AppShell>
         <GiftCelebrationLayer />
