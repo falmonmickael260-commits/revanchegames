@@ -59,7 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({ "@context": "https://schema.org", "@graph": [{ "@type": "Organization", "@id": SITE_URL + "/#organization", name: SITE_NAME, url: SITE_URL, logo: SITE_URL + "/icons/icon-512.png" }, { "@type": "WebSite", "@id": SITE_URL + "/#website", name: SITE_NAME, url: SITE_URL, inLanguage: "fr", publisher: { "@id": SITE_URL + "/#organization" } }] }) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({ "@context": "https://schema.org", "@graph": [{ "@type": "Organization", "@id": SITE_URL + "/#organization", name: SITE_NAME, alternateName: "RevancheGames", url: SITE_URL, logo: SITE_URL + "/icons/icon-512.png" }, { "@type": "WebSite", "@id": SITE_URL + "/#website", name: SITE_NAME, alternateName: "RevancheGames", url: SITE_URL, inLanguage: "fr", publisher: { "@id": SITE_URL + "/#organization" } }] }) }} />
         <ServiceWorkerRegister />
         <AppShell>{children}</AppShell>
         <GiftCelebrationLayer />
