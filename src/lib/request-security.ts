@@ -3,7 +3,9 @@ export class RequestError extends Error {
 }
 
 export async function readLimitedBody(request: Request, limit: number): Promise<Uint8Array> {
-  if (Number(request.headers.get("content-length")) > limit) throw new RequestError("Envoi trop volumineux.", 413);
+  const declared = request.headers.get("content-length");
+  if (declared !== null && !/^\d+$/.test(declared)) throw new RequestError("Longueur invalide.", 400);
+  if (declared !== null && Number(declared) > limit) throw new RequestError("Envoi trop volumineux.", 413);
   const reader = request.body?.getReader();
   if (!reader) return new Uint8Array();
   const chunks: Uint8Array[] = [];
