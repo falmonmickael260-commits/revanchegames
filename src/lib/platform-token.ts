@@ -54,12 +54,14 @@ export interface PlatformIdentity {
 // see docs/PLATFORM.md, Kilomax). Each game's own server normally verifies
 // the token itself; this one is for routes that run here instead.
 export function verifyPlatformToken(token: unknown): PlatformIdentity | null {
-  if (typeof token !== "string") return null;
+  if (typeof token !== "string" || token.length > 8192) return null;
   const secret = process.env.PLATFORM_SHARED_SECRET;
   if (!secret) return null;
 
-  const [payloadB64, signature] = token.split(".");
-  if (!payloadB64 || !signature) return null;
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [payloadB64, signature] = parts;
+  if (!/^[A-Za-z0-9_-]+$/.test(payloadB64) || !/^[A-Za-z0-9_-]{43}$/.test(signature)) return null;
 
   const expected = createHmac("sha256", secret).update(payloadB64).digest("base64url");
   const a = Buffer.from(signature);
@@ -72,8 +74,11 @@ export function verifyPlatformToken(token: unknown): PlatformIdentity | null {
       username?: unknown;
       avatar?: unknown;
       exp?: unknown;
+      iat?: unknown;
     };
-    if (typeof payload.exp !== "number" || payload.exp < Math.floor(Date.now() / 1000)) return null;
+    const now = Math.floor(Date.now() / 1000);
+    if (typeof payload.exp !== "number" || !Number.isSafeInteger(payload.exp) || payload.exp <= now ||
+        typeof payload.iat !== "number" || !Number.isSafeInteger(payload.iat) || payload.iat > now + 60 || payload.exp <= payload.iat) return null;
     if (typeof payload.uid !== "string" || typeof payload.username !== "string") return null;
     return {
       uid: payload.uid,
