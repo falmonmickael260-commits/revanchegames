@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
+import { SITE_DESCRIPTION } from "@/lib/seo";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GAMES } from "@/data/games";
 import { HomeView } from "@/components/home/HomeView";
 import { toProgress } from "@/components/stats/LevelBadge";
+export const metadata: Metadata = { description: SITE_DESCRIPTION, alternates: { canonical: "/" }, robots: { index: true, follow: true } };
 export default function HomePage() {
   return <Suspense fallback={<div className="rg-page"><div className="rg-skeleton h-60" aria-label="Chargement de l’accueil" /></div>}><HomeContent /></Suspense>;
 }
