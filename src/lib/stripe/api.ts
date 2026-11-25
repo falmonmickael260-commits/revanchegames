@@ -33,7 +33,7 @@ export async function stripeList<T extends { id: string }>(path: string): Promis
 }
 
 export function verifyStripeSignature(raw: string, header: string | null, secret: string, now = Date.now()): void {
-  if (!secret.startsWith("whsec_") || !header) throw new Error("Signature absente.");
+  if (!secret.startsWith("whsec_") || !header || header.length > 8192) throw new Error("Signature absente ou invalide.");
   const fields = header.split(",").map((part) => part.trim().split("="));
   const timestamps = fields.filter(([key]) => key === "t");
   const timestamp = timestamps[0]?.[1] || "";
