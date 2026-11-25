@@ -358,6 +358,7 @@ export function GameViewport() {
           key={activeKey}
           src={active.src}
           title={active.name}
+          referrerPolicy="no-referrer"
           className="rg-game-frame"
           onLoad={() => setLoadedKey(activeKey)}
           allow="fullscreen; autoplay; clipboard-write; web-share; gamepad; microphone"
