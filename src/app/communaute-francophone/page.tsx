@@ -21,6 +21,7 @@ export default function FrancophonePage() {
     <Link className="rg-primary-button" href="/jeux">Découvrir les jeux en ligne</Link>
     {regions.map(region => <section key={region.name} className="my-6 rounded-xl border border-border-soft p-5">
       <h2 className="text-xl font-bold">Jouer depuis {region.name === "Belgique" ? "la Belgique" : region.name === "France" ? "la France" : "la Suisse"}</h2><p className="my-3">{region.text}</p>
+      {region.name === "Suisse" && <p className="my-3"><Link className="rg-text-link" href="/suisse">Revanche Games Suisse : guide pour jouer entre amis en Suisse romande</Link></p>}
       <details><summary>Exemples de villes depuis lesquelles jouer</summary><p className="mt-3 leading-relaxed">{region.cities.join(", ")}.</p></details>
     </section>)}
     <p className="my-4">Les parties se déroulent en ligne. Ces villes sont des exemples de lieux de connexion, et non des établissements ou des communautés locales dont la présence serait vérifiée.</p>
