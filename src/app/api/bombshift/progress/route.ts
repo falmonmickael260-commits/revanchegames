@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     let body: unknown;
     try { body = JSON.parse(new TextDecoder().decode(await readLimitedBody(request, 64 * 1024))); }
-    catch { throw new RequestError("Sauvegarde BombShift invalide."); }
+    catch (error) { if (error instanceof RequestError) throw error; throw new RequestError("Sauvegarde BombShift invalide."); }
     if (!body || typeof body !== "object" || Array.isArray(body)) throw new RequestError("Sauvegarde BombShift invalide.");
     const progress = sanitizeBombshiftSave((body as Record<string, unknown>).progress);
     if (!progress) throw new RequestError("Format de sauvegarde BombShift invalide.");
