@@ -1,6 +1,6 @@
 const MAP_IDS = new Set([
   "volcano", "ice", "temple", "volcano2", "ice2", "temple2", "volcano3", "ice3", "temple3",
-  ...Array.from({ length: 101 }, (_, index) => `level-${index + 10}`),
+  ...Array.from({ length: 131 }, (_, index) => `level-${index + 10}`),
 ]);
 export const isBombshiftMapId = (value: unknown): value is string => typeof value === "string" && MAP_IDS.has(value);
 const RANKS = new Set(["C", "B", "A", "S", "SS", "SSS"]);

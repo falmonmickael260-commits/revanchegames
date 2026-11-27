@@ -7,13 +7,13 @@ const save = (maps: Record<string, unknown>, unlockedMaps = 40) => ({
   schema: 3, unlockedMaps, maps, settings: {}, stats: {}, abilities: {},
 });
 
-test('accepts all 110 canonical map IDs, including mirrors 90, 100 and 110', () => {
+test('accepts all 140 canonical map IDs, including mirrors 120, 130 and 140', () => {
   const ids = ['volcano','ice','temple','volcano2','ice2','temple2','volcano3','ice3','temple3',
-    ...Array.from({ length: 101 }, (_, i) => `level-${i + 10}`)];
-  const raw = save(Object.fromEntries(ids.map((id) => [id, progress()])), 110);
+    ...Array.from({ length: 131 }, (_, i) => `level-${i + 10}`)];
+  const raw = save(Object.fromEntries(ids.map((id) => [id, progress()])), 140);
   const restored = sanitizeBombshiftSave(raw)!;
-  assert.equal(restored.unlockedMaps, 110);
-  assert.equal(Object.keys(restored.maps).length, 110);
+  assert.equal(restored.unlockedMaps, 140);
+  assert.equal(Object.keys(restored.maps).length, 140);
   for (const id of ids) assert.equal(restored.maps[id].cleared, true);
   assert.deepEqual(restored.maps['level-40'].secrets, ['level-40-s1']);
 });
@@ -38,9 +38,9 @@ test('merges devices without losing a later level, best score or mirror completi
 });
 
 test('keeps the nine original IDs and ignores unrelated or out-of-campaign IDs', () => {
-  const cleaned = sanitizeBombshiftSave(save({ volcano: progress(), 'level-111': progress(), 'level-9': progress(), unknown: progress() }, 999))!;
+  const cleaned = sanitizeBombshiftSave(save({ volcano: progress(), 'level-141': progress(), 'level-9': progress(), unknown: progress() }, 999))!;
   assert.deepEqual(Object.keys(cleaned.maps), ['volcano']);
-  assert.equal(cleaned.unlockedMaps, 110);
+  assert.equal(cleaned.unlockedMaps, 140);
   assert.equal(sanitizeBombshiftSave(null), null);
 });
 
@@ -71,4 +71,10 @@ test('keeps records on level 110 after account merge with an older device', () =
   assert.equal(merged.unlockedMaps, 110);
   assert.equal(merged.maps['level-110'].bestTimeMs, 240000);
   assert.equal(merged.maps['level-80'].bestTimeMs, 90000);
+});
+
+test('retains level 140 when merging an older device', () => {
+  const merged = mergeBombshiftSaves(save({'level-140': progress()}, 140), save({}, 1))!;
+  assert.equal(merged.unlockedMaps, 140);
+  assert.equal(merged.maps['level-140'].cleared, true);
 });
