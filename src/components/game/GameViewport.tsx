@@ -72,6 +72,15 @@ export function GameViewport() {
         return;
       }
       if (data.launch !== launch) return;
+      if (slug === 'bombshift' && (data.type === 'rg:bombshift-room' || data.type === 'rg:bombshift-invite')) {
+        const code = typeof data.room === 'string' && /^[A-HJ-NP-Z2-9]{4}$/.test(data.room) ? data.room : null;
+        if(data.type === 'rg:bombshift-room'){ reportRoom(slug,code); return; }
+        if(!code)return;
+        reportRoom(slug,code);
+        if(document.fullscreenElement)await document.exitFullscreen().catch(()=>undefined);
+        window.dispatchEvent(new CustomEvent('rg:open-invite',{detail:{game:'bombshift',room:code}}));
+        return;
+      }
       if (slug === 'bombshift' && data.type === 'rg:cosmetics') {
         if (!['catalog','buy','equip','chest'].includes(data.action) || !Number.isSafeInteger(data.requestId)) return;
         let result; let error: string | undefined;

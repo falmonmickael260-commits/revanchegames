@@ -101,7 +101,7 @@ export function DirectMessageDialog({
         <ChatMessageList messages={messages} me={me} loading={loading} emptyMessage={personal ? "Tes cadeaux apparaîtront ici. Appuie sur le cadeau ci-dessous pour t’en offrir un." : undefined}
           renderAttachment={(message, own) => message.giftBatchId ? <GiftMessageAttachment id={message.giftBatchId} own={own} animate={message.live} /> :
             message.invitationId ? <PrivateGameInvitation id={message.invitationId} own={own} onJoined={onClose} /> :
-            message.voiceInvitation ? <VoiceInvitation id={message.id} roomId={message.voiceInvitation.roomId} expiresAt={message.voiceInvitation.expiresAt} own={own} onJoined={onClose} /> : null} />
+            message.voiceInvitation ? <VoiceInvitation id={message.id} roomId={message.voiceInvitation.roomId} expiresAt={message.voiceInvitation.expiresAt} own={own} onJoined={onClose} /> : !own && /^Rejoins mon salon BombShift Duo : https:\/\/revanchegames\.com\/play\/bombshift\?room=[A-HJ-NP-Z2-9]{4}$/.test(message.body) ? <Link onClick={onClose} href={"/play/bombshift?room="+message.body.slice(-4)} className="rounded-xl bg-gradient-to-r from-cyan to-violet px-4 py-3 text-center font-semibold text-void">Rejoindre BombShift Duo</Link> : null} />
         {personal ? <div className="flex items-center gap-3 border-t border-border-soft p-4">
           <GiftLauncher meId={me.id} recipients={[{ id: me.id, name: me.username }]} context="dm" defaultOpen={openGiftsInitially} />
           <span className="text-sm text-text-muted">M’offrir un cadeau · payé avec mes pièces</span>

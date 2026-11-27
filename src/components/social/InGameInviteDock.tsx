@@ -5,7 +5,7 @@ import { UserPlus, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useSocial } from "./SocialProvider";
 import { PresenceDot, presenceLabel } from "./PresenceDot";
-import { sendGameInvitation } from "@/lib/social/api";
+import { sendGameInvitation, sendDirectMessage } from "@/lib/social/api";
 import { requestPushDelivery } from "@/lib/push-client";
 
 /**
@@ -32,20 +32,28 @@ export function InGameInviteDock({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  const [requestedRoom,setRequestedRoom]=useState<string|null>(null);
   useEffect(() => {
-    const openFromGame = () => setOpen(true);
+    const openFromGame = (event:Event) => {const detail=(event as CustomEvent).detail; if(detail?.game===gameSlug && typeof detail.room==="string")setRequestedRoom(detail.room);setOpen(true);};
     window.addEventListener('rg:open-invite', openFromGame);
     return () => window.removeEventListener('rg:open-invite', openFromGame);
-  }, []);
+  }, [gameSlug]);
 
   // Rien à proposer sans amis : pas la peine d'occuper un coin de l'écran.
-  if (friends.length === 0) return null;
+  if (friends.length === 0 && !open) return null;
+  const currentRoom=roomCode || (gameSlug==="bombshift" ? requestedRoom : null);
 
   async function invite(friendId: string) {
     setBusyId(friendId);
     setError("");
-    if (!roomCode) { setError('Crée ou rejoins un salon dans le jeu avant d’inviter un ami.'); setBusyId(null); return; }
-    const result = await sendGameInvitation(friendId, gameSlug, roomCode);
+    if (!currentRoom) { setError('Crée ou rejoins un salon dans le jeu avant d’inviter un ami.'); setBusyId(null); return; }
+    if(gameSlug==="bombshift"){
+      if(!/^[A-HJ-NP-Z2-9]{4}$/.test(currentRoom)){setError("Salon invalide.");setBusyId(null);return;}
+      try{const result=await sendDirectMessage(friendId,"Rejoins mon salon BombShift Duo : https://revanchegames.com/play/bombshift?room="+currentRoom);
+      if(!result.ok){setError(result.error);return;} if(result.data?.id)void requestPushDelivery({type:"direct_message",messageId:result.data.id});
+      setSentTo(set=>new Set(set).add(`${currentRoom}:${friendId}`));}catch{setError("Connexion indisponible.");}finally{setBusyId(null);}return;
+    }
+    const result = await sendGameInvitation(friendId, gameSlug, currentRoom);
     setBusyId(null);
 
     if (!result.ok) {
@@ -55,7 +63,7 @@ export function InGameInviteDock({
     if (result.data) {
       void requestPushDelivery({ type: "game_invitation", invitationId: result.data });
     }
-    setSentTo((set) => new Set(set).add(`${roomCode}:${friendId}`));
+    setSentTo((set) => new Set(set).add(`${currentRoom}:${friendId}`));
   }
 
   return (
@@ -98,8 +106,9 @@ export function InGameInviteDock({
           )}
 
           <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2">
+            {friends.length===0 && <li className="p-3 text-sm text-text-dim">Aucun ami ajouté. Partage le lien depuis le jeu.</li>}
             {friends.map((friend) => {
-              const sent = sentTo.has(`${roomCode}:${friend.id}`);
+              const sent = sentTo.has(`${currentRoom}:${friend.id}`);
               return (
                 <li
                   key={friend.id}
@@ -117,7 +126,7 @@ export function InGameInviteDock({
                   </div>
                   <button
                     type="button"
-                    disabled={busyId === friend.id || sent}
+                    disabled={busyId !== null || sent || !currentRoom}
                     onClick={() => invite(friend.id)}
                     className="shrink-0 rounded-lg bg-gradient-to-r from-cyan to-violet px-2.5 py-1.5 font-display text-xs font-semibold text-void disabled:opacity-50"
                   >
