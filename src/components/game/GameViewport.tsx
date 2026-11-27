@@ -358,7 +358,9 @@ export function GameViewport() {
           key={activeKey}
           src={active.src}
           title={active.name}
-          referrerPolicy="no-referrer"
+          // BombShift authenticates its parent via document.referrer; only
+          // disclose the origin, never the player page path or query string.
+          referrerPolicy={active.slug === "bombshift" ? "strict-origin" : "no-referrer"}
           className="rg-game-frame"
           onLoad={() => setLoadedKey(activeKey)}
           allow="fullscreen; autoplay; clipboard-write; web-share; gamepad; microphone"
