@@ -72,6 +72,17 @@ export function GameViewport() {
         return;
       }
       if (data.launch !== launch) return;
+      if (slug === 'bombshift' && data.type === 'rg:cosmetics') {
+        if (!['catalog','buy','equip'].includes(data.action) || !Number.isSafeInteger(data.requestId)) return;
+        let result; let error: string | undefined;
+        try {
+          const response = await fetch('/api/bombshift/cosmetics', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:data.action,item:data.item,price:data.price})});
+          result = await response.json();
+          if (!response.ok) { error = result.error || 'Boutique indisponible.'; result = undefined; }
+        } catch { error = 'Boutique indisponible.'; }
+        if (!cancelled) iframeRef.current?.contentWindow?.postMessage({type:'rg:cosmetics-result',v:1,game:slug,launch,requestId:data.requestId,result,error},target);
+        return;
+      }
       if (data.type === 'rg:invite-request' && (slug === 'camouflip' || slug === 'fortune-empire' || slug === 'dominorush')) {
         if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
         window.dispatchEvent(new CustomEvent('rg:open-invite'));
