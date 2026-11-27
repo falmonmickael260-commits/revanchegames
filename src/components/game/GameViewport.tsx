@@ -73,10 +73,10 @@ export function GameViewport() {
       }
       if (data.launch !== launch) return;
       if (slug === 'bombshift' && data.type === 'rg:cosmetics') {
-        if (!['catalog','buy','equip'].includes(data.action) || !Number.isSafeInteger(data.requestId)) return;
+        if (!['catalog','buy','equip','chest'].includes(data.action) || !Number.isSafeInteger(data.requestId)) return;
         let result; let error: string | undefined;
         try {
-          const response = await fetch('/api/bombshift/cosmetics', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:data.action,item:data.item,price:data.price})});
+          const response = await fetch('/api/bombshift/cosmetics', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:data.action,item:data.item,price:data.price,requestKey:data.requestKey})});
           result = await response.json();
           if (!response.ok) { error = result.error || 'Boutique indisponible.'; result = undefined; }
         } catch { error = 'Boutique indisponible.'; }
