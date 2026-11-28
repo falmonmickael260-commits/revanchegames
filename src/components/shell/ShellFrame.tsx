@@ -78,6 +78,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
           // sur ordinateur où la navigation latérale prend le relais.
           style={immersive ? undefined : { paddingBottom: "var(--rg-bottom-nav-h)" }}
         >
+          {process.env.NEXT_PUBLIC_RG_VISUAL_PREVIEW === "1" && <div className="rg-preview-notice" role="note">APERÇU V2 · Comptes, parties et transactions réels désactivés</div>}
           {children}
         </main>
       </div>

@@ -8,7 +8,9 @@ export async function proxy(request: NextRequest) {
   if(process.env.RG_VISUAL_PREVIEW === "1") {
     if(request.nextUrl.pathname.startsWith("/api/")) return NextResponse.json({error:"Prévisualisation visuelle : services réels désactivés."},{status:503});
     if(request.nextUrl.pathname.startsWith("/play/") || request.nextUrl.pathname === "/sign-up" || request.nextUrl.pathname === "/sign-in") return NextResponse.redirect(new URL("/library",request.url));
-    return NextResponse.next();
+    const previewResponse=NextResponse.next();
+    previewResponse.headers.set("X-Robots-Tag","noindex, nofollow");
+    return previewResponse;
   }
   // Stripe authenticates with its signature. No Supabase session refresh/network
   // request must prevent delivery or read/transform its raw request body.

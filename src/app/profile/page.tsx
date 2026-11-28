@@ -43,7 +43,7 @@ export default function ProfilePage() {
 
 function ProfileSkeleton() {
   return (
-    <div className="rg-page rg-profile-page flex flex-col gap-6">
+    <div className="rg-page rg-profile-page rg-club-profile flex flex-col gap-6">
       <PageHeader eyebrow="Ton espace joueur" title="Mon profil" />
       <div className="h-24 animate-pulse rounded-2xl border border-border-soft bg-surface" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -66,7 +66,7 @@ async function ProfileContent() {
 
   if (!user) {
     return (
-      <div className="rg-page rg-profile-page flex flex-col gap-6">
+      <div className="rg-page rg-profile-page rg-club-profile flex flex-col gap-6">
         <PageHeader eyebrow="Ton espace joueur" title="Mon profil" />
         <EmptyState
           icon={UserPlus}
@@ -139,7 +139,7 @@ async function ProfileContent() {
   const { data: revRows } = await supabase.rpc("get_rev_progress", { p_user_id: user.id });
 
   return (
-    <div className="rg-page rg-profile-page flex flex-col gap-6">
+    <div className="rg-page rg-profile-page rg-club-profile flex flex-col gap-6">
       <PageHeader eyebrow="Ton espace joueur" title="Mon profil" />
 
       <section className="rg-profile-identity" aria-label="Carte de joueur">
@@ -175,7 +175,7 @@ async function ProfileContent() {
         </div>
       </section>
 
-      <nav className="rg-profile-section-nav" aria-label="Sections du profil">
+      <nav className="rg-profile-section-nav rg-club-profile-nav" aria-label="Sections du profil">
         <a href="#profil-apercu"><LayoutGrid size={16} /> Aperçu</a>
         <a href="#mes-cadeaux"><Trophy size={16} /> Cadeaux</a>
         <a href="#profil-jeux"><BarChart3 size={16} /> Jeux</a>

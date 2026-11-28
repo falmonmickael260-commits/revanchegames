@@ -26,12 +26,12 @@ export default function LeaderboardPage({
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <PageHeader
+    <div className="rg-club-ranking mx-auto flex max-w-3xl flex-col gap-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="rg-club-ranking-stage"><Trophy aria-hidden="true"/><PageHeader
         eyebrow="Compétition"
         title="Classement"
         subtitle="Calculé sur les parties réellement terminées, tous jeux confondus."
-      />
+      /></div>
       {children}
     </div>
   );
@@ -100,7 +100,7 @@ async function LeaderboardContent({
           classement se remplira dès les premières parties terminées.
         </p>
       ) : (
-        <ol className="flex flex-col gap-2">
+        <ol className="rg-club-ranklist flex flex-col gap-2">
           {board.map((entry) => (
             <Row key={entry.userId} entry={entry} />
           ))}

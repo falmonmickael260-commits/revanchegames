@@ -30,13 +30,14 @@ async function ShopContent({ searchParams }: { searchParams: Promise<{ payment?:
   } catch { /* A missing configuration leaves checkout disabled. */ }
   return (
     <div className="rg-page rg-shop-page flex flex-col gap-7">
-      <PageHeader
+      <div className="rg-vault-stage"><div className="rg-vault-illustration" aria-hidden="true"><div className="rg-vault-ring"/><div className="rg-vault-coin">R</div><div className="rg-vault-coin rg-vault-coin-small">R</div></div><div className="rg-vault-intro"><PageHeader
         eyebrow="Boutique"
         title="Ton prochain coup de pouce."
         subtitle="Un portefeuille commun aux jeux compatibles. Retrouve tes pièces, tes achats et tes codes promo."
       />
 
-      <ShopWalletSection />
+      <ShopWalletSection /></div></div>
+      <h2 className="rg-club-section-label">Réserve de pièces</h2>
 
       <div className="rg-coin-packs">
         {PACKS.map((pack) => (
