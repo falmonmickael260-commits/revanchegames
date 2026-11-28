@@ -49,11 +49,11 @@ export function PublicGameRooms({visible=true}:{visible?:boolean}) {
     }
     void refresh();
     const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 5000);
-    const visible = () => { if (!document.hidden) void refresh(); };
-    document.addEventListener('visibilitychange', visible);
+    const onVisibility = () => { if (!document.hidden) void refresh(); };
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', visible);
+      document.removeEventListener('visibilitychange', onVisibility);
       request?.abort();
     };
   }, [reload, me?.id, visible]);
