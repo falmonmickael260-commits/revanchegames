@@ -50,7 +50,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
   const onChatPage = pathname === "/chat";
 
   return (
-    <div className={`rg-shell-root flex min-h-dvh bg-void ${immersive ? "" : "rg-club-shell rg-party-shell"}`}>
+    <div className={`rg-shell-root flex min-h-dvh bg-void ${immersive ? "" : "rg-club-shell rg-party-shell rg-premium-shell"}`}>
       <div className="rg-grain" />
       <AuthHashErrorRedirect />
 
@@ -78,7 +78,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
           // sur ordinateur où la navigation latérale prend le relais.
           style={immersive ? undefined : { paddingBottom: "var(--rg-bottom-nav-h)" }}
         >
-          {process.env.NEXT_PUBLIC_RG_VISUAL_PREVIEW === "1" && <div className="rg-preview-notice" role="note">APERÇU V3 · CLUB SOCIAL · Comptes, parties et transactions réels désactivés</div>}
+          {process.env.NEXT_PUBLIC_RG_VISUAL_PREVIEW === "1" && <div className="rg-preview-notice" role="note">APERÇU V4 · MOBILE PREMIUM · Comptes, parties et transactions réels désactivés</div>}
           {children}
         </main>
       </div>

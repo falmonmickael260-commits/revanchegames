@@ -9,6 +9,7 @@ import "./refonte.css";
 import "./gifts.css";
 import "./club-launcher.css";
 import "./party-club.css";
+import "./premium-mobile.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",

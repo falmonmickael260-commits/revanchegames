@@ -50,7 +50,7 @@ export function Header() {
           <Avatar username={me.username} avatarUrl={me.avatarUrl} size="sm" />
           <span>{me.username}</span>
         </Link>}
-        <div className="rg-desktop-wallet"><WalletPill /></div>
+        <div className="rg-desktop-wallet rg-premium-wallet"><WalletPill /></div>
         <Link href="/messages" aria-label={`Messages${unread ? `, ${unread} non lus` : ""}`} className="rg-icon-button rg-desktop-message">
           <MessageCircle className="h-4 w-4" />{unread > 0 && <span className="rg-count">{unread > 99 ? "99+" : unread}</span>}
         </Link>
