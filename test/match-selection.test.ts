@@ -1,0 +1,10 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {matchingRooms} from "../src/lib/game-connector/match-selection";
+import type {PublicGameRoom} from "../src/lib/game-connector/public-rooms";
+const room=(id:string,game_slug:string,player_count:number,capacity:number,isHost=false):PublicGameRoom=>({id,game_slug,player_count,capacity,isHost,host_name:"Test"});
+const rooms=[room("a","president",2,4),room("b","president",3,4),room("c","president",4,4),room("d","la-meute",6,8),room("e","president",3,4,true),room("f","unknown",1,2),room("g","president",0,4)];
+test("prioritises nearly full eligible rooms without admitting the host to their own room",()=>assert.deepEqual(matchingRooms(rooms,"any",["president","la-meute"]).map(r=>r.id),["b","d","a"]));
+test("specific game only",()=>assert.deepEqual(matchingRooms(rooms,"la-meute",["president","la-meute"]).map(r=>r.id),["d"]));
+test("no available compatible game returns empty",()=>assert.deepEqual(matchingRooms(rooms,"bombshift",["president"]),[]));
+test("invalid capacity and counts excluded",()=>assert.deepEqual(matchingRooms([room("x","president",1.5,4),room("y","president",1,0)],"any",["president"]),[]));

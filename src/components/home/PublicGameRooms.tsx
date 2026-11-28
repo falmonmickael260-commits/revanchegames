@@ -13,7 +13,7 @@ import { useGameSession } from '@/components/game/GameSessionProvider';
 
 const publicGames = GAMES.filter(game => game.enabled && (PUBLIC_ROOM_GAMES as readonly string[]).includes(game.id));
 
-export function PublicGameRooms() {
+export function PublicGameRooms({visible=true}:{visible?:boolean}) {
   const router = useRouter();
   const { active } = useGameSession();
   const { me } = useSocial();
@@ -28,6 +28,8 @@ export function PublicGameRooms() {
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    if(!visible)return;
+    if(process.env.NEXT_PUBLIC_RG_VISUAL_PREVIEW==="1"){setRooms([]);setLoadError(false);return;}
     let request: AbortController | undefined;
     async function refresh() {
       request?.abort();
@@ -54,7 +56,7 @@ export function PublicGameRooms() {
       document.removeEventListener('visibilitychange', visible);
       request?.abort();
     };
-  }, [reload, me?.id]);
+  }, [reload, me?.id, visible]);
 
   async function join(room: PublicGameRoom) {
     if (room.isHost && active?.slug === room.game_slug && active.roomCode === room.ownRoomCode) {
@@ -119,7 +121,7 @@ export function PublicGameRooms() {
         : rooms.length === 0 ? (
           <div className="rg-inline-empty">
             <Users className="h-5 w-5" />
-            <p>Aucune partie publique pour le moment.</p>
+            <p>{process.env.NEXT_PUBLIC_RG_VISUAL_PREVIEW==="1"?"Aperçu : salons de production non connectés.":"Aucune partie publique pour le moment."}</p>
             <Link href={active?.roomCode ? `/play/${active.slug}` : '/library'}>
               {active?.roomCode ? 'Ouvrir mon salon' : 'Choisir un jeu'} <ArrowRight className="h-4 w-4" />
             </Link>
