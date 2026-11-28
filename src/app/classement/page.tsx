@@ -26,7 +26,7 @@ export default function LeaderboardPage({
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div className="rg-arena-ranking mx-auto flex max-w-3xl flex-col gap-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <PageHeader
         eyebrow="Compétition"
         title="Classement"

@@ -16,10 +16,11 @@ export function VoiceSeats({ members, hostId, compact = false, onMember, onInvit
       const host = member?.id === hostId;
       const state = member ? member.muted ? "Micro coupé" : member.speaking ? "Parle" : "Micro actif" : "Place libre";
       const label = `Siège ${index + 1} · ${member?.name || "Libre"}${host ? " · Hôte" : ""} · ${state}`;
-      return <li key={`seat-${index}`} aria-label={label} className="flex min-w-0 flex-col items-center text-center">
+      return <li key={`seat-${index}`} aria-label={label} className={`rg-arena-seat flex min-w-0 flex-col items-center text-center${member?.speaking && !member.muted ? " is-speaking" : ""}${member ? " is-occupied" : ""}`}>
         <button type="button" onClick={member ? onMember : onInvite} disabled={member ? !onMember : !onInvite}
           aria-label={member ? label : `Inviter à la place ${index + 1}`} title={label}
           className={`relative flex shrink-0 items-center justify-center rounded-full border transition-shadow disabled:cursor-default ${compact ? "h-10 w-10" : "h-[68px] w-[68px]"} ${member?.speaking ? "border-cyan bg-cyan/10 ring-2 ring-cyan/70 shadow-[0_0_16px_var(--rg-cyan)]" : member ? "border-violet/40 bg-surface-raised" : "border-dashed border-border-soft bg-abyss/60 text-text-faint"}`}>
+          {member?.speaking && !member.muted && <span className="rg-speech-ripple" aria-hidden="true" />}
           {member ? <Avatar username={member.name} avatarUrl={member.avatarUrl} size={compact ? "sm" : "md"} /> : <Armchair className={compact ? "h-4 w-4" : "h-6 w-6"} />}
           {host && <Crown aria-label="Hôte" className={`absolute -top-2.5 left-1/2 -translate-x-1/2 fill-amber-300 text-amber-300 ${compact ? "h-3.5 w-3.5" : "h-5 w-5"}`} />}
           {member && <span className="absolute -bottom-0.5 -right-0.5 rounded-full border border-border-soft bg-abyss p-0.5">{member.muted ? <MicOff className="h-2.5 w-2.5 text-text-faint" /> : <Mic className="h-2.5 w-2.5 text-cyan" />}</span>}

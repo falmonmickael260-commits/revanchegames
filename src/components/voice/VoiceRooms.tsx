@@ -69,11 +69,11 @@ export function VoiceRooms() {
 
   const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border-soft bg-surface-raised px-4 py-2 text-sm disabled:opacity-40";
   if (voice.current && me) return <ActiveVoiceRoom key={voice.current.instanceId || voice.current.id} rooms={rooms} invite={invite} inviting={inviting} sent={sent} inviteError={inviteError} />;
-  return <div className="mx-auto max-w-5xl px-4 py-6 pb-52 sm:px-6 lg:px-8">
+  return <div className="rg-voice-lobby mx-auto max-w-5xl px-4 py-6 pb-52 sm:px-6 lg:px-8">
     <PageHeader eyebrow="Communauté" title="Salons vocaux" subtitle="Un salon, des voix, un chat : retrouve tes amis ou fais de nouvelles rencontres." />
     {!ready ? <p className="mt-6" role="status">Chargement…</p> : !me ? <p className="mt-6">Connecte-toi pour créer ou rejoindre une salle. <Link href="/sign-in?next=/voice" className="text-cyan">Se connecter</Link></p> : <>
       {(error || voice.error) && <p role="alert" className="mt-4 rounded-xl border border-rose-400/40 p-3 text-sm text-rose-300">{voice.error || error}</p>}
-      <form className="mt-6 space-y-4 rounded-2xl border border-border-soft bg-surface p-5" onSubmit={event => { event.preventDefault(); void voice.join("create", title, visibility, passcode); }}>
+      <form className="rg-voice-create mt-6 space-y-4 rounded-2xl border border-border-soft bg-surface p-5" onSubmit={event => { event.preventDefault(); void voice.join("create", title, visibility, passcode); }}>
         <div className="flex items-center gap-3"><Headphones className="h-6 w-6 text-cyan" /><h2 className="font-semibold">Créer ta salle éphémère</h2></div>
         <label className="block text-sm">Nom de la salle<input required maxLength={60} value={title} onChange={event => setTitle(event.target.value)} placeholder="Le salon des amis" className="mt-2 block min-h-11 w-full rounded-xl border border-border-soft bg-abyss px-3 text-base" /></label>
         <label className="block text-sm">Qui peut rejoindre ?<select value={visibility} onChange={event => setVisibility(event.target.value as "public" | "friends")} className="mt-2 block min-h-11 w-full rounded-xl border border-border-soft bg-abyss px-3 text-base"><option value="public">Tous les membres · Salle publique</option><option value="friends">Mes amis uniquement</option></select></label>

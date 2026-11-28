@@ -7,6 +7,7 @@ import "./globals.css";
 import "./refonte.css";
 import "./gifts.css";
 import "./arena.css";
+import "./arena-world.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
