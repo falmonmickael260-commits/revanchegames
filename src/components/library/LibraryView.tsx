@@ -23,6 +23,8 @@ function LibraryContent() {
   const filtered=GAMES.filter(game=>(!query||searchable(`${game.name} ${game.description}`).includes(searchable(query)))&&(!category||game.categories.some(value=>value===category))&&(availability==="all"||(availability==="playable"?game.enabled:!game.enabled))&&(mode==="all"||(mode==="multiplayer"&&game.enabled&&game.supportsRooms!==false)||(mode==="solo"&&game.supportsRooms===false)||(mode==="favorites"&&favorites.includes(game.id)))).sort((a,b)=>Number(b.enabled)-Number(a.enabled));
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const selected=filtered.find(game=>game.id===selectedId);
+  const detailRef=useRef<HTMLDivElement>(null);
+  useEffect(()=>{if(selectedId)detailRef.current?.scrollIntoView({block:"nearest",behavior:"instant"});},[selectedId]);
   const featured=["la-meute","kilomax","president"].flatMap(id=>GAMES.filter(game=>game.id===id&&game.enabled));
   const filter=(key:string,value:string)=>{const next=new URLSearchParams(params.toString());if(value==="all")next.delete(key);else next.set(key,value);router.push(`/library?${next}`);};
   return <div className="rg-page rg-library-page rg-party-library"><PageHeader eyebrow="À toi de choisir" title="Trouve ton prochain jeu." subtitle={`${GAMES.filter(game=>game.enabled).length} jeux disponibles, et d’autres aventures en préparation.`} />
@@ -32,7 +34,7 @@ function LibraryContent() {
     <CategoryFilter />
     <div className="rg-library-availability" role="group" aria-label="Disponibilité des jeux">{[["all","Tout le catalogue"],["playable","Disponibles"],["upcoming","À venir"]].map(([value,label])=><button key={value} type="button" aria-pressed={availability===value} onClick={()=>filter("availability",value)}>{label}</button>)}</div>
     <div className="rg-library-results"><p>{filtered.length} jeu{filtered.length>1?"x":""}{query?` pour « ${query} »`:""}</p>{query&&<button type="button" onClick={()=>router.push("/library")}>Effacer la recherche</button>}</div>
-    {filtered.length?<><div className="rg-party-grid">{filtered.map(game=><ClubGameButton game={game} key={game.id} onInfo={()=>setSelectedId(game.id)}/>)}</div>{selected&&<div className="rg-party-game-detail" role="region" aria-label={`Détails de ${selected.name}`}><button type="button" onClick={()=>setSelectedId(null)}>Fermer les détails ×</button><GameCard game={selected}/></div>}</>:<EmptyState icon={SearchX} title="Pas de jeu trouvé" message="Essaie un autre nom ou une autre catégorie." />}
+    {filtered.length?<><div className="rg-party-grid">{filtered.map(game=><ClubGameButton game={game} key={game.id} onInfo={()=>setSelectedId(game.id)}/>)}</div>{selected&&<div ref={detailRef} className="rg-party-game-detail" role="region" aria-label={`Détails de ${selected.name}`}><button type="button" onClick={()=>setSelectedId(null)}>Fermer les détails ×</button><GameCard game={selected}/></div>}</>:<EmptyState icon={SearchX} title="Pas de jeu trouvé" message="Essaie un autre nom ou une autre catégorie." />}
   </div>;
 }
 export function LibraryView(){return <Suspense fallback={<div className="rg-page"><div className="rg-skeleton h-60" /></div>}><LibraryContent /></Suspense>;}

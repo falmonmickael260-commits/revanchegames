@@ -85,3 +85,43 @@ html:not([data-theme="light"]) .rg-party-shell,html[data-theme="light"] .rg-part
 @media(min-width:1180px){.rg-party-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:767px){.rg-party-home{padding:8px 12px 24px}.rg-party-tabs{margin-top:2px}.rg-party-tabs button{font-size:11px;gap:4px;min-height:38px}.rg-party-tabs button svg{width:15px;height:15px}.rg-party-social{gap:7px;margin:12px 0 19px}.rg-party-social>a,.rg-party-social>button{min-height:72px;flex-direction:column;justify-content:center;text-align:center;padding:6px 3px;gap:0;border-radius:18px}.rg-party-social img{width:46px;height:43px}.rg-party-social small{font-size:8px}.rg-party-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 11px}.rg-club-game{min-height:clamp(142px,43vw,205px);border-radius:22px}.rg-club-game-main{padding:10px 11px}.rg-club-game-main img{height:70%;top:4%}.rg-club-game-main h3{font-size:clamp(16px,4.7vw,22px)}.rg-club-game-main i{width:28px;height:28px;right:9px;bottom:10px}.rg-party-library{padding:12px}.rg-party-game-detail{bottom:0}}
 @media(prefers-reduced-motion:reduce){.rg-party-welcome>img{animation:none}}
+
+/* Keep non-redesigned screens readable and retain original theme settings. */
+html:not([data-theme="light"]) .rg-party-shell{background:#161123}
+html[data-theme="light"] .rg-party-shell{background:#f5efff}
+.rg-party-shell .rg-club-hall-main{background:#f5efff}
+.rg-party-shell .rg-logo-wordmark strong,.rg-party-shell .rg-logo-wordmark small{color:#6941a4}
+.rg-party-shell .rg-logo-crown{background:#e5d5ff;color:#8050c0;border-color:#cdb6ec}
+html:not([data-theme="light"]) .rg-party-shell .rg-sidebar-group>a.is-active{color:#633da4;background:#e8d8ff;box-shadow:none}
+.rg-party-shell .rg-sidebar-player{background:#f1e7ff;border-color:#e6d9f4}
+.rg-party-panel .rg-home-shortcuts>a{background:#fff9ff;color:#49345e;border-color:#e6d9f4}
+.rg-party-panel .rg-home-shortcuts small{color:#665578}
+.rg-party-panel .rg-friend-rail>button{color:#49345e;background:#fff9ff}
+.rg-party-panel .rg-community-preview h3,.rg-party-panel .rg-community-preview p{color:#49345e}
+.rg-party-library .rg-library-spotlight{display:block}
+.rg-party-library .rg-library-spotlight-grid{gap:10px}
+.rg-party-library .rg-library-spotlight-card{border-radius:16px}
+.rg-party-game-detail .rg-library-card{background:#fff9ff!important;color:#49345e;border-color:#dfd0f4!important}
+.rg-party-game-detail .rg-library-card-body h3,.rg-party-game-detail .rg-game-tagline,.rg-party-game-detail .rg-game-mode,.rg-party-game-detail .rg-game-details{color:#49345e}
+.rg-club-fallback-art{position:absolute!important;top:3%;left:5%;width:90%;height:72%;border-radius:14px;overflow:hidden}
+.rg-party-voice-room{background:radial-gradient(ellipse at 75% 5%,#7356a9,#302348 54%,#191426)}
+.rg-party-voice-room>section{border:1px solid #ad8ee477!important;background:#241a3b;box-shadow:0 10px 40px #100a22a0;border-radius:26px}
+.rg-party-voice-room>section>header{background:linear-gradient(120deg,#7455a4,#a16098);color:white}
+.rg-party-voice-room .rg-voice-room-meta{color:#f3e7ff}
+.rg-party-voice-seats{position:relative;background:radial-gradient(ellipse at 50% 70%,#d1a7ef55,transparent 65%),linear-gradient(145deg,#5b4788,#453665);padding:16px 10px 12px}
+.rg-party-voice-seats .rg-party-seat{background:#b49bdd35;border-color:#d4beff80;border-width:2px;box-shadow:0 3px #241b4b55}
+.rg-party-voice-seats .rg-party-seat:not(:disabled):hover{background:#ceb7f96b}
+.rg-party-voice-seats li>span{color:#f3e8ff;font-weight:700}
+.rg-party-speaking{position:absolute;inset:-5px;border:2px solid #b2ffc9;border-radius:50%;pointer-events:none;animation:partyTalk 1.4s ease-out infinite}
+@keyframes partyTalk{from{transform:scale(.9);opacity:.9}to{transform:scale(1.35);opacity:0}}
+.rg-party-voice-room section[aria-label="Chat de la salle"]{background:#2c2046;color:#fff}
+.rg-party-voice-room .rg-voice-chat-heading h2,.rg-party-voice-room .rg-voice-chat-heading p{color:#e6d5f7}
+.rg-party-voice-room>section>footer{background:#392951;border-top-color:#b89de044}
+.rg-party-shell .rg-club-voice-stage{background:radial-gradient(ellipse at 85% 50%,#e0c3ff80,transparent 60%),linear-gradient(125deg,#7759a8,#ad70af);border-radius:24px;border:0}
+.rg-party-shell .rg-club-voice-stage .rg-page-heading{color:white}
+.rg-party-shell .rg-club-voice-stage .rg-page-subtitle{color:#f5eaff}
+.rg-party-shell .rg-club-voice-waves{color:#fff4fb;border-color:#fff6}
+.rg-party-shell .rg-club-ranking-stage{border:0;border-radius:24px;background:linear-gradient(130deg,#785ca8,#c18bb3)}
+.rg-party-shell .rg-vault-stage{border-radius:26px;background:radial-gradient(ellipse at 80% 45%,#f8cb8555,transparent 60%),linear-gradient(115deg,#53366f,#9b6587);border:0}
+@media(max-height:500px){.rg-party-voice-seats{padding:6px 8px}}
+@media(prefers-reduced-motion:reduce){.rg-party-speaking{animation:none}}

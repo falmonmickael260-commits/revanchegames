@@ -64,7 +64,7 @@ export function ActiveVoiceRoom({ rooms, invite, inviting, sent, inviteError }: 
   const roomMessages = [...voice.messages, ...giftMessages].sort((a,b) => a.createdAt.localeCompare(b.createdAt));
   const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border-soft bg-surface-raised px-3 text-xs font-semibold disabled:opacity-40";
   const speakers = voice.members.filter(member => member.speaking);
-  return <div className="rg-chat-page-stage rg-voice-room-stage p-2 sm:p-4 lg:p-6" style={{ bottom: keyboardInset ? `${keyboardInset}px` : "var(--rg-bottom-nav-h)" }}>
+  return <div className="rg-chat-page-stage rg-voice-room-stage rg-party-voice-room p-2 sm:p-4 lg:p-6" style={{ bottom: keyboardInset ? `${keyboardInset}px` : "var(--rg-bottom-nav-h)" }}>
     <section aria-label="Ta salle vocale" className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-cyan/25 bg-surface shadow-xl">
       <header className="flex shrink-0 flex-col gap-2 border-b border-border-soft bg-gradient-to-r from-violet/15 to-cyan/5 px-3 py-2.5">
         <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function ActiveVoiceRoom({ rooms, invite, inviting, sent, inviteError }: 
           <button type="button" className={button + " h-11 w-11 shrink-0 px-0"} aria-label="Autres salons" title="Autres salons" onClick={() => setPanel("rooms")}><LayoutGrid className="h-4 w-4" /></button>
         </div>
       </header>
-      <div className="rg-voice-seats shrink-0 border-b border-border-soft bg-gradient-to-b from-violet/5 to-abyss/20 px-3 py-2">
+      <div className="rg-voice-seats rg-party-voice-seats shrink-0 border-b border-border-soft bg-gradient-to-b from-violet/5 to-abyss/20 px-3 py-2">
         <VoiceSeats members={voice.members} hostId={room.hostId} compact onMember={() => setPanel("participants")} onInvite={canInvite ? () => setPanel("invite") : undefined} />
       </div>
       {voice.error && <p role="alert" className="shrink-0 px-3 py-1 text-xs text-rose-300">{voice.error}</p>}
