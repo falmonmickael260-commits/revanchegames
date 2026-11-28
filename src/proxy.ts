@@ -5,6 +5,7 @@ import type { NextRequest } from "next/server";
 // Refreshes the Supabase session cookie on every request. Renamed from
 // `middleware.ts` in Next.js 16 — see node_modules/next/dist/docs/.../proxy.md.
 export async function proxy(request: NextRequest) {
+  if(request.nextUrl.pathname === "/mobile-preview.html" && process.env.RG_VISUAL_PREVIEW !== "1") return new NextResponse(null,{status:404});
   if(process.env.RG_VISUAL_PREVIEW === "1") {
     if(request.nextUrl.pathname.startsWith("/api/")) return NextResponse.json({error:"Prévisualisation visuelle : services réels désactivés."},{status:503});
     if(request.nextUrl.pathname.startsWith("/play/") || request.nextUrl.pathname === "/sign-up" || request.nextUrl.pathname === "/sign-in") return NextResponse.redirect(new URL("/library",request.url));
