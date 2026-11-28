@@ -50,7 +50,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
   const onChatPage = pathname === "/chat";
 
   return (
-    <div className="rg-shell-root flex min-h-dvh bg-void">
+    <div className={`rg-shell-root flex min-h-dvh bg-void ${immersive ? "" : "rg-club-shell"}`}>
       <div className="rg-grain" />
       <AuthHashErrorRedirect />
 
@@ -72,7 +72,7 @@ export function ShellFrame({ children }: { children: React.ReactNode }) {
 
         <main
           ref={mainRef}
-          className="rg-app-main min-w-0 flex-1"
+          className={`rg-app-main min-w-0 flex-1 ${pathname === "/" ? "rg-club-hall-main" : ""}`}
           // Place réservée à la barre d'app mobile et à la zone de sécurité.
           // La navigation fixe fait 76 px (safe area comprise) et tombe à 0
           // sur ordinateur où la navigation latérale prend le relais.

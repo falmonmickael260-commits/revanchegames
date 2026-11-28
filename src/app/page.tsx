@@ -12,6 +12,7 @@ export default function HomePage() {
 }
 async function loadHomeSelection() {
   await connection();
+  if(process.env.RG_VISUAL_PREVIEW === "1") return {popularIds:[],newIds:GAMES.filter(game=>game.enabled&&game.newBadge).map(game=>game.id),progress:null};
   const db = await createClient();
   const [{ data }, { data: auth }] = await Promise.all([db.rpc("game_popularity"), db.auth.getUser()]);
   const progressResult = auth.user ? await db.rpc("player_progress", { p_user_id: auth.user.id }) : { data: null };

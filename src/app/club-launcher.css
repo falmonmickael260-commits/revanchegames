@@ -1,0 +1,84 @@
+/* Launcher visual system; scoped away from the actual game viewport. */
+html:not([data-theme="light"]) .rg-club-shell{background:#090c17;}
+.rg-club-shell .rg-desktop-sidebar{width:190px;flex-shrink:0;box-shadow:none;border-right:1px solid #ffffff0e}
+.rg-club-sidebar-caption{display:block;font-size:9px;letter-spacing:.3em;text-align:center;margin-top:8px;opacity:.55}
+.rg-club-shell .rg-sidebar-group{margin-bottom:20px}
+.rg-club-shell .rg-sidebar-group>p{font-size:9px;letter-spacing:.18em}
+.rg-club-shell .rg-sidebar-group a{border-radius:8px;min-height:36px}
+.rg-club-shell .rg-sidebar-group a.is-active{background:#ebae5920;box-shadow:inset 3px 0 #f6bf72;color:#ffcb83}
+.rg-club-shell .rg-app-header{border-bottom:0}
+.rg-club-shell .rg-club-hall-main{position:relative}
+.rg-launcher-home{--club-gold:#ffcf80;position:relative;max-width:none;min-height:calc(100dvh - var(--rg-header-h) - var(--rg-bottom-nav-h));padding:12px clamp(14px,2.4vw,36px) 20px;display:flex;flex-direction:column;gap:12px;isolation:isolate;color:#f8f6f2;background:radial-gradient(ellipse at 75% 5%,#273043 0%,transparent 48%),#090c17;}
+.rg-launcher-hud{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:54px}
+.rg-launcher-brand{display:flex;gap:10px;align-items:center;white-space:nowrap}
+.rg-launcher-brand strong{display:block;font-size:15px;letter-spacing:.15em;font-weight:900}
+.rg-launcher-brand small{display:block;font-size:8px;letter-spacing:.28em;color:#aab1c0}
+.rg-launcher-mark{display:grid;place-items:center;width:40px;height:40px;background:#ffcf80;color:#11131d;font-weight:950;font-size:24px;clip-path:polygon(15% 0,85% 0,100% 25%,100% 78%,50% 100%,0 78%,0 25%)}
+.rg-launcher-account{min-width:0;max-width:65%}
+.rg-launcher-account .rg-home-player,.rg-launcher-account .rg-auth-strip{margin:0;padding:5px 8px;background:transparent;border:0;box-shadow:none;gap:6px}
+.rg-launcher-account .rg-auth-strip p{display:none}
+.rg-launcher-account .rg-home-player-info{min-width:0}
+.rg-launcher-tabs{display:flex;align-items:center;gap:clamp(8px,2vw,28px);border-bottom:1px solid #ffffff22;overflow-x:auto;scrollbar-width:none;flex:none}
+.rg-launcher-tabs button{display:flex;align-items:center;gap:8px;white-space:nowrap;padding:12px 4px;color:#a7adbc;font-size:13px;font-weight:800;border-bottom:3px solid transparent;transition:color .2s,border-color .2s}
+.rg-launcher-tabs button svg{width:17px;height:17px}
+.rg-launcher-tabs button[aria-pressed=true]{color:var(--club-gold);border-color:var(--club-gold)}
+.rg-launcher-zone[hidden]{display:none!important}
+.rg-launcher-zone{min-width:0}
+.rg-launcher-world{position:relative;min-height:clamp(430px,60dvh,780px);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;isolation:isolate;background:#11182a;clip-path:polygon(0 0,calc(100% - 24px) 0,100% 24px,100% 100%,24px 100%,0 calc(100% - 24px))}
+.rg-launcher-scene,.rg-launcher-shade{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.rg-launcher-scene{animation:clubScene .65s ease both}
+.rg-launcher-scene-art{width:100%;height:100%}
+.rg-launcher-scene-art img{object-position:center 42%}
+.rg-launcher-scene-art .rg-game-art-title,.rg-launcher-mini .rg-game-art-title,.rg-library-index-art .rg-game-art-title{display:none}
+.rg-launcher-shade{background:linear-gradient(90deg,#080b15f5 0%,#080b15b0 32%,#080b1520 72%),linear-gradient(0deg,#080b15 0%,#080b15d4 16%,transparent 53%);box-shadow:inset 0 1px color-mix(in srgb,var(--world-accent) 70%,transparent)}
+.rg-launcher-world-copy{padding:clamp(20px,4vw,62px);padding-bottom:28px;max-width:74%;animation:clubCopy .35s ease both}
+.rg-launcher-eyebrow{display:flex;align-items:center;gap:10px;letter-spacing:.2em;font-size:10px;font-weight:800;color:#ffdca5}
+.rg-launcher-eyebrow>span{width:7px;height:7px;border-radius:50%;background:#ffcf80;box-shadow:0 0 16px #ffcf80}
+.rg-launcher-world-copy h2{font-size:clamp(42px,7vw,100px);font-weight:950;line-height:.98;letter-spacing:-.055em;margin:14px 0;text-shadow:0 8px 40px #000b}
+.rg-launcher-world-copy p{font-size:clamp(14px,2vw,22px);color:#e0e1e9;max-width:440px;margin:12px 0}
+.rg-launcher-world-copy small{display:flex;align-items:center;gap:7px;color:#c2c8d6;font-size:12px}
+.rg-launcher-world-copy small svg{width:15px;height:15px}
+.rg-launcher-actions{display:flex;align-items:center;gap:18px;margin-top:25px;flex-wrap:wrap}
+.rg-launcher-play{display:flex;align-items:center;justify-content:center;gap:12px;background:#ffcf80;color:#15121b;min-width:155px;padding:14px 28px;font-size:15px;font-weight:950;letter-spacing:.1em;clip-path:polygon(0 0,100% 0,100% 72%,90% 100%,0 100%);transition:filter .2s}
+.rg-launcher-play:hover{filter:brightness(1.15)}
+.rg-launcher-play svg,.rg-launcher-secondary svg{width:18px;height:18px}
+.rg-launcher-secondary{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#fff}
+.rg-launcher-rev{position:absolute;right:2%;bottom:100px;width:clamp(100px,20vw,260px);pointer-events:none;text-align:center;filter:drop-shadow(0 10px 24px #0008)}
+.rg-launcher-rev img{width:100%;height:auto;max-height:300px;animation:clubFloat 4s ease-in-out infinite}
+.rg-launcher-rev>span{font-size:10px;letter-spacing:.05em;color:#ffdcad}
+.rg-launcher-picker{display:flex;align-items:center;gap:10px;padding:0 clamp(10px,2.3vw,34px) 20px;z-index:1}
+.rg-launcher-picker>button{flex:none;padding:7px;border:1px solid #ffffff25;border-radius:50%;background:#0b0e1bc9}
+.rg-launcher-picker>button svg{width:20px;height:20px}
+.rg-launcher-reel{display:flex;flex:1;min-width:0;overflow:auto;gap:9px;padding:5px 1px 9px;scrollbar-width:thin}
+.rg-launcher-reel>button{position:relative;overflow:hidden;flex:0 0 clamp(84px,11vw,142px);height:clamp(60px,8vw,95px);background:#161c28;border:2px solid #ffffff1a;transform:scale(.94);opacity:.7;transition:transform .18s,opacity .18s,border-color .18s}
+.rg-launcher-reel>button[aria-pressed=true]{transform:scale(1);opacity:1;border-color:#ffcf80}
+.rg-launcher-mini{position:absolute!important;inset:0}
+.rg-launcher-reel>button>span{position:absolute;bottom:0;inset-inline:0;padding:5px;background:linear-gradient(transparent,#070a12ed);font-size:10px;font-weight:800;text-align:left}
+.rg-launcher-live{display:flex;justify-content:space-between;gap:8px;padding:14px 0}
+.rg-launcher-live>a,.rg-launcher-live>button{display:flex;flex:1;align-items:center;gap:10px;text-align:left;padding:9px 13px;background:transparent;border-left:2px solid #ffcf8050;color:#f5f6fa;min-width:0}
+.rg-launcher-live>*>svg{width:20px;height:20px;flex:none;color:#ffcf80}
+.rg-launcher-live>*>svg:last-child{margin-left:auto;width:15px}
+.rg-launcher-live span{font-size:13px;font-weight:800}
+.rg-launcher-live small{display:block;color:#a6aebf;font-size:10px;font-weight:500}
+.rg-launcher-panel{padding:clamp(14px,3vw,40px);min-height:54vh;background:linear-gradient(125deg,#17263b66,transparent);border-top:1px solid #ffcf8050}
+.rg-launcher-panel .rg-home-section{max-width:none}
+.rg-launcher-about{font-size:11px;color:#aab1bf;margin-top:auto}
+.rg-launcher-about summary{cursor:pointer;opacity:.75}
+.rg-library-page .rg-library-spotlight{display:none}
+.rg-library-console{display:grid;grid-template-columns:minmax(180px,.65fr) minmax(0,1.35fr);gap:22px;align-items:start}
+.rg-library-index{display:flex;flex-direction:column;gap:5px;max-height:64dvh;overflow:auto;padding-right:6px;scrollbar-width:thin}
+.rg-library-index>button{display:flex;align-items:center;text-align:left;gap:12px;padding:8px;color:inherit;border-left:3px solid transparent;background:transparent}
+.rg-library-index>button[aria-pressed=true]{border-color:#ffcf80;background:#ffcf8019}
+.rg-library-index-art{width:76px;height:48px;flex:none;position:relative!important}
+.rg-library-index strong,.rg-library-index small{display:block}
+.rg-library-index small{font-size:11px;opacity:.65}
+.rg-library-focus .rg-library-card{border:0;background:transparent;box-shadow:none}
+.rg-library-focus .rg-library-card>div:first-child .rg-game-art{aspect-ratio:16/9}
+.rg-library-focus .rg-library-card-body h3{font-size:clamp(26px,4vw,48px)}
+.rg-library-focus{animation:clubCopy .25s ease both}
+@keyframes clubScene{from{opacity:.25;transform:scale(1.025)}to{opacity:1;transform:scale(1)}}
+@keyframes clubCopy{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes clubFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@media(min-width:1024px){.rg-club-shell .rg-shell-content{margin-left:190px;width:calc(100% - 190px)}}
+@media(max-width:767px){.rg-launcher-home{padding:8px 10px 14px;gap:9px}.rg-launcher-brand{gap:5px}.rg-launcher-mark{width:30px;height:30px;font-size:18px}.rg-launcher-brand strong{font-size:11px}.rg-launcher-brand small{font-size:7px}.rg-launcher-tabs{gap:15px}.rg-launcher-tabs button{font-size:11px;gap:5px;padding:10px 0}.rg-launcher-tabs button svg{width:15px;height:15px}.rg-launcher-world{min-height:clamp(390px,58dvh,530px)}.rg-launcher-world-copy{max-width:93%;padding:20px 16px 15px;z-index:1}.rg-launcher-world-copy h2{font-size:clamp(36px,10vw,62px);max-width:80%;margin:12px 0}.rg-launcher-world-copy p{max-width:68%;font-size:14px}.rg-launcher-rev{width:105px;bottom:95px;right:0;opacity:.82}.rg-launcher-rev span{display:none}.rg-launcher-shade{background:linear-gradient(0deg,#080b15 0%,#080b15ba 35%,transparent 85%),linear-gradient(90deg,#080b1550,transparent)}.rg-launcher-eyebrow{font-size:8px;letter-spacing:.12em}.rg-launcher-actions{margin-top:16px;gap:12px}.rg-launcher-play{min-width:113px;padding:12px 19px;font-size:12px}.rg-launcher-secondary{font-size:11px}.rg-launcher-picker{padding:0 7px 10px;gap:4px}.rg-launcher-picker>button{padding:2px}.rg-launcher-live{gap:3px;padding:7px 0}.rg-launcher-live>a,.rg-launcher-live>button{padding:6px 5px;gap:5px}.rg-launcher-live span{font-size:10px}.rg-launcher-live small{font-size:9px}.rg-launcher-live>*>svg{width:15px;height:15px}.rg-launcher-live>*>svg:last-child{display:none}.rg-library-console{display:flex;flex-direction:column;gap:10px}.rg-library-index{width:100%;flex-direction:row;max-height:none;overflow:auto;padding:0 0 7px}.rg-library-index>button{flex:0 0 100px;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:3px;border-left:0;border-bottom:2px solid transparent}.rg-library-index-art{width:100%;height:60px}.rg-library-index strong{font-size:11px}.rg-library-index small{font-size:9px}.rg-library-focus{width:100%}.rg-club-shell .rg-bottom-nav .is-active .rg-nav-icon{background:#ffcf80;color:#111522;box-shadow:0 0 20px #ffcf8030}}
+@media(prefers-reduced-motion:reduce){.rg-launcher-scene,.rg-launcher-world-copy,.rg-launcher-rev img,.rg-library-focus{animation:none}.rg-launcher-reel>button{transition:none}}

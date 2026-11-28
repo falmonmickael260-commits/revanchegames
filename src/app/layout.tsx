@@ -7,6 +7,7 @@ import { SITE_URL, SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, jsonLd } from "@/lib
 import "./globals.css";
 import "./refonte.css";
 import "./gifts.css";
+import "./club-launcher.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
