@@ -85,3 +85,19 @@ html:not([data-theme="light"]) .rg-premium-shell .rg-sidebar-group>a.is-active,.
 .rg-premium-r svg{position:absolute;top:-9px;left:1px;width:21px;height:15px;fill:#ffd483}
 @media(max-width:767px){.rg-premium-home{padding:5px 12px 24px}.rg-premium-shell .rg-app-header{padding-inline:12px}.rg-premium-shell .rg-premium-wallet{display:block!important}.rg-premium-shell .rg-header-player{display:none}.rg-premium-shell .rg-header-tools{gap:4px}.rg-premium-shell .rg-desktop-message{display:flex!important}.rg-premium-shell .rg-premium-welcome{min-height:185px}.rg-premium-welcome-copy{padding-top:12px;margin-left:35%}.rg-premium-portrait{width:40%}.rg-premium-shortcuts{margin:12px 8px 12px 34%;gap:4px}.rg-premium-shortcuts>a,.rg-premium-shortcuts>button{min-height:62px;border-radius:11px;font-size:9px}.rg-premium-shortcuts svg{width:22px;height:22px}.rg-premium-shell .rg-club-game{aspect-ratio:1.85;border-radius:15px}.rg-premium-shell .rg-club-game-main{padding:9px}.rg-premium-shell .rg-club-game-main h3{font-size:clamp(16px,4.4vw,21px)}.rg-premium-shell .rg-club-game-main>div>span{font-size:9px;padding:2px 5px}.rg-premium-shell .rg-club-favorite,.rg-premium-shell .rg-club-info{width:25px;height:25px;top:6px;right:6px}.rg-premium-shell .rg-club-info{top:34px}.rg-premium-shell .rg-party-title h2{font-size:17px}.rg-premium-shell .rg-party-title h2 svg{width:24px;height:24px}.rg-premium-shell .rg-party-title>a,.rg-premium-shell .rg-party-title>button{font-size:11px}.rg-premium-shell .rg-party-grid{gap:10px}.rg-premium-room{min-width:115px}.rg-premium-shell .rg-party-library{padding:12px}}
 @media(max-width:360px){.rg-premium-shortcuts{margin-left:29%}.rg-premium-welcome-copy{margin-left:32%}.rg-premium-shell .rg-desktop-message{display:none!important}.rg-premium-shortcuts>a,.rg-premium-shortcuts>button{font-size:8px}}
+
+/* The GameArt root is a div: keep it out of the caption layout. */
+.rg-premium-shell .rg-club-game-main>.rg-premium-game-art{position:absolute!important;inset:0;z-index:-2;margin:0;padding:0;max-width:none;width:100%;height:100%;text-shadow:none}
+.rg-premium-shell .rg-club-game-main>.rg-premium-game-art>span{display:none}
+.rg-premium-shell .rg-club-game-main>.rg-premium-game-art img{object-position:center}
+.rg-premium-shell .rg-premium-access{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:4px 1px 9px;font-size:12px;color:#dec2f5}
+.rg-premium-access>a,.rg-premium-access>button{display:inline-flex;align-items:center;gap:5px;font-weight:800;min-height:32px}
+.rg-premium-access svg{width:15px;height:15px}
+.rg-premium-access .rg-premium-register{padding:5px 12px;border:1px solid #b98fda80;border-radius:20px;background:#41235a}
+.rg-premium-shell .rg-premium-nav>a.rg-premium-central .rg-count{top:-1px;right:-4px}
+.rg-premium-shell .rg-club-game-main>div:not(.rg-premium-game-art){position:relative;z-index:1}
+.rg-premium-shell .rg-party-panel .rg-home-shortcuts>a,.rg-premium-shell .rg-party-panel .rg-friend-rail>button{background:#302041;color:#f1ddff;border-color:#5b3b76}
+.rg-premium-shell .rg-party-panel .rg-home-shortcuts small{color:#cdb4e1}
+.rg-premium-shell .rg-party-library .rg-library-modes button[aria-pressed=true],.rg-premium-shell .rg-party-library .rg-library-availability button[aria-pressed=true]{background:#7040a6;color:#fff}
+.rg-premium-shell .rg-club-game-main .rg-premium-game-art .rg-camouflip-cover-logo{inset:auto 0 0 auto;width:45%;height:auto;object-fit:contain}
+@media(max-width:767px){.rg-premium-shell .rg-club-favorite,.rg-premium-shell .rg-club-info{width:32px;height:32px}.rg-premium-shell .rg-club-info{top:42px}.rg-premium-shell .rg-club-game-main h3{max-width:98%}}

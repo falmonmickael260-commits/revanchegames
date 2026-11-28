@@ -40,6 +40,7 @@ export function HomeView({ popularIds, newIds, progress }: { popularIds: string[
       {([{id:"play",name:"Jeux",Icon:Gamepad2},{id:"rooms",name:"Salons",Icon:Users},{id:"social",name:"Amis",Icon:Headphones},{id:"collection",name:"Collection",Icon:Heart}] as const).map(({id,name,Icon})=><button key={id} type="button" aria-pressed={zone===id} onClick={()=>setZone(id)}><Icon/><span>{name}</span></button>)}
     </nav>
     <div className="rg-launcher-zone" hidden={zone!=="play"}>
+      <div className="rg-premium-access">{me?<><Link href="/profile"><Avatar username={me.username} avatarUrl={me.avatarUrl} size="sm"/>{me.username}</Link>{progress&&<LevelBadge progress={progress} compact/>}</>:ready?<><Link href="/sign-in">Connexion</Link><Link href="/sign-up" className="rg-premium-register">S’inscrire</Link></>:null}<Link href="/messages"><MessageCircle/>Messages</Link></div>
       <section className="rg-premium-welcome" aria-label="Bienvenue">
         <div className="rg-premium-portrait" aria-hidden="true"/>
         <div className="rg-premium-welcome-copy"><h2>Bienvenue sur<br/><strong>Revanche Games !</strong></h2><p>Joue · Discute · Offre des cadeaux et défie tes amis !</p></div>
