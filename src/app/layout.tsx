@@ -10,6 +10,7 @@ import "./gifts.css";
 import "./club-launcher.css";
 import "./party-club.css";
 import "./premium-mobile.css";
+import "./match-hall.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",

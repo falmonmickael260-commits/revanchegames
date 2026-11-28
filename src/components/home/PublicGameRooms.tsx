@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Plus, RefreshCw, Users } from 'lucide-react';
+import { ArrowRight, Plus, RefreshCw, Users, Search } from 'lucide-react';
+import { GameArt } from '@/components/library/GameArt';
 import { GAMES } from '@/data/games';
 import { PUBLIC_ROOM_GAMES } from '@/lib/game-connector/protocol';
 import type { PublicGameRoom } from '@/lib/game-connector/public-rooms';
@@ -17,6 +18,8 @@ export function PublicGameRooms() {
   const { active } = useGameSession();
   const { me } = useSocial();
   const [showGames, setShowGames] = useState(false);
+  const [gameFilter,setGameFilter]=useState('all');
+  const [roomQuery,setRoomQuery]=useState('');
   const [rooms, setRooms] = useState<PublicGameRoom[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [joinError, setJoinError] = useState('');
@@ -82,6 +85,7 @@ export function PublicGameRooms() {
     }
   }
 
+  const visibleRooms=rooms?.filter(room=>(gameFilter==='all'||gameFilter===room.game_slug)&&(`${room.host_name} ${GAMES.find(game=>game.id===room.game_slug)?.name??room.game_slug}`).toLocaleLowerCase().includes(roomQuery.trim().toLocaleLowerCase()));
   return (
     <section id="salons" className="rg-home-section scroll-mt-24" aria-labelledby="public-rooms-title">
       <div className="rg-section-heading">
@@ -95,14 +99,15 @@ export function PublicGameRooms() {
           </button>
         </div>
       </div>
+      <div className="rg-room-filters"><label><Search/><input aria-label="Rechercher un salon" placeholder="Rechercher un salon…" value={roomQuery} onChange={event=>setRoomQuery(event.target.value)}/></label><div className="rg-room-game-filter"><button type="button" aria-pressed={gameFilter==='all'} onClick={()=>setGameFilter('all')}>Tous</button>{publicGames.map(game=><button type="button" key={game.id} aria-pressed={gameFilter===game.id} onClick={()=>setGameFilter(game.id)}>{game.name}</button>)}</div></div>
       <div id="public-room-games" hidden={!showGames} className="mb-3 rounded-2xl border border-border-soft bg-surface p-3">
         <p className="mb-2 text-xs text-text-dim">Choisis un jeu et crée ton salon. Il apparaîtra sur l’Accueil.</p>
         <ul className="grid gap-2 sm:grid-cols-3">
           {publicGames.map(game => {
             const href = `/play/${game.id}?public=1`;
             return <li key={game.id}>
-              <Link href={me ? href : `/sign-in?next=${encodeURIComponent(href)}`} className="block rounded-xl border border-border-soft px-3 py-2 text-sm font-semibold text-text hover:bg-surface-raised">
-                {game.name}
+              <Link href={me ? href : `/sign-in?next=${encodeURIComponent(href)}`} className="rg-room-create-game block rounded-xl border border-border-soft px-3 py-2 text-sm font-semibold text-text hover:bg-surface-raised">
+                <GameArt game={game} className="rg-room-create-art"/><span>{game.name}</span>
               </Link>
             </li>;
           })}
@@ -120,11 +125,13 @@ export function PublicGameRooms() {
             </Link>
           </div>
         ) : (
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {rooms.map(room => {
+          <ul className="rg-room-list grid gap-2 sm:grid-cols-2">
+            {visibleRooms?.length===0&&<li className="rg-room-no-result">Aucun salon ne correspond à ta recherche.</li>}
+            {visibleRooms?.map(room => {
               const game = GAMES.find(game => game.id === room.game_slug);
               return (
-                <li key={room.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border-soft bg-surface p-3">
+                <li key={room.id} className="rg-room-entry flex items-center justify-between gap-3 rounded-2xl border border-border-soft bg-surface p-3">
+                  {game&&<GameArt game={game} className="rg-room-entry-art"/>}
                   <div className="min-w-0">
                     <h3 className="truncate text-sm font-bold text-text">{game?.name ?? room.game_slug}</h3>
                     <p className="truncate text-xs text-text-dim">{room.host_name} · {room.player_count}/{room.capacity} joueurs</p>
