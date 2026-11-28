@@ -1,0 +1,49 @@
+/* Revanche Arena — presentation only, no game state or service changes. */
+.rg-arena-welcome{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(140px,.7fr);align-items:center;min-height:clamp(245px,31vw,390px);overflow:hidden;margin:0 0 22px;padding:clamp(18px,4vw,48px);background:#101827;color:#fff;border-radius:22px;background-image:radial-gradient(ellipse at 75% 65%,#8d354b88,transparent 58%),radial-gradient(ellipse at 12% 0%,#40577977,transparent 55%),linear-gradient(115deg,#101724,#172237 55%,#28182b);box-shadow:0 22px 65px #06091148}
+.rg-arena-welcome:after{content:"";position:absolute;inset:auto 0 0;height:35%;background:linear-gradient(0deg,#080d1699,transparent);z-index:-1;pointer-events:none}
+.rg-arena-orbit{position:absolute;z-index:-1;right:-9%;width:68%;aspect-ratio:1;border:1px solid #ee9a6b55;border-radius:50%;box-shadow:0 0 0 26px #e98a6510,0 0 0 65px #f4a16d0a,inset 0 0 55px #e76d5533;transform:rotateX(58deg) rotateZ(-20deg);animation:rg-arena-breathe 7s ease-in-out infinite;pointer-events:none}
+.rg-arena-copy{position:relative;z-index:2;min-width:0}
+.rg-arena-eyebrow{font-size:10px;font-weight:850;letter-spacing:.19em;color:#f8bf82}
+.rg-arena-copy h2{font-size:clamp(31px,5vw,67px);line-height:1.04;font-weight:900;letter-spacing:-.065em;margin:12px 0;color:#fff;text-wrap:balance}
+.rg-arena-copy p{font-size:clamp(12px,1.5vw,16px);line-height:1.55;color:#e3e5ee;max-width:38ch;margin-bottom:20px}
+.rg-arena-copy .rg-primary-button{display:inline-flex;align-items:center;gap:8px;min-height:44px;background:linear-gradient(115deg,#da3949,#a6253c);color:white}
+.rg-arena-mascot{position:relative;align-self:stretch;min-height:190px;display:grid;place-items:center;pointer-events:none}
+.rg-mascot-body{position:relative;width:min(100%,290px);aspect-ratio:9/10;background:url('/images/rev-mascot.svg') center/contain no-repeat;filter:drop-shadow(0 13px 15px #060810a0);animation:rg-rev-float 5s ease-in-out infinite}
+.rg-mascot-glow{position:absolute;width:95%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#e8755440,transparent 68%)}
+.rg-arena-mascot>span{position:absolute;bottom:0;font-size:9px;letter-spacing:.18em;color:#f9c38b;font-weight:800}
+@keyframes rg-rev-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes rg-arena-breathe{0%,100%{opacity:.55}50%{opacity:1}}
+html:not([data-theme="light"]) .rg-shell-root{background-image:radial-gradient(ellipse at 82% 0%,#26364d99,transparent 48%),radial-gradient(ellipse at 15% 92%,#4c1e35a6,transparent 46%),linear-gradient(160deg,#101725,#080c14 67%)}
+html:not([data-theme="light"]) .rg-desktop-sidebar{background:linear-gradient(155deg,#151e2bdb,#0b111caa);border-right-color:#ffffff0b;box-shadow:none}
+html:not([data-theme="light"]) .rg-app-header{background:#101725dc;border-bottom-color:#ffffff0c}
+html:not([data-theme="light"]) .rg-sidebar-group>a.is-active{background:linear-gradient(90deg,#d13d4c30,transparent);box-shadow:inset 2px 0 #f58170}
+.rg-home-page{max-width:1480px}
+.rg-home-page .rg-home-section{margin-top:30px}
+.rg-home-page .rg-section-heading h2{font-size:clamp(19px,2.4vw,29px);font-weight:850}
+.rg-home-page .rg-home-feature{min-height:clamp(260px,34vw,440px);border:0;border-radius:18px;box-shadow:0 20px 50px #0005}
+.rg-home-page .rg-home-feature .rg-home-feature-shade{background:linear-gradient(90deg,#090e19ed,#11182ba3 44%,transparent 100%),linear-gradient(0deg,#0b111bb8,transparent 45%)}
+.rg-home-page .rg-home-feature .rg-hero-kicker{background:none;padding:0}
+.rg-home-page .rg-home-games{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(155px,22%);grid-template-columns:none;gap:14px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;padding:5px 3px 15px;scrollbar-width:thin}
+.rg-home-page .rg-home-games>article{scroll-snap-align:start}
+.rg-home-page .rg-home-games .rg-game-tile{background:transparent;border:0;box-shadow:none;border-radius:0;transition:transform .22s}
+.rg-home-page .rg-home-games .rg-tile-image{height:auto;aspect-ratio:4/5;border-radius:13px;box-shadow:0 8px 18px #0003}
+.rg-home-page .rg-home-games .rg-tile-info{padding:10px 2px;min-height:48px}
+.rg-home-page .rg-home-games .rg-tile-info h3{font-size:13px}
+.rg-home-page .rg-home-games .rg-tile-info p{font-size:11px;color:var(--rg-text-faint)}
+.rg-home-page .rg-home-games .rg-tile-play{background:#b42d43e8;border:1px solid #ffffff50}
+.rg-home-page .rg-game-tile:focus-within{outline:2px solid #f59d76;outline-offset:2px}
+html:not([data-theme="light"]) .rg-home-shortcuts>a{background:transparent;box-shadow:none;border:0;border-bottom:1px solid #ffffff15;border-radius:0}
+html:not([data-theme="light"]) .rg-home-shortcuts svg{background:none;color:#f5bc82}
+.rg-home-page .rg-community-preview{position:relative;isolation:isolate;overflow:hidden;padding-right:clamp(18px,18%,190px);min-height:155px}
+.rg-home-page .rg-community-preview>.rg-community-mascot{position:absolute;right:0;bottom:-28px;width:clamp(95px,17%,160px);aspect-ratio:9/10;background:url('/images/rev-mascot.svg') center/contain no-repeat;pointer-events:none;opacity:.85;z-index:-1}
+html:not([data-theme="light"]) .rg-home-page .rg-community-preview{background:linear-gradient(100deg,#1d293b77,#602a4160);border:0;box-shadow:none}
+html:not([data-theme="light"]) .rg-library-card{border:0;box-shadow:none;background:transparent}
+html:not([data-theme="light"]) .rg-library-spotlight-card{border:0;box-shadow:0 10px 25px #0003}
+html:not([data-theme="light"]) .rg-community-tile,html:not([data-theme="light"]) .rg-community-roster,html:not([data-theme="light"]) .rg-voice-listing,html:not([data-theme="light"]) .rg-conversation-list{box-shadow:none;background:linear-gradient(120deg,#202c3e80,#11192435);border-color:#ffffff12}
+.rg-shop-page>.rg-page-heading{position:relative;isolation:isolate;min-height:160px;padding:24px clamp(90px,23%,240px) 24px 20px;border-radius:18px;color:white;background:radial-gradient(ellipse at 85% 50%,#96543f75,transparent 58%),linear-gradient(120deg,#202a3b,#221929);overflow:hidden}
+.rg-shop-page>.rg-page-heading:after{content:"";position:absolute;right:2%;bottom:-15%;width:clamp(105px,21%,190px);aspect-ratio:9/10;background:url('/images/rev-mascot.svg') center/contain no-repeat;z-index:-1;pointer-events:none}
+.rg-shop-page>.rg-page-heading .rg-page-title{color:white}
+.rg-shop-page>.rg-page-heading .rg-page-subtitle{color:#e0e2e8}
+@media(min-width:1024px){.rg-home-page .rg-home-games{grid-auto-columns:minmax(150px,calc((100% - 70px)/6))}}
+@media(max-width:639px){.rg-arena-welcome{grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);min-height:230px;padding:16px 13px;border-radius:16px;gap:4px}.rg-arena-copy h2{font-size:clamp(26px,7vw,36px)}.rg-arena-eyebrow{font-size:8px;letter-spacing:.11em}.rg-arena-copy p{font-size:12px;margin-bottom:12px}.rg-arena-copy .rg-primary-button{font-size:11px;padding:9px 10px;gap:4px}.rg-arena-mascot{min-height:140px}.rg-arena-mascot>span{font-size:7px;letter-spacing:.09em}.rg-home-page .rg-home-games{grid-auto-columns: minmax(125px,43%);gap:10px}.rg-home-page .rg-home-feature{border-radius:16px}.rg-home-page .rg-home-feature .rg-hero-content h2{font-size:40px}.rg-home-page .rg-community-preview{padding-right:70px}.rg-home-page .rg-community-preview>.rg-community-mascot{width:85px;opacity:.5}.rg-shop-page>.rg-page-heading{padding:18px 85px 18px 14px}.rg-shop-page>.rg-page-heading:after{right:-8px;width:105px}}
+@media(prefers-reduced-motion:reduce){.rg-arena-orbit,.rg-mascot-body{animation:none}.rg-home-page .rg-home-games .rg-game-tile{transition:none}}

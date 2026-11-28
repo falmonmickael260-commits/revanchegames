@@ -6,6 +6,7 @@ import { GiftCelebrationLayer } from "@/components/gifts/GiftCelebrationLayer";
 import "./globals.css";
 import "./refonte.css";
 import "./gifts.css";
+import "./arena.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
