@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { GameArt } from "@/components/library/GameArt";
 import { ArrowRight, Play, Gamepad2, ChevronLeft, ChevronRight, Trophy, Headphones, MessageCircle, Sparkles, Users, ShoppingBag, Heart } from "lucide-react";
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode, type CSSProperties } from "react";
 import { GAMES } from "@/data/games";
 import { Avatar } from "@/components/ui/Avatar";
 import { useSocial } from "@/components/social/SocialProvider";
@@ -42,7 +42,7 @@ export function HomeView({ popularIds, newIds, progress }: { popularIds: string[
       {([{id:"play",name:"Jouer",Icon:Gamepad2},{id:"rooms",name:"Parties publiques",Icon:Users},{id:"social",name:"Club social",Icon:Headphones},{id:"collection",name:"Ma collection",Icon:Heart}] as const).map(({id,name,Icon})=><button key={id} type="button" aria-pressed={zone===id} onClick={()=>setZone(id)}><Icon/><span>{name}</span></button>)}
     </nav>
     <div className="rg-launcher-zone" hidden={zone!=="play"}>
-      {game&&<section className="rg-launcher-world" style={{"--world-accent":game.theme.accent} as React.CSSProperties} aria-label="Sélection de jeux">
+      {game&&<section className="rg-launcher-world" style={{"--world-accent":game.theme.accent} as CSSProperties} aria-label="Sélection de jeux">
         <div className="rg-launcher-scene" key={game.id}><GameArt game={game} className="rg-launcher-scene-art" eager/></div>
         <div className="rg-launcher-shade"/>
         <div className="rg-launcher-world-copy" key={game.id+"copy"}><span className="rg-launcher-eyebrow"><span/> SÉLECTION DU CLUB · {String(chosen+1).padStart(2,"0")} / {String(featured.length).padStart(2,"0")}</span><h2>{game.name}</h2><p>{game.tagline}</p><small><Users/> {game.players}</small><div className="rg-launcher-actions"><Link href={`/play/${game.id}`} className="rg-launcher-play"><Play fill="currentColor"/> JOUER</Link><Link href="/library" className="rg-launcher-secondary">Tous les jeux <ArrowRight/></Link></div></div>
