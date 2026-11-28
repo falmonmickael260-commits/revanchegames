@@ -16,7 +16,7 @@ export function BottomNav() {
       const Icon = item.icon;
       return <Link key={id} href={item.href} aria-current={active ? "page" : undefined} className={active ? "is-active" : ""}>
         <span className="rg-nav-icon"><Icon strokeWidth={active ? 2.5 : 1.8} className="h-5 w-5" />{count > 0 && <span className="rg-count" aria-label={`${count} non lus`}>{count > 99 ? "99+" : count}</span>}</span>
-        <span>{id === "library" ? "Jeux" : item.label}</span>
+        <span>{id === "library" ? "Jeux" : id === "community" ? "Club" : id === "home" ? "Accueil" : item.label}</span>
       </Link>;
     })}
   </nav>;
